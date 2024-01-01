@@ -1,0 +1,68 @@
+{
+  "name": "nuxt-ts-boilerplate",
+  "private": true,
+  "type": "module",
+  "author": {
+    "name": "Hau Tran",
+    "email": "hautran.job@outlook.com",
+    "url": "https://github.com/dauphaihau"
+  },
+  "description": "Nuxt 3 with TypeScript boilerplate",
+  "scripts": {
+    "generate": "nuxt generate",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "build": "nuxt build",
+    "start": "node .output/server/index.mjs",
+    "devtools:enable": "npx nuxi@latest devtools enable",
+    "devtools:disable": "npx nuxi@latest devtools disable",
+    "typecheck": "npx nuxi typecheck",
+    "test": "vitest --run tests",
+    "lint": "eslint --ext .ts,.js,.vue,.cjs .",
+    "lint:fix": "eslint --fix --ext .ts,.js,.vue,.cjs .",
+    "postinstall": "nuxt prepare && husky install",
+    "prepare": "husky install",
+    "docker:dev": "docker-compose -f docker-compose.yml -f docker-compose.dev.yml up",
+    "docker:prod": "docker-compose -f docker-compose.yml -f docker-compose.prod.yml up"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,vue}": [
+      "pnpm lint:fix",
+      "pnpm test"
+    ]
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "latest",
+    "@nuxt/test-utils": "^3.9.0",
+    "@nuxtjs/color-mode": "^3.3.2",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0",
+    "@nuxtjs/i18n": "^8.0.0",
+    "@typescript-eslint/parser": "^6.15.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.4.3",
+    "@vueuse/core": "^10.7.0",
+    "@vueuse/nuxt": "^10.7.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "husky": "^8.0.3",
+    "jsdom": "^23.0.1",
+    "lint-staged": "^15.2.0",
+    "nuxt": "^3.8.2",
+    "nuxt-security": "^1.0.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0",
+    "vue": "^3.3.12",
+    "vue-eslint-parser": "^9.3.2",
+    "vue-router": "^4.2.5",
+    "vue-tsc": "^1.8.25"
+  },
+  "dependencies": {
+    "@formkit/auto-animate": "^0.8.1",
+    "@nuxt/ui": "^2.11.1",
+    "@pinia/nuxt": "^0.5.1",
+    "dayjs": "^1.11.10",
+    "http-status-codes": "^2.3.0",
+    "pinia": "^2.1.7",
+    "zod": "^3.22.4"
+  }
+}
