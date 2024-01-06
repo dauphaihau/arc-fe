@@ -1,3 +1,12 @@
+<script setup lang="ts">
+
+import { ROUTES } from '~/config/enums/routes';
+
+const authStore = useAuthStore();
+const { user } = storeToRefs(authStore);
+
+</script>
+
 <template>
   <div>
     <UPopover>
@@ -9,9 +18,9 @@
           <Icon name="uil:user" color="black" />
         </UButton>
       </UTooltip>
-      <template #panel>
-        <div class="p-2 flex flex-col">
-          <UButton color="gray" variant="ghost">
+      <template #panel="{close}">
+        <div class="p-2 flex flex-col" @click="close">
+          <UButton color="gray" variant="ghost" :to="ROUTES.ACCOUNT">
             <div class="flex items-center gap-3">
               <img
                 src="~/assets/images/avatar-default.jpg"
@@ -44,10 +53,3 @@
     </UPopover>
   </div>
 </template>
-
-<script setup lang="ts">
-
-const authStore = useAuthStore();
-const { user } = storeToRefs(authStore);
-
-</script>

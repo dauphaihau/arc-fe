@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import type { FormError } from '@nuxt/ui/dist/runtime/types';
 import type { IUser, LoginPayloadType, RegisterPayloadType } from '~/interfaces/user';
 import { TOKEN_TYPES, KEY_LS_ACCESS_TOKEN, KEY_LS_REFRESH_TOKEN } from '~/config/enums/token';
-import { PATHS } from '~/config/enums/path';
+import { ROUTES } from '~/config/enums/routes';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,7 +12,9 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     getUser: state => state.user,
+    getShop: state => state.user?.shop,
     isLogged: state => !!state.user,
+    isOwnedShop: state => !!state.user?.shop,
   },
   actions: {
     async getCurrentUser() {
@@ -20,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
       if (data.value?.user) {
         this.user = data.value?.user;
       } else {
-        navigateTo(PATHS.HOME);
+        navigateTo(ROUTES.HOME);
       }
     },
     async register(payload: RegisterPayloadType): Promise<FormError | null> {
@@ -101,7 +103,7 @@ export const useAuthStore = defineStore('auth', {
       const { status } = await useCustomFetch.post('/auth/logout');
       if (status.value === 'success') {
         this.clearAll();
-        navigateTo(PATHS.HOME);
+        navigateTo(ROUTES.HOME);
       }
     },
     clearAll() {

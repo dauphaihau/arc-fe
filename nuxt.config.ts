@@ -39,7 +39,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     public: {
-      baseApiURL: process.env.BASE_API_URL,
+      apiBaseURL: process.env.API_BASE_URL,
       apiVersion: process.env.API_VERSION,
       accessTokenExpirationMins: process.env.ACCESS_TOKEN_EXPIRATION_MINS,
       refreshTokenExpirationDays: process.env.REFRESH_TOKEN_EXPIRATION_DAYS,
@@ -73,4 +73,8 @@ export default defineNuxtConfig({
     langDir: 'locales',
     defaultLocale: 'en',
   },
+  colorMode: {
+    preference: 'light',
+  },
+  css: ['~/assets/css/main.css'],
 });

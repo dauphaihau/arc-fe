@@ -60,6 +60,7 @@
     "@formkit/auto-animate": "^0.8.1",
     "@nuxt/ui": "^2.11.1",
     "@pinia/nuxt": "^0.5.1",
+    "@tailwindcss/typography": "^0.5.10",
     "dayjs": "^1.11.10",
     "http-status-codes": "^2.3.0",
     "pinia": "^2.1.7",

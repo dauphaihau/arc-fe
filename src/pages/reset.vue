@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { PATHS } from '~/config/enums/path';
+import { ROUTES } from '~/config/enums/routes';
 definePageMeta({ layout: 'default' });
 
 const enum STEPS {
@@ -139,7 +139,7 @@ async function resendEmail() {
         You've successfully changed your password
       </template>
       <template #content>
-        <NuxtLink :to="PATHS.HOME">
+        <NuxtLink :to="ROUTES.HOME">
           <UButton size="xl" block>
             Continue to shopping
           </UButton>

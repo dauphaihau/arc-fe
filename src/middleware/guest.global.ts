@@ -1,5 +1,5 @@
 import { KEY_LS_ACCESS_TOKEN } from '~/config/enums/token';
-import { PATHS } from '~/config/enums/path';
+import { ROUTES } from '~/config/enums/routes';
 
 export default defineNuxtRouteMiddleware((to, _from) => {
   const authStore = useAuthStore();
@@ -9,7 +9,7 @@ export default defineNuxtRouteMiddleware((to, _from) => {
     authStore.getCurrentUser();
   }
 
-  if (user.value && [PATHS.RESET].includes(to.path as PATHS)) {
-    return navigateTo(PATHS.HOME);
+  if (user.value && [ROUTES.RESET].includes(to.path as ROUTES)) {
+    return navigateTo(ROUTES.HOME);
   }
 });

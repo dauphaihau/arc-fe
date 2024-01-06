@@ -11,7 +11,7 @@ async function baseCustomFetch<T>(url: UrlType, options: UseFetchOptions<T> = {}
   const config = useRuntimeConfig();
 
   const defaults: HttpOption<T> = {
-    baseURL: `${config.public.baseApiURL}` + `/v${config.public.apiVersion}`,
+    baseURL: `${config.public.apiBaseURL}` + `/v${config.public.apiVersion}`,
     credentials: 'include',
     server: false,
     // this overrides the default key generation, which includes a hash of

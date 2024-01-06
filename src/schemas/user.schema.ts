@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { USER_REG_NAME, USER_REG_PASSWORD } from '~/config/enums/user';
+import { shopSchema } from '~/schemas/shop.schema';
+// import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 
 export const userSchema = z.object({
   name: z
@@ -27,4 +29,11 @@ export const userSchema = z.object({
   is_email_verified: z
     .boolean()
     .optional(),
+  shop: shopSchema.optional(),
+  // shop: z.union([
+  //   objectIdSchema
+  //     .describe('the shop that user owns')
+  //     .optional(),
+  //   shopSchema,
+  // ]),
 });

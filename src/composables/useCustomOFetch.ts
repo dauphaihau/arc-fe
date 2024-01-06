@@ -17,7 +17,7 @@ const $api = <
   ) => {
   const config = useRuntimeConfig();
   return $fetch<T, R>(request, {
-    baseURL: `${config.public.baseApiURL}` + `/v${config.public.apiVersion}`,
+    baseURL: `${config.public.apiBaseURL}` + `/v${config.public.apiVersion}`,
     credentials: 'include',
     ...opts,
   });

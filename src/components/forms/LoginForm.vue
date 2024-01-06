@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '#ui/types';
-import { userSchema } from '../../schemas/user.schema';
+import { userSchema } from '~/schemas/user.schema';
 import type { LoginPayloadType } from '~/interfaces/user';
-import { PATHS } from '~/config/enums/path';
+import { ROUTES } from '~/config/enums/routes';
 
 const authStore = useAuthStore();
 const formRef = ref();
@@ -53,7 +53,7 @@ async function onSubmit(event: FormSubmitEvent<LoginPayloadType>) {
           <UInput v-model="state.password" size="xl" type="password" />
         </UFormGroup>
 
-        <NuxtLink :to="PATHS.RESET">
+        <NuxtLink :to="ROUTES.RESET">
           <UButton variant="link" class="mb-4 pl-0">
             Forget Password?
           </UButton>

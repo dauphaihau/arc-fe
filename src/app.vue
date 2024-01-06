@@ -1,13 +1,9 @@
 <template>
-  <div>
-    <Body>
-      <div>
-        <NuxtLayout>
-          <NuxtPage />
-        </NuxtLayout>
-      </div>
-    </Body>
-  </div>
+  <NuxtLayout class="min-h-screen max-w-[1650px] xl:mx-auto">
+    <NuxtPage />
+  </NuxtLayout>
+
+  <UNotifications />
 </template>
 
 <script setup lang="ts">

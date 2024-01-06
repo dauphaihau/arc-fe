@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PATHS } from '~/config/enums/path';
+import { ROUTES } from '~/config/enums/routes';
 
 const error = useError();
 
@@ -16,7 +16,7 @@ const errorMessage = computed(() => (
 ));
 
 const handleError = () => {
-  clearError({ redirect: PATHS.HOME });
+  clearError({ redirect: ROUTES.HOME });
 };
 
 useHead({
