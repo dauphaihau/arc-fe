@@ -5,6 +5,13 @@ import { ROUTES } from '~/config/enums/routes';
 const links = [
   { title: 'Dashboard', route: '/account/shop/dashboard' },
   { title: 'Products', route: '/account/shop/products' },
+  { title: 'Messages', route: '/account/shop/messages' },
+  { title: 'Orders & Shipping', route: '/account/shop/orders' },
+  { title: 'Marketing', route: '/account/shop/marketing' },
+  // { title: 'Vouchers', route: '/account/shop/vouchers' },
+  { title: 'Finances', route: '/account/shop/finances' },
+  { title: 'Settings', route: '/account/shop/settings' },
+  { title: 'Help', route: '/account/shop/help' },
 ];
 
 const authStore = useAuthStore();
@@ -40,7 +47,10 @@ const items = [
 
 <template>
   <div class="flex min-h-screen max-w-[1650px] xl:mx-auto">
-    <aside class="w-[320px] bg-gradient-to-t from-[#f6f8fa] via-[#f6f8fa] to-[#fcfcfd]">
+    <aside
+      class="
+        w-[250px] bg-gradient-to-t from-[#f6f8fa] via-[#f6f8fa] to-[#fcfcfd] fixed h-full z-10"
+    >
       <UDropdown
         :items="items"
         :popper="{ placement: 'bottom-start' }"
@@ -64,8 +74,7 @@ const items = [
           <ULink
             :to="item.route"
             active-class="text-primary border-l-2 border-primary"
-            inactive-class="text-gray-500 text-left dark:text-gray-400 hover:text-gray-700
-             dark:hover:text-gray-200 border-l-2 border-white"
+            inactive-class="text-customGray-800 hover:text-customGray-900 border-l-2 border-white"
             class="font-medium w-full text-sm pl-5"
           >
             {{ item.title }}
@@ -73,9 +82,13 @@ const items = [
         </div>
       </div>
     </aside>
+    <div class="h-full w-[250px] bg-red-300" />
 
-    <div class="w-full h-full">
-      <header class="flex justify-between items-center pr-8 pl-4 w-full py-3">
+    <div class="h-full grow">
+      <header
+        class="flex justify-between items-center pr-8 pl-4
+      w-full py-3 fixed bg-white z-10 w-[calc(100%-250px)]"
+      >
         <div class="hover:bg-customGray-100 h-fit rounded-lg">
           <UInput
             icon="i-heroicons-magnifying-glass-20-solid"
@@ -104,7 +117,8 @@ const items = [
           </UTooltip>
         </div>
       </header>
-      <div class="px-8">
+
+      <div class="px-8 mt-16 min-h-screen">
         <slot />
       </div>
     </div>

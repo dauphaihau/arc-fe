@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ROUTES } from '~/config/enums/routes';
-definePageMeta({ layout: 'default' });
+definePageMeta({ layout: 'home' });
 
 const enum STEPS {
   SEND_EMAIL,

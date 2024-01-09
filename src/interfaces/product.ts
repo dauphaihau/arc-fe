@@ -1,13 +1,20 @@
 import { z } from 'zod';
 import { productSchema, productStateUserCanModify } from '../schemas/product.schema';
+import { clothingSchema, electronicSchema, baseAttributeSchema } from '../schemas/sub/prod-attribute.schema';
 import type { RequestGetListParams } from '~/interfaces/common';
 
 export type IProduct = z.infer<typeof productSchema>;
+export type IProductClothing = z.infer<typeof clothingSchema>;
+export type IProductElectronic = z.infer<typeof electronicSchema>;
+export type IProductBaseAttr = z.infer<typeof baseAttributeSchema>;
 
 export type PRODUCT_STATES_USER_CAN_MODIFY = z.infer<typeof productStateUserCanModify>;
 
-export type CreateProductPayload = Omit<IProduct, 'id' | 'rating_average' | 'views' | 'state'> & {
-  state: PRODUCT_STATES_USER_CAN_MODIFY
-};
+export type CreateProductPayload =
+  Omit<IProduct, 'id' | 'rating_average' | 'views' | 'category' | 'attributes' | 'images' | 'shop_id' | 'state'> &
+  Partial<Pick<IProduct, 'category' | 'images'>> &
+  { attributes: IProductBaseAttr & { category?: IProduct['category'] } } &
+  { state: PRODUCT_STATES_USER_CAN_MODIFY }
+
 
 export type GetProductsParams = Partial<Pick<IProduct, 'title' | 'price' | 'category'> & RequestGetListParams>

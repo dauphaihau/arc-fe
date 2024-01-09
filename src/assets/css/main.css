@@ -1,3 +1,18 @@
+
+/*
+  Remove Arrows/Spinners from Input Number
+*/
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
 .shop-dashboard-title {
   @apply text-2xl font-semibold text-customGray-950
 }

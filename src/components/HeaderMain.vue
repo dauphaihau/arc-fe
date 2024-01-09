@@ -9,7 +9,7 @@ const authStore = useAuthStore();
 </script>
 
 <template>
-  <header class="flex justify-between items-center py-3 border-b border-b-zinc-200 px-8">
+  <header class="flex justify-between items-center py-3 px-8 max-w-[1650px] mx-auto">
     <NuxtLink id="brand" :to="ROUTES.HOME" class="font-bold">
       Arc
     </NuxtLink>
@@ -62,6 +62,7 @@ const authStore = useAuthStore();
       <RegisterLoginDialog />
     </div>
   </header>
+  <div class="border-b border-b-zinc-200 " />
 </template>
 
 <style scoped>

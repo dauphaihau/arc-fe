@@ -21,6 +21,9 @@ export default defineAppConfig({
     formGroup: {
       description: 'text-customGray-800',
     },
+    radio: {
+      help: 'text-customGray-800',
+    },
   },
   nuxtIcon: {
     size: '20px', // default <Icon> size applied

@@ -55,7 +55,7 @@ authStore.$subscribe((_mutation, state) => {
           <h1 class="text-3xl font-bold">
             {{ isLoginForm ? 'Log in' : 'Create your account' }}
           </h1>
-          <p class="text-zinc-600/50 text-base">
+          <p class="text-customGray-950 text-base">
             {{
               isLoginForm ?
                 'Enter your credentials to access your account.' : 'Registration is easy.'
@@ -67,7 +67,7 @@ authStore.$subscribe((_mutation, state) => {
         <RegisterForm v-else />
 
         <div class="flex items-center mt-3">
-          <p class="text-sm">
+          <p class="text-sm text-customGray-950">
             {{ isLoginForm ? 'New to Arc?' : 'Already a Arc user?' }}
           </p>
           <UButton

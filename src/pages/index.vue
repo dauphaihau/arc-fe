@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-definePageMeta({ layout: 'default' });
+definePageMeta({ layout: 'home' });
 </script>
 
 <template>

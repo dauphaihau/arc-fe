@@ -21,7 +21,8 @@ export const productImageSchema = z.object({
     .number()
     .min(1)
     .max(10)
-    .default(1).optional(),
+    .default(1)
+    .optional(),
 });
 
 export const productSchema = z.object({
@@ -69,7 +70,8 @@ export const productSchema = z.object({
     .optional(),
   non_taxable: z
     .boolean()
-    .default(false),
+    .default(false)
+    .optional(),
   category: z.nativeEnum(PRODUCT_CATEGORIES),
   attributes: productAttributeSchema,
   images: z

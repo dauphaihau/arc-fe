@@ -1,14 +1,14 @@
 import { z } from 'zod';
 import { PRODUCT_CATEGORIES, PRODUCT_ATTR_CLOTHING_SIZE, PRODUCT_ATTR_CLOTHING_GENDER } from '~/config/enums/product';
 
-const baseAttributeSchema = z.object({
+export const baseAttributeSchema = z.object({
   // manufacturer: z.string().min(2),
   // brand: z.string().min(2),
   // model_number: z.string().min(2),
   // weigh: z.string().min(2), // 3.41 pounds
   // material: z.array(z.string().min(2)).min(1),
   // package_dimensions: z.string().min(30), //  4.49 x 4.41 x 3.7 inches; 12.31 Ounces
-  color: z.array(z.string().min(2)).min(1),
+  colors: z.array(z.string().min(2)).min(1, 'Choose at least one color'),
 });
 
 export const electronicSchema = z.object({

@@ -16,7 +16,7 @@ const slots = useSlots();
         <h1 v-if="slots.title" class="text-2xl font-bold">
           <slot name="title" />
         </h1>
-        <p v-if="slots.subtitle" class="text-zinc-500/90 text-sm">
+        <p v-if="slots.subtitle" class="text-customGray-950 text-sm">
           <slot name="subtitle" />
         </p>
       </div>

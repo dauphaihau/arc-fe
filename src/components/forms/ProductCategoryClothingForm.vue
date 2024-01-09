@@ -1,16 +1,21 @@
 <script setup lang="ts">
 
-import { productAttrClothingGender, productAttrClothingSize } from '~/config/enums/product';
+import type { IProductClothing } from '~/interfaces/product';
+import {
+  PRODUCT_ATTR_CLOTHING_GENDER,
+  PRODUCT_ATTR_CLOTHING_SIZE
+} from '~/config/enums/product';
 
-const state = reactive({
-  size: '',
-  gender: '',
-});
+// const state = reactive<IProductClothing>(
+const state = reactive<Partial<IProductClothing>>({});
 
-const emit = defineEmits<{(e: 'state', value: object): void }>();
+const productAttrClothingGenderOpts = Object.values(PRODUCT_ATTR_CLOTHING_GENDER);
+const productAttrClothingSizeOpts = Object.values(PRODUCT_ATTR_CLOTHING_SIZE);
+
+const emit = defineEmits<{(e: 'onChangeAttributes', value: Partial<IProductClothing>): void }>();
 
 watch(state, () => {
-  emit('state', state);
+  emit('onChangeAttributes', state);
 });
 
 </script>
@@ -26,13 +31,13 @@ watch(state, () => {
       v-model="state.gender"
       class="w-full lg:w-40"
       placeholder="Select gender"
-      :options="productAttrClothingSize"
+      :options="productAttrClothingGenderOpts"
       size="lg"
     />
   </UFormGroup>
   <UFormGroup
     label="Size"
-    name="color"
+    name="size"
     class="mb-4"
     required
   >
@@ -40,7 +45,7 @@ watch(state, () => {
       v-model="state.size"
       class="w-full lg:w-40"
       placeholder="Select size"
-      :options="productAttrClothingGender"
+      :options="productAttrClothingSizeOpts"
       size="lg"
     />
   </UFormGroup>
