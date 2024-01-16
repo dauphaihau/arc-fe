@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
 import { shopSchema } from '~/schemas/shop.schema';
 import type { IShop } from '~/interfaces/shop';
+import { ROUTES } from '~/config/enums/routes';
 
 const { $api } = useNuxtApp();
 const toast = useToast();
@@ -18,8 +19,19 @@ const state = reactive({
 async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }>) {
   formRef.value.clear();
   loading.value = true;
-  const { pending, error } = await $api.shop.createShop(event.data);
+  const { pending, error, data } = await $api.shop.createShop(event.data);
   loading.value = pending.value;
+  if (!error.value) {
+    toast.add({
+      title: 'Create shop success',
+    });
+    const authStore = useAuthStore();
+    if (authStore?.user) {
+      authStore.user.shop = data.value?.shop;
+    }
+    navigateTo(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.DASHBOARD}`);
+    return;
+  }
 
   switch (error.value?.data.code) {
     case StatusCodes.INTERNAL_SERVER_ERROR:

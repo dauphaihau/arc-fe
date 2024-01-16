@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { PRODUCT_CATEGORIES, PRODUCT_ATTR_CLOTHING_SIZE, PRODUCT_ATTR_CLOTHING_GENDER } from '~/config/enums/product';
+import {
+  PRODUCT_CATEGORIES,
+  PRODUCT_ATTR_CLOTHING_SIZES,
+  PRODUCT_ATTR_CLOTHING_GENDER,
+  PRODUCT_ATTR_CLOTHING_TYPES
+} from '~/config/enums/product';
 
 export const baseAttributeSchema = z.object({
   // manufacturer: z.string().min(2),
@@ -19,7 +24,8 @@ export const electronicSchema = z.object({
 
 export const clothingSchema = z.object({
   category: z.literal(PRODUCT_CATEGORIES.CLOTHING),
-  size: z.nativeEnum(PRODUCT_ATTR_CLOTHING_SIZE),
+  type: z.nativeEnum(PRODUCT_ATTR_CLOTHING_TYPES),
+  sizes: z.array(z.nativeEnum(PRODUCT_ATTR_CLOTHING_SIZES)).min(1),
   gender: z.nativeEnum(PRODUCT_ATTR_CLOTHING_GENDER),
 });
 

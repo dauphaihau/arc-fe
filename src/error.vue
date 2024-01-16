@@ -1,18 +1,26 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
 
-const error = useError();
+interface IError {
+  statusCode: number;
+  statusMessage: string;
+  message: string;
+}
+
+const { error } = defineProps<{
+  error: IError
+}>();
 
 const errorCode = computed(() => (
-  error.value instanceof Error || !error.value ?
+  !(error instanceof Error) || !error ?
     500 :
-    error.value.statusCode
+    error.statusCode
 ));
 
 const errorMessage = computed(() => (
-  error.value instanceof Error || !error.value ?
+  !(error instanceof Error) || !error ?
     'Something went wrong' :
-    error.value.statusMessage
+    error.statusMessage
 ));
 
 const handleError = () => {

@@ -6,16 +6,31 @@ const authStore = useAuthStore();
 // const isDark = useDark();
 // const toggleDark = useToggle(isDark);
 
+const value = ref('');
 </script>
 
 <template>
-  <header class="flex justify-between items-center py-3 px-8 max-w-[1650px] mx-auto">
-    <NuxtLink id="brand" :to="ROUTES.HOME" class="font-bold">
+  <!--  <header class="flex justify-between items-center py-3 px-8 max-w-[1650px] mx-auto">-->
+  <header class="flex justify-between items-center py-3 max-w-[1300px] mx-auto">
+    <NuxtLink id="brand" :to="ROUTES.HOME" class="font-bold text-xl">
       Arc
     </NuxtLink>
 
+    <CategoriesDropdown class="mx-3" />
+
+    <div class="grow mx-5">
+      <UInput
+        v-model="value"
+        icon="i-heroicons-magnifying-glass-20-solid"
+        size="lg"
+        :ui="{
+          rounded: 'rounded-full'
+        }"
+      />
+    </div>
+
     <div class="flex items-center gap-4">
-      <HeaderLangDropdown />
+      <!--    <HeaderLangDropdown/>-->
 
       <!--      <UButton-->
       <!--        color="gray"-->
@@ -56,10 +71,20 @@ const authStore = useAuthStore();
             <Icon name="uil:shop" />
           </UButton>
         </UTooltip>
-
         <HeaderUserDropdown />
       </div>
-      <RegisterLoginDialog />
+      <RegisterLoginDialog v-else />
+
+      <UTooltip text="Cart">
+        <UButton
+          :to="ROUTES.CART"
+          color="gray"
+          variant="ghost"
+          class="icon-button"
+        >
+          <Icon name="uil:cart" />
+        </UButton>
+      </UTooltip>
     </div>
   </header>
   <div class="border-b border-b-zinc-200 " />

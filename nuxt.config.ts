@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     '@nuxtjs/i18n',
     'nuxt-security',
     '@formkit/auto-animate/nuxt',
+    '@nuxt/image',
   ],
   typescript: {
     strict: true,
@@ -41,6 +42,7 @@ export default defineNuxtConfig({
     public: {
       apiBaseURL: process.env.API_BASE_URL,
       apiVersion: process.env.API_VERSION,
+      awsHostBucket: process.env.AWS_S3_HOST_BUCKET,
       accessTokenExpirationMins: process.env.ACCESS_TOKEN_EXPIRATION_MINS,
       refreshTokenExpirationDays: process.env.REFRESH_TOKEN_EXPIRATION_DAYS,
     },
@@ -77,4 +79,7 @@ export default defineNuxtConfig({
     preference: 'light',
   },
   css: ['~/assets/css/main.css'],
+  image: {
+    domains: [process.env.AWS_S3_HOST_BUCKET as string],
+  },
 });

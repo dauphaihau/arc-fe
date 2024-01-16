@@ -19,7 +19,9 @@ const formRef = ref();
 const isDraftProd = ref(false);
 const loading = ref(false);
 const errorImageField = ref(false);
+const isVariantProd = ref(false);
 const btnSubmit = ref();
+const isSubmit = ref(false);
 
 const state = reactive<CreateProductPayload>({
   title: '',
@@ -61,6 +63,7 @@ const productCategoryOpts = Object.values(PRODUCT_CATEGORIES);
 const productAttrColorsOpts = mapKeysEnum(PRODUCT_ATTR_COLORS);
 
 const validate = (state: CreateProductPayload): FormError[] => {
+  isSubmit.value = !isSubmit.value;
   let errors: FormError[] = [];
 
   const data = {
@@ -75,7 +78,7 @@ const validate = (state: CreateProductPayload): FormError[] => {
 
   const result = productSchema.omit({
     id: true,
-    shop_id: true,
+    shop: true,
     views: true,
     rating_average: true,
   }).safeParse(data);
@@ -321,29 +324,53 @@ watch(() => state.category, () => {
       </template>
       <template #content>
         <div class="">
-          <UFormGroup
-            description="Remember to factor in the costs of
+          <UButton
+            class="mb-4"
+            color="gray"
+            variant="solid"
+            @click="() => isVariantProd = !isVariantProd"
+          >
+            {{ !isVariantProd ? 'Add variantions' : 'Remove variantions' }}
+          </UButton>
+
+          <VariantForm v-if="isVariantProd" :submit="isSubmit" />
+
+
+          <div v-else>
+            <UFormGroup
+              description="Remember to factor in the costs of
               materials, labor, and other business expenses.
               If you offer free shipping,
               make sure to include the cost of shipping so it doesn't eat into your profits."
-            class="mb-4"
-            label="Price"
-            name="price"
-            required
-          >
-            <UInput v-model="state.price" :disabled="loading" size="lg" type="number" />
-          </UFormGroup>
-          <UFormGroup class="mb-4" label="Quantity" name="quantity" required>
-            <UInput v-model="state.quantity" :disabled="loading" size="lg" />
-          </UFormGroup>
-          <UFormGroup
-            description="SKUs are for your use only—buyers won’t see them."
-            class="mb-4"
-            label="SKU"
-            name="sku"
-          >
-            <UInput v-model="state.sku" :disabled="loading" size="lg" />
-          </UFormGroup>
+              class="mb-4"
+              label="Price"
+              name="price"
+              required
+            >
+              <UInput
+                v-model="state.price"
+                :disabled="loading"
+                size="lg"
+                type="number"
+              />
+            </UFormGroup>
+            <UFormGroup class="mb-4" label="Quantity" name="quantity" required>
+              <UInput
+                v-model="state.quantity"
+                :disabled="loading"
+                size="lg"
+                type="number"
+              />
+            </UFormGroup>
+            <UFormGroup
+              description="SKUs are for your use only—buyers won’t see them."
+              class="mb-4"
+              label="SKU"
+              name="sku"
+            >
+              <UInput v-model="state.sku" :disabled="loading" size="lg" />
+            </UFormGroup>
+          </div>
         </div>
       </template>
     </CreateProductCard>

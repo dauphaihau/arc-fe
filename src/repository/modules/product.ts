@@ -13,12 +13,25 @@ export const productModule = {
     );
   },
 
-  async getProducts(params: GetProductsParams) {
+  async getProductsByShop(params: GetProductsParams) {
     const authStore = useAuthStore();
     const shopId = authStore.getUser?.shop?.id;
     return await useCustomFetch.get<GetListResponse<IProduct>>(
       `${RESOURCES.SHOPS}/${shopId}${RESOURCES.PRODUCTS}`,
       params
+    );
+  },
+
+  async getProducts(params: GetProductsParams) {
+    return await useCustomFetch.get<GetListResponse<IProduct>>(
+      `${RESOURCES.PRODUCTS}`,
+      params
+    );
+  },
+
+  async getDetailProduct(id: IProduct['id']) {
+    return await useCustomFetch.get<{ product: IProduct }>(
+      `${RESOURCES.PRODUCTS}/${id}`
     );
   },
 };

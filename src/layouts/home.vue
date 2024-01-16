@@ -1,6 +1,6 @@
 <template>
   <HeaderMain />
-  <div class="max-w-6xl mx-auto">
+  <div class="max-w-[1300px] mx-auto">
     <slot />
   </div>
   <!--    <footer>footer</footer>-->

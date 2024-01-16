@@ -1,5 +1,7 @@
 <script lang="ts" setup>
 
+import { ROUTES } from '~/config/enums/routes';
+
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
 const { $api } = useNuxtApp();
@@ -8,7 +10,7 @@ const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
 
-const { pending, data } = await $api.product.getProducts({
+const { pending, data } = await $api.product.getProductsByShop({
   page,
 });
 
@@ -35,6 +37,7 @@ const columns = [
 
 const rows = computed(() => {
   return data.value?.results.map(prod => ({
+    id: prod.id,
     title: prod.title,
     category: prod.category,
     price: { value: prod.price, class: 'text-center' },
@@ -43,7 +46,7 @@ const rows = computed(() => {
   }));
 });
 
-const items = (row: {id: string}) => [
+const items = (row: { id: string }) => [
   [
     {
       label: 'Edit',
@@ -62,8 +65,13 @@ const items = (row: {id: string}) => [
       icon: 'i-heroicons-archive-box-20-solid',
     },
     {
-      label: 'Move',
+      label: 'Preview',
       icon: 'i-heroicons-arrow-right-circle-20-solid',
+      click: () => {
+        navigateTo(`${ROUTES.PRODUCTS}/${row.id}`, {
+          open: { target: '_blank' },
+        });
+      },
     },
   ],
   [
@@ -138,9 +146,20 @@ const items = (row: {id: string}) => [
       </template>
 
       <template #actions-data="{ row }">
-        <UDropdown :items="items(row)">
-          <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
-        </UDropdown>
+        <div class="flex items-center justify-end">
+          <UTooltip text="Edit">
+            <UButton
+              color="gray"
+              variant="ghost"
+              class="p-1.5"
+            >
+              <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
+            </UButton>
+          </UTooltip>
+          <UDropdown :items="items(row)">
+            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
+          </UDropdown>
+        </div>
       </template>
     </UTable>
 
