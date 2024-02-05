@@ -10,7 +10,6 @@ const value = ref('');
 </script>
 
 <template>
-  <!--  <header class="flex justify-between items-center py-3 px-8 max-w-[1650px] mx-auto">-->
   <header class="flex justify-between items-center py-3 max-w-[1300px] mx-auto">
     <NuxtLink id="brand" :to="ROUTES.HOME" class="font-bold text-xl">
       Arc

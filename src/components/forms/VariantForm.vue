@@ -1,27 +1,21 @@
 <script setup lang="ts">
 
-const props = defineProps<{
-  submit: boolean
-}>();
+import type { IProductInventory, IProductVariant } from '~/interfaces/product';
 
-interface State {
+type State = {
   variants: { name: string }[]
   subVariants: { name: string }[]
-  variant_group_name: string,
-  sub_variant_group_name: string,
   isActiveSubVariant: boolean,
   variantOption: string,
   subVariantOption: string,
-}
+} & Pick<IProductVariant, 'variant_group_name' | 'sub_variant_group_name'>
 
-interface Variant {
-  id: number
-  variant_name: string,
+type Variant = {
+  id?: number
   sub_variant_name?: string,
-  price: number,
-  quantity: number,
-  sku: string,
-}
+} & Pick<IProductVariant, 'variant_name'> & Pick<IProductInventory, | 'price'| 'stock' | 'sku'>
+
+const emit = defineEmits<{(e: 'onChangeVariants', value: any[]): void }>();
 
 const state = reactive<State>({
   variant_group_name: '',
@@ -38,7 +32,7 @@ const variants = ref<Variant[]>([
     id: 1,
     variant_name: '',
     price: 0,
-    quantity: 0,
+    stock: 0,
     sku: '',
   },
 ]);
@@ -57,7 +51,7 @@ const addVariant = () => {
       id: variants.value.length + 1,
       variant_name: state.variantOption,
       price: 0,
-      quantity: 0,
+      stock: 0,
       sku: '',
     };
 
@@ -86,7 +80,7 @@ const addVariant = () => {
         variant_name: stateVariant.name || '',
         sub_variant_name: stateSubVariant.name || '',
         price: result?.price || 0,
-        quantity: result?.quantity || 0,
+        stock: result?.stock || 0,
         sku: result?.sku || '',
       });
     });
@@ -151,7 +145,7 @@ const addSubVariant = () => {
         variant_name: '',
         sub_variant_name: subv.name,
         price: 0,
-        quantity: 0,
+        stock: 0,
         sku: '',
       });
     });
@@ -169,7 +163,7 @@ const addSubVariant = () => {
 
       const result = variants.value.find(
         vari => vari.variant_name === stateVariant.name &&
-                vari.sub_variant_name === stateSubVariant.name
+              vari.sub_variant_name === stateSubVariant.name
       );
 
       newVariants.push({
@@ -177,7 +171,7 @@ const addSubVariant = () => {
         variant_name: stateVariant.name || '',
         sub_variant_name: stateSubVariant.name || '',
         price: result?.price || 0,
-        quantity: result?.quantity || 0,
+        stock: result?.stock || 0,
         sku: result?.sku || '',
       });
     });
@@ -194,8 +188,8 @@ const columnsRef = ref([
     key: 'price',
     label: 'Price',
   }, {
-    key: 'quantity',
-    label: 'Quantity',
+    key: 'stock',
+    label: 'Stock',
   }, {
     key: 'sku',
     label: 'SKU',
@@ -215,14 +209,12 @@ const onChangeInputTable = (event: Event, row: Variant) => {
   const target = event.target as HTMLInputElement;
   const name = target.name;
   let value: string | number = target.value;
-  if (name === 'price' || name === 'quantity') {
+  if (name === 'price' || name === 'stock') {
     value = Number(value);
   }
-  // let { name, value } = event.target as HTMLInputElement;
-  // if (name === 'price' || name === 'quantity') {
-  //   value = Number(value);
-  // }
-  variants.value[row.id - 1][name] = value;
+  if (row.id) {
+    variants.value[row.id - 1][name] = value;
+  }
 };
 
 const activeSubVariant = () => {
@@ -240,7 +232,7 @@ const activeSubVariant = () => {
         variant_name: variant.name,
         sub_variant_name: '',
         price: 0,
-        quantity: 0,
+        stock: 0,
         sku: '',
       };
     });
@@ -248,6 +240,27 @@ const activeSubVariant = () => {
     variants.value[0].sub_variant_name = '';
   }
 };
+
+const inactiveSubVariant = () => {
+  state.isActiveSubVariant = false;
+
+  columns.value = columns.value.filter(col => col.key !== 'sub_variant_name');
+
+  if (state.variants.length) {
+    variants.value = state.variants.map((variant, index) => {
+      return {
+        id: index + 1,
+        variant_name: variant.name,
+        price: 0,
+        stock: 0,
+        sku: '',
+      };
+    });
+  } else {
+    variants.value[0].variant_name = '';
+  }
+};
+
 
 const rowsTable = computed(() => variants.value);
 
@@ -258,19 +271,60 @@ watch(() => [state.variant_group_name, state.sub_variant_group_name], () => {
   }
 });
 
-watch(props, () => {
-  // console.log('subbmiiti');
-}, { deep: true, immediate: true });
+watch(() => variants.value, () => {
+  if (state.isActiveSubVariant) {
+    const groupedVariants = Object.entries(
+      variants.value.reduce((acc, {
+        sub_variant_name, variant_name, ...values
+      }) => {
+        delete values.id;
+
+        if (!acc[variant_name]) {
+          acc[variant_name] = [];
+        }
+        acc[variant_name].push({
+          ...values,
+          variant_name: sub_variant_name,
+        });
+        return acc;
+      }, {})
+    ).map(([variant_name, variant_options]) => ({
+      variant_group_name: state.variant_group_name,
+      sub_variant_group_name: state.sub_variant_group_name,
+      variant_name,
+      variant_options,
+    }));
+    emit('onChangeVariants', groupedVariants);
+    return;
+  }
+
+  const groupedVariants = Object.entries(
+    variants.value.reduce((acc, {
+      variant_name, ...values
+    }) => {
+      delete values.id;
+
+      if (!acc[variant_name]) {
+        acc[variant_name] = {};
+      }
+      acc[variant_name] = values;
+      return acc;
+    }, {})
+  ).map(([variant_name, resValuesVariant]) => ({
+    ...resValuesVariant as object,
+    variant_group_name: state.variant_group_name,
+    variant_name,
+  }));
+  emit('onChangeVariants', groupedVariants);
+}, { deep: true });
 
 
 </script>
 
 <template>
   <div class="">
-    <!--    <div class="max-w-[42%]">-->
-    <!--        <div class="flex gap-2 w-full">-->
-    <div class="grid grid-cols-3">
-      <div class="">
+    <div class="flex gap-20">
+      <div class="w-1/5">
         <UFormGroup
           class="mb-4"
           label="Group variant 1"
@@ -321,7 +375,7 @@ watch(props, () => {
         <UDivider color="gray" orientation="vertical" class="w-fit" />
       </div>
 
-      <div class="">
+      <div class="w-1/5 relative">
         <UButton
           v-if="!state.isActiveSubVariant"
           class="mb-4"
@@ -333,6 +387,14 @@ watch(props, () => {
           Add a variation
         </UButton>
         <div v-else>
+          <UButton
+            class="absolute -top-4 -right-10"
+            variant="ghost"
+            icon="i-heroicons-x-mark"
+            color="gray"
+            @click="inactiveSubVariant"
+          />
+
           <UFormGroup
             class="mb-4"
             label="Group variant 2"
@@ -387,12 +449,14 @@ watch(props, () => {
       :columns="columns"
       class="mt-5"
     >
-      <!--      <template #variant_group_name-data="{ row }">-->
-      <!--        <UInput-->
-      <!--          v-model="state.variant_group_name"-->
-      <!--          size="lg"-->
-      <!--        />-->
-      <!--      </template>-->
+      <template #variant_name-data="{ row }">
+        {{ row.variant_name || '-' }}
+      </template>
+
+      <template #sub_variant_name-data="{ row }">
+        {{ row.sub_variant_name || '-' }}
+      </template>
+
       <template #price-data="{ row }">
         <UInput
           v-model="row.price"
@@ -405,10 +469,11 @@ watch(props, () => {
           </template>
         </UInput>
       </template>
-      <template #quantity-data="{ row }">
+
+      <template #stock-data="{ row }">
         <UInput
-          v-model="row.quantity"
-          name="quantity"
+          v-model="row.stock"
+          name="stock"
           size="lg"
           @change="(e: Event) => onChangeInputTable(e, row)"
         />

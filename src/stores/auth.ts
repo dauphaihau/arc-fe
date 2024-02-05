@@ -71,10 +71,8 @@ export const useAuthStore = defineStore('auth', {
         () => useCustomOFetch.get(
           `/auth/verify-token?token=${route.query.t}&type=${TOKEN_TYPES.RESET_PASSWORD}`
         )
-        // () => useCustomOFetch.get(`/auth/reset-password?token=${route.query.t}`)
       );
       if (error.value) {
-        // return error.value.data.message || 'An unknown error occurred. Please try again';
         return false;
       }
       this.tokenResetPassword = route.query.t as string;

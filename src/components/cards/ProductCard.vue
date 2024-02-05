@@ -8,6 +8,7 @@ const { product } = defineProps<{
 const config = useRuntimeConfig();
 const router = useRouter();
 
+
 </script>
 
 <template>
@@ -27,7 +28,7 @@ const router = useRouter();
         {{ product.title }}
       </h1>
       <p class="text-customGray-950 text-md font-medium">
-        {{ product.price }}$
+        {{ product?.inventory?.price || 0 }}$
       </p>
       <p class="text-customGray-800 text-sm">
         {{ product?.shop?.shop_name }}

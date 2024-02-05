@@ -5,9 +5,9 @@ import {
   PRODUCT_CONFIG,
   PRODUCT_CATEGORIES,
   PRODUCT_WHO_MADE,
-  PRODUCT_STATES,
-  PRODUCT_ATTR_COLORS
+  PRODUCT_STATES
 } from '~/config/enums/product';
+import { ROUTES } from '~/config/enums/routes';
 import type { CreateProductPayload } from '~/interfaces/product';
 
 const { $api } = useNuxtApp();
@@ -21,21 +21,7 @@ const loading = ref(false);
 const errorImageField = ref(false);
 const isVariantProd = ref(false);
 const btnSubmit = ref();
-const isSubmit = ref(false);
-
-const state = reactive<CreateProductPayload>({
-  title: '',
-  description: '',
-  who_made: PRODUCT_WHO_MADE.I_DID,
-  is_digital: false,
-  state: PRODUCT_STATES.ACTIVE,
-  attributes: {
-    colors: [],
-  },
-  price: 0,
-  quantity: 1,
-  sku: '',
-});
+const isSubmit = ref(0);
 
 const productWhoMadeOpts = [
   {
@@ -44,13 +30,26 @@ const productWhoMadeOpts = [
   },
   {
     id: PRODUCT_WHO_MADE.COLLECTIVE,
-    label: 'Collective',
+    label: 'A member of my shop',
   },
   {
     id: PRODUCT_WHO_MADE.SOMEONE_ELSE,
-    label: 'Someone else',
+    label: 'Another company or person',
   },
 ];
+
+const state = reactive<CreateProductPayload>({
+  title: '',
+  description: '',
+  who_made: PRODUCT_WHO_MADE.I_DID,
+  is_digital: false,
+  state: PRODUCT_STATES.ACTIVE,
+  attributes: {},
+  variants: [],
+  price: 0,
+  stock: 1,
+  sku: '',
+});
 
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
@@ -60,10 +59,8 @@ const isDigitalOpts = [
 ];
 
 const productCategoryOpts = Object.values(PRODUCT_CATEGORIES);
-const productAttrColorsOpts = mapKeysEnum(PRODUCT_ATTR_COLORS);
 
 const validate = (state: CreateProductPayload): FormError[] => {
-  isSubmit.value = !isSubmit.value;
   let errors: FormError[] = [];
 
   const data = {
@@ -73,7 +70,6 @@ const validate = (state: CreateProductPayload): FormError[] => {
   };
   if (data?.attributes) {
     data.attributes.category = state.category;
-    data.attributes.colors = state.attributes.colors;
   }
 
   const result = productSchema.omit({
@@ -81,6 +77,10 @@ const validate = (state: CreateProductPayload): FormError[] => {
     shop: true,
     views: true,
     rating_average: true,
+    variants: true,
+    price: isVariantProd.value || undefined,
+    quantity: isVariantProd.value || undefined,
+    sku: isVariantProd.value || undefined,
   }).safeParse(data);
 
   if (!result.success) {
@@ -105,6 +105,7 @@ async function onSubmit(event: FormSubmitEvent<CreateProductPayload>) {
   loading.value = true;
 
   if (!fileImages.value) {
+    toast.add({ title: 'Error images' });
     return;
   }
   const promises = [];
@@ -132,14 +133,14 @@ async function onSubmit(event: FormSubmitEvent<CreateProductPayload>) {
   await Promise.all(promises);
 
   delete event.data.category;
-  const { error } = await $api.product.createProduct({
+  const { error } = await $api.shop.createProduct({
     ...event.data,
     images: keys.map(key => ({ relative_url: key })),
     is_digital: !!event.data.is_digital,
   });
   loading.value = false;
   if (!error.value) {
-    router.back();
+    router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
     toast.add({ title: 'Create product success' });
   } else {
     toast.add({ title: 'Create product failed' });
@@ -158,14 +159,16 @@ const onChangeAttributes = (values: any) => {
   state.attributes = { ...state.attributes, ...values };
 };
 
+const onChangeVariants = (values: any) => {
+  state.variants = values;
+};
+
 const onChangeImages = (values: File[]) => {
   fileImages.value = values;
 };
 
 watch(() => state.category, () => {
-  state.attributes = {
-    colors: [],
-  };
+  state.attributes = {};
 });
 
 </script>
@@ -198,9 +201,8 @@ watch(() => state.category, () => {
           label="Description"
           name="description"
           class="mb-4"
-          :help="
-            state.description &&
-              `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
+          :help="state.description &&
+            `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
           "
           required
         >
@@ -245,6 +247,14 @@ watch(() => state.category, () => {
           <UFormGroup label="Who made it?" name="who_made" class="mb-4">
             <USelectMenu v-model="selectedWhoMade" size="lg" :options="productWhoMadeOpts" />
           </UFormGroup>
+          <UFormGroup
+            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"
+            class="mb-4"
+            label="Brand"
+            name="attributes.brand"
+          >
+            <UInput v-model="state.attributes.brand" :disabled="loading" size="lg" />
+          </UFormGroup>
           <!--            <UFormGroup-->
           <!--              label="What is it?"-->
           <!--              name="description"-->
@@ -279,39 +289,16 @@ watch(() => state.category, () => {
             searchable-placeholder="Search a category..."
             :options="productCategoryOpts"
             size="lg"
-            :ui-menu="{
-              option: {
-                base: 'capitalize'
-              }
-            }"
           />
         </UFormGroup>
 
         <div v-if="state.category">
-          <UFormGroup
-            label="Color"
-            name="colors"
-            class="mb-4"
-            description="Add up to 3 colors."
-            required
-          >
-            <USelectMenu
-              v-model="state.attributes.colors"
-              searchable
-              multiple
-              class="w-full lg:w-40"
-              placeholder="Select a colors"
-              :options="productAttrColorsOpts"
-              size="lg"
-            />
-          </UFormGroup>
-
-          <ProductCategoryElectronicForm
-            v-if="state.category.toLowerCase() === PRODUCT_CATEGORIES.ELECTRONIC"
-            @on-change-attributes="onChangeAttributes"
-          />
           <ProductCategoryClothingForm
             v-if="state.category.toLowerCase() === PRODUCT_CATEGORIES.CLOTHING"
+            @on-change-attributes="onChangeAttributes"
+          />
+          <ProductCategoryElectronicForm
+            v-if="state.category.toLowerCase() === PRODUCT_CATEGORIES.ELECTRONIC"
             @on-change-attributes="onChangeAttributes"
           />
         </div>
@@ -333,33 +320,34 @@ watch(() => state.category, () => {
             {{ !isVariantProd ? 'Add variantions' : 'Remove variantions' }}
           </UButton>
 
-          <VariantForm v-if="isVariantProd" :submit="isSubmit" />
+          <VariantForm
+            v-if="isVariantProd"
+            :submit="isSubmit"
+            @on-change-variants="onChangeVariants"
+          />
 
 
-          <div v-else>
-            <UFormGroup
-              description="Remember to factor in the costs of
-              materials, labor, and other business expenses.
-              If you offer free shipping,
-              make sure to include the cost of shipping so it doesn't eat into your profits."
-              class="mb-4"
-              label="Price"
-              name="price"
-              required
-            >
+          <div v-else class="max-w-[40%]">
+            <UFormGroup class="mb-4" label="Price" name="price" required>
               <UInput
                 v-model="state.price"
                 :disabled="loading"
                 size="lg"
                 type="number"
-              />
+                class="w-1/2"
+              >
+                <template #trailing>
+                  <span class="text-gray-500 dark:text-gray-400 text-xs">USD</span>
+                </template>
+              </UInput>
             </UFormGroup>
             <UFormGroup class="mb-4" label="Quantity" name="quantity" required>
               <UInput
-                v-model="state.quantity"
+                v-model="state.stock"
                 :disabled="loading"
                 size="lg"
                 type="number"
+                class="w-1/2"
               />
             </UFormGroup>
             <UFormGroup
@@ -368,7 +356,7 @@ watch(() => state.category, () => {
               label="SKU"
               name="sku"
             >
-              <UInput v-model="state.sku" :disabled="loading" size="lg" />
+              <UInput v-model="state.sku" :disabled="loading" size="lg" class="w-1/2" />
             </UFormGroup>
           </div>
         </div>
@@ -388,18 +376,14 @@ watch(() => state.category, () => {
       type="submit"
       variant="outline"
       @click="() => {
+        isSubmit++
         btnSubmit.click();
         isDraftProd = true
       }"
     >
       Save
     </UButton>
-    <UButton
-      :disabled="loading"
-      size="md"
-      type="submit"
-      @click="() => btnSubmit.click()"
-    >
+    <UButton :disabled="loading" size="md" type="submit" @click="() => btnSubmit.click()">
       Save & Display
     </UButton>
   </div>

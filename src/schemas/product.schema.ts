@@ -6,10 +6,32 @@ import {
   PRODUCT_REGEX_SLUG,
   PRODUCT_REGEX_NOT_URL,
   PRODUCT_WHO_MADE,
-  PRODUCT_CONFIG
+  PRODUCT_CONFIG,
+  PRODUCT_VARIANT_TYPES
 } from '~/config/enums/product';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 import { shopSchema } from '~/schemas/shop.schema';
+
+export const productInventorySchema = z.object({
+  id: objectIdSchema,
+  shop: objectIdSchema,
+  product: objectIdSchema,
+  price: z
+    .number()
+    .min(0.2, 'Price must at least 0.2$')
+    .max(PRODUCT_CONFIG.MAX_PRICE,
+      `Price must be less than or equal to ${PRODUCT_CONFIG.MAX_PRICE}$`),
+  stock: z
+    .number()
+    .min(0)
+    .max(PRODUCT_CONFIG.MAX_QUANTITY),
+  sku: z
+    .string()
+    .max(PRODUCT_CONFIG.MAX_CHAR_SKU)
+    .optional(),
+  variant: z.string().optional(),
+  reservations: z.array(z.any()),
+});
 
 export const productImageSchema = z.object({
   id: objectIdSchema.optional(),
@@ -45,18 +67,7 @@ export const productVariantOptSchema = z.object({
     .startsWith('shop', 'must start with shop')
     .regex(PRODUCT_REGEX_NOT_URL, 'must not absolute url')
     .optional(),
-  price: z
-    .number()
-    .min(1)
-    .max(PRODUCT_CONFIG.MAX_PRICE),
-  quantity: z
-    .number()
-    .min(0)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY),
-  sku: z
-    .string()
-    .max(PRODUCT_CONFIG.MAX_CHAR_SKU)
-    .optional(),
+  inventory: productInventorySchema,
 });
 
 export const productVariantSchema = z.object({
@@ -67,7 +78,6 @@ export const productVariantSchema = z.object({
 export const productSchema = z.object({
   id: objectIdSchema,
   shop: shopSchema,
-  // shop: objectIdSchema,
   title: z
     .string()
     .min(2, 'Title must contain at least 2 characters')
@@ -76,15 +86,6 @@ export const productSchema = z.object({
     .string()
     .min(2, 'Description must contain at least 2 characters')
     .max(PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION),
-  price: z
-    .number()
-    .min(0.2, 'Price must at least 0.2$')
-    .max(PRODUCT_CONFIG.MAX_PRICE,
-      `Price must be less than or equal to ${PRODUCT_CONFIG.MAX_PRICE}$`),
-  quantity: z
-    .number()
-    .min(1)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY),
   slug: z
     .string()
     .regex(PRODUCT_REGEX_SLUG, 'invalid slug')
@@ -124,10 +125,13 @@ export const productSchema = z.object({
     .max(5, 'Rating must be equal or less than 5.0')
     .default(0)
     .optional(),
-  variants: z.array(productVariantSchema).optional(),
-  sku: z
-    .string()
+  variant_type: z
+    .nativeEnum(PRODUCT_VARIANT_TYPES)
+    .default(PRODUCT_VARIANT_TYPES.NONE),
+  variants: z
+    .array(productVariantSchema)
     .optional(),
+  inventory: productInventorySchema.optional(),
 });
 
 export const productStateUserCanModify = z.union([

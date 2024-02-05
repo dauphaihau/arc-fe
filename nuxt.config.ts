@@ -28,6 +28,7 @@ export default defineNuxtConfig({
     'nuxt-security',
     '@formkit/auto-animate/nuxt',
     '@nuxt/image',
+    '@samk-dev/nuxt-vcalendar',
   ],
   typescript: {
     strict: true,

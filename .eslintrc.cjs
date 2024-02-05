@@ -15,6 +15,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    camelcase: 'off',
     semi: ['error', 'always',
       {
         omitLastInOneLineBlock: true,

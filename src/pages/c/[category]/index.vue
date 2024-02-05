@@ -22,7 +22,6 @@ const page = ref(1);
 const { pending, data } = await $api.product.getProducts({
   page,
   category: route.params.category as PRODUCT_CATEGORIES,
-  populate: 'shop',
 });
 
 </script>

@@ -1,33 +1,45 @@
 import { RESOURCES } from '~/config/enums/resources';
-import type { IUpdateProductCart, ICart, IAddProductCart } from '~/interfaces/cart';
-import type { IProduct } from '~/interfaces/product';
+import type {
+  IUpdateCouponsItem, IUpdateProductCart,
+  IAddProductCart,
+  IResponseGetCart
+} from '~/interfaces/cart';
+import type { IProductInventory } from '~/interfaces/product';
+import type { ITempOrder } from '~/interfaces/order';
 
 export const cartModule = {
 
   async getCart() {
-    return await useCustomFetch.get<{ cart: ICart }>(
+    return await useCustomFetch.get<IResponseGetCart>(
       `${RESOURCES.USER}${RESOURCES.CART}`
     );
   },
 
   async addProduct(payload: IAddProductCart) {
-    return await useCustomFetch.post<{ cart: ICart }>(
+    return await useCustomFetch.post(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       payload
     );
   },
 
   async updateProduct(payload: IUpdateProductCart) {
-    return await useCustomFetch.patch<{ cart: ICart }>(
+    return await useCustomFetch.patch<{ tempOrder: ITempOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       payload
     );
   },
 
-  async deleteProduct(id: IProduct['id']) {
-    return await useCustomFetch.delete(
+  async updateCouponsItem(payload: IUpdateCouponsItem[]) {
+    return await useCustomFetch.put<{ tempOrder: ITempOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
-      { product: id }
+      payload
+    );
+  },
+
+  async deleteProduct(id: IProductInventory['id']) {
+    return await useCustomFetch.delete<{ tempOrder: ITempOrder }>(
+      `${RESOURCES.USER}${RESOURCES.CART}`,
+      { inventory: id }
     );
   },
 };

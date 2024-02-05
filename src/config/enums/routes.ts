@@ -6,4 +6,5 @@ export enum ROUTES {
   DASHBOARD = '/dashboard',
   CART = '/cart',
   PRODUCTS = '/products',
+  COUPONS = '/coupons',
 }

@@ -7,11 +7,11 @@ definePageMeta({ layout: 'shop' });
   <div class="pb-20">
     <div class="flex justify-between">
       <h1 class="shop-dashboard-title">
-        Create a product
+        Create a coupon
       </h1>
     </div>
     <div class="max-w-[1150px] mx-auto mt-4">
-      <CreateProductForm />
+      <CreateCouponForm />
     </div>
   </div>
 </template>

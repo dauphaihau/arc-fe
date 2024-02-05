@@ -1,13 +1,13 @@
 import { z } from 'zod';
-import { productVariantOptSchema, productSchema } from '~/schemas/product.schema';
+import { productInventorySchema } from './product-inventory.schema';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 import { shopSchema } from '~/schemas/shop.schema';
+import { productVariantSchema } from '~/schemas/product.schema';
 
 export const productCartSchema = z.object({
-  product: productSchema,
-  product_variant: productVariantOptSchema,
-  quantity: productSchema.shape.quantity,
-  variant: z.string().optional(),
+  inventory: productInventorySchema,
+  variant: productVariantSchema,
+  quantity: productInventorySchema.shape.stock,
   is_select_order: z
     .boolean()
     .default(true)

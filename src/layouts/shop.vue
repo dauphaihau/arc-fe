@@ -1,27 +1,55 @@
 <script setup lang="ts">
 
+import avatarDefault from '../assets/images/avatar-default.jpg';
 import { ROUTES } from '~/config/enums/routes';
 
-const links = [
-  { title: 'Dashboard', route: '/account/shop/dashboard' },
-  { title: 'Products', route: '/account/shop/products' },
-  { title: 'Messages', route: '/account/shop/messages' },
-  { title: 'Orders & Shipping', route: '/account/shop/orders' },
-  { title: 'Marketing', route: '/account/shop/marketing' },
-  // { title: 'Vouchers', route: '/account/shop/vouchers' },
-  { title: 'Finances', route: '/account/shop/finances' },
-  { title: 'Settings', route: '/account/shop/settings' },
-  { title: 'Help', route: '/account/shop/help' },
+const routes = useRoute();
+const authStore = useAuthStore();
+
+const {
+  ACCOUNT, SHOP, PRODUCTS, COUPONS,
+} = ROUTES;
+
+const itemsLinkSidebar = [
+  { title: 'Dashboard', route: `${ACCOUNT}${SHOP}/dashboard` },
+  { title: 'Products', route: ACCOUNT + SHOP + PRODUCTS },
+  { title: 'Messages', route: `${ACCOUNT}${SHOP}/messages` },
+  { title: 'Orders & Shipping', route: `${ACCOUNT}${SHOP}/orders` },
+  { title: 'Marketing', route: `${ACCOUNT}${SHOP}/marketing` },
+  { title: 'Coupons', route: ACCOUNT + SHOP + COUPONS },
+  { title: 'Finances', route: `${ACCOUNT}${SHOP}/finances` },
 ];
 
-const authStore = useAuthStore();
+const itemsHeaderDropdown = [
+  [{
+    label: 'Product',
+    icon: 'i-heroicons-cube',
+    shortcuts: ['P'],
+    click: () => {
+      navigateTo(`${ACCOUNT}${SHOP}${PRODUCTS}/new`);
+    },
+  }, {
+    label: 'Coupon',
+    icon: 'i-heroicons-ticket',
+    shortcuts: ['C'],
+    // disabled: true,
+    click: () => {
+      navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new`);
+    },
+  }],
+];
+
 const shop = authStore.getShop;
 
-const items = [
+const itemsShopDropdown = [
   [{
     label: 'Profile',
     avatar: {
-      src: 'https://avatars.githubusercontent.com/u/739984?v=4',
+      src: avatarDefault,
+      // src: 'https://avatars.githubusercontent.com/u/739984?v=4',
+    },
+    click: () => {
+      navigateTo(ROUTES.ACCOUNT);
     },
   }], [
     {
@@ -52,7 +80,7 @@ const items = [
         w-[250px] bg-gradient-to-t from-[#f6f8fa] via-[#f6f8fa] to-[#fcfcfd] fixed h-full z-10"
     >
       <UDropdown
-        :items="items"
+        :items="itemsShopDropdown"
         :popper="{ placement: 'bottom-start' }"
         class="mb-4 m-4 p-2 rounded  hover:bg-customGray-200/50 duration-200"
       >
@@ -70,12 +98,15 @@ const items = [
       </UDropdown>
 
       <div class="flex flex-col gap-3">
-        <div v-for="(item, index) of links" :key="index">
+        <div v-for="(item, index) of itemsLinkSidebar" :key="index">
           <ULink
             :to="item.route"
             active-class="text-primary border-l-2 border-primary"
             inactive-class="text-customGray-800 hover:text-customGray-900 border-l-2 border-white"
-            class="font-medium w-full text-sm pl-5"
+            :class="[
+              'font-medium w-full text-sm pl-5',
+              routes.path.includes(item.route) && 'text-primary border-l-2 !border-primary'
+            ]"
           >
             {{ item.title }}
           </ULink>
@@ -86,8 +117,10 @@ const items = [
 
     <div class="h-full grow">
       <header
-        class="flex justify-between items-center pr-8 pl-4
-      w-full py-3 fixed bg-white z-10 w-[calc(100%-250px)]"
+        class="flex justify-between items-center pl-6 pr-10 py-3
+               fixed bg-white z-[1] max-w-[1400px] w-[calc(100%-250px)]
+               backdrop-blur-xl bg-white/50
+              "
       >
         <div class="hover:bg-customGray-100 h-fit rounded-lg">
           <UInput
@@ -112,13 +145,34 @@ const items = [
               variant="ghost"
               class="icon-button"
             >
-              <Icon name="uil:bell" />
+              <Icon name="i-heroicons-bell" class="heroicon-sw-2" />
             </UButton>
           </UTooltip>
+          <UTooltip text="Setting">
+            <UButton
+              color="gray"
+              variant="ghost"
+              class="icon-button"
+            >
+              <Icon name="i-heroicons-cog-8-tooth" class="heroicon-sw-2" />
+            </UButton>
+          </UTooltip>
+          <UDropdown :items="itemsHeaderDropdown">
+            <UTooltip text="Create">
+              <UButton
+                :ui="{ rounded: 'rounded-full' }"
+                icon="i-heroicons-plus"
+                size="xs"
+                color="primary"
+                square
+                variant="solid"
+              />
+            </UTooltip>
+          </UDropdown>
         </div>
       </header>
 
-      <div class="px-8 mt-16 min-h-screen">
+      <div class="px-10 mt-24 min-h-screen">
         <slot />
       </div>
     </div>

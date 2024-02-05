@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import type { IProductCart } from '~/interfaces/cart';
+import { useCartStore } from '~/stores/cart';
 
-const { data: { quantity, product } } = defineProps<{
+const { data: { quantity, inventory } } = defineProps<{
   data: IProductCart
 }>();
 
 const { $api } = useNuxtApp();
+const cartStore = useCartStore();
 const toast = useToast();
 
 const selected = ref();
 const initLoad = ref(true);
 
 const quantityOpts = computed(() => {
-  const result = new Array(product.quantity)
+  const result = new Array(inventory?.stock)
     .fill('')
     .map((_, index) => (index + 1).toString());
   selected.value = result[quantity - 1];
@@ -24,19 +26,21 @@ watch(() => selected.value, async () => {
     initLoad.value = false;
     return;
   }
-  const { error } = await $api.cart.updateProduct({
-    product: product.id,
+  const { error, data } = await $api.cart.updateProduct({
+    inventory: inventory.id,
     quantity: Number(selected.value),
   });
   if (error.value) {
     toast.add({ title: 'Something Wrong' });
+  } else {
+    cartStore.tempOrder = data.value?.tempOrder || null;
   }
 });
 
 </script>
 
 <template>
-  <UFormGroup label="Quantity">
+  <UFormGroup>
     <USelectMenu
       v-model="selected"
       size="lg"

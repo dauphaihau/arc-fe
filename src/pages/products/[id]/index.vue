@@ -31,7 +31,7 @@ if (notFound.value) {
         <DetailImagesProduct :images="data.product.images" />
         <div class="space-y-6 grow">
           <div class="font-bold text-xl">
-            {{ priceVariant || data.product.price }}$
+            {{ formatCurrency(priceVariant || (data.product.inventory?.price ?? 0)) }}
           </div>
           {{ data.product.title }}
 

@@ -13,6 +13,20 @@ input[type=number] {
   -moz-appearance: textfield;
 }
 
+/* Set heroicon's stroke width */
+.heroicon-sw-2 path {
+  stroke-width: 2 !important;
+}
+.heroicon-sw-1\.75 path {
+  stroke-width: 1.75 !important;
+}
+.heroicon-sw-1\.5 path {
+  stroke-width: 1.5 !important;
+}
+.heroicon-sw-1\.2 path {
+  stroke-width: 1.2 !important;
+}
+
 .shop-dashboard-title {
   @apply text-2xl font-semibold text-customGray-950
 }

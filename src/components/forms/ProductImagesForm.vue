@@ -58,7 +58,8 @@ const removeImage = (index: number) => {
     description="Add up to 10 photos."
     required
   >
-    <div class="grid grid-cols-4 gap-3">
+    <!--    <div class="grid grid-cols-4 gap-3">-->
+    <div class="flex gap-3">
       <UCard
         :ui="{
           base: 'shape cursor-pointer',

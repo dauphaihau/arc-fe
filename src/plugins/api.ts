@@ -1,14 +1,16 @@
-import { shopModule } from '~/repository/modules/shop';
+import { ShopModule } from '~/repository/modules/shop';
 import { productModule } from '~/repository/modules/product';
-import { uploadModule } from '~/repository/modules/upload';
+import { UploadModule } from '~/repository/modules/upload';
 import { cartModule } from '~/repository/modules/cart';
+import { OrderModule } from '~/repository/modules/order';
 
 export default defineNuxtPlugin(() => {
   const modules = {
-    shop: shopModule,
-    product: productModule,
-    upload: uploadModule,
     cart: cartModule,
+    order: new OrderModule(),
+    product: productModule,
+    shop: new ShopModule(),
+    upload: new UploadModule(),
   };
 
   return {

@@ -1,11 +1,19 @@
 import type { GetPresignedUrlData } from '~/interfaces/upload';
 import { RESOURCES } from '~/config/enums/resources';
 
-export const uploadModule = {
+export class UploadModule {
+  private shopId: string | undefined;
+
+  constructor() {
+    useRouter().beforeEach(() => {
+      const authStore = useAuthStore();
+      this.shopId = authStore.getUser?.shop?.id;
+    });
+  }
 
   async getPresignedUrl() {
-    const authStore = useAuthStore();
-    const shopId = authStore.getUser?.shop?.id;
-    return await useCustomFetch.get<GetPresignedUrlData>(`${RESOURCES.UPLOAD}?shop_id=${shopId}`);
-  },
-};
+    return await useCustomFetch.get<GetPresignedUrlData>(
+      `${RESOURCES.UPLOAD}?shop_id=${this.shopId}`
+    );
+  }
+}

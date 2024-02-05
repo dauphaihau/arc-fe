@@ -1,3 +1,13 @@
+export const PRODUCT_CONFIG = {
+  MAX_CHAR_DESCRIPTION: 10000,
+  MAX_IMAGES: 10,
+  MAX_PRICE: 50000,
+  MAX_QUANTITY: 999,
+  MAX_CHAR_VARIANT_GROUP_NAME: 14,
+  MAX_CHAR_VARIANT_NAME: 20,
+  MAX_CHAR_SKU: 100,
+};
+
 export enum PRODUCT_CATEGORIES {
   ELECTRONIC = 'electronic',
   CLOTHING = 'clothing',
@@ -19,23 +29,23 @@ export enum PRODUCT_WHO_MADE {
   COLLECTIVE = 'collective',
   SOMEONE_ELSE = 'someone_else'
 }
-export const PRODUCT_CONFIG = {
-  MAX_CHAR_DESCRIPTION: 10000,
-  MAX_IMAGES: 10,
-  MAX_PRICE: 50000,
-  MAX_QUANTITY: 10000000,
-  MAX_CHAR_VARIANT_GROUP_NAME: 14,
-  MAX_CHAR_VARIANT_NAME: 20,
-  MAX_CHAR_SKU: 100,
-};
 
-export enum PRODUCT_ATTR_CLOTHING_SIZES { S = 'S', M = 'M', L = 'L', XL = 'XL' }
+export enum PRODUCT_VARIANT_TYPES {
+  NONE = 'none',
+  SINGLE = 'single',
+  COMBINE = 'combine'
+}
 
-export enum PRODUCT_ATTR_CLOTHING_GENDER { MALE = 'male', FEMALE = 'female' }
+export enum PRODUCT_ATTR_CLOTHING_TYPES {
+  PANTS = 'pants',
+  T_SHIRT = 't-shirt',
+  HOODIE = 'hoodie',
+  SWEATERS = 'Sweaters'
+}
 
-export enum PRODUCT_ATTR_CLOTHING_TYPES { PANTS = 'pants', T_SHIRT = 't-shirt', HOODIE = 'hoodie', SWEATERS = 'Sweaters' }
+export enum PRODUCT_ATTR_CLOTHING_SHAPES { SLIM = 'slim', OVERSIZE = 'oversize' }
 
-export enum PRODUCT_ATTR_COLORS { black, white, red, yellow, blue, green }
+export enum PRODUCT_ATTR_CLOTHING_GENDER { MALE = 'male', FEMALE = 'female', UNISEX = 'unisex' }
 
 export const PRODUCT_REGEX_SLUG = /^[a-z0-9]+(?:(?:-|_)+[a-z0-9]+)*$/;
 export const PRODUCT_REGEX_NOT_URL = /^(?!http.*$).*/;

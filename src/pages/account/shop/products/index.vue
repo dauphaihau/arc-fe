@@ -1,16 +1,20 @@
 <script lang="ts" setup>
 
 import { ROUTES } from '~/config/enums/routes';
+import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import type { IProduct } from '~/interfaces/product';
 
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
 const { $api } = useNuxtApp();
+const config = useRuntimeConfig();
+const toast = useToast();
 
 const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
 
-const { pending, data } = await $api.product.getProductsByShop({
+const { pending, data, refresh } = await $api.shop.getProducts({
   page,
 });
 
@@ -18,35 +22,52 @@ const columns = [
   {
     key: 'title',
     label: 'Title',
-  }, {
+  },
+  {
     key: 'category',
     label: 'Category',
-  }, {
+  },
+  {
+    key: 'sku',
+    label: 'SKU Variant',
+  },
+  {
+    key: 'variant',
+    label: 'Variant',
+  },
+  {
     key: 'price',
     label: 'Price',
     class: 'text-center',
-  }, {
+  },
+  {
     key: 'stock',
     label: 'Stock',
     class: 'text-center',
   },
   {
+    label: 'Actions',
     key: 'actions',
+    class: 'text-right',
   },
 ];
 
 const rows = computed(() => {
-  return data.value?.results.map(prod => ({
-    id: prod.id,
-    title: prod.title,
-    category: prod.category,
-    price: { value: prod.price, class: 'text-center' },
-    stock: { value: prod.quantity, class: 'text-center' },
+  return data.value?.results.map(product => ({
+    id: product.id,
+    title: product.title,
+    image: config.public.awsHostBucket + '/' + product.images[0].relative_url,
+    category: product.category,
+    variants: product.variants,
+    inventory: product.inventory,
+    variant_type: product.variant_type,
+    price: { class: 'text-center' },
+    stock: { class: 'text-center' },
     actions: { class: 'text-right' },
   }));
 });
 
-const items = (row: { id: string }) => [
+const itemsDropdown = (row: { id: string }) => [
   [
     {
       label: 'Edit',
@@ -78,11 +99,20 @@ const items = (row: { id: string }) => [
     {
       label: 'Delete',
       icon: 'i-heroicons-trash-20-solid',
+      click: () => removeProduct(row.id),
     },
   ],
 ];
 
-// const selectedCheckbox = ref(false);
+async function removeProduct(id: IProduct['id']) {
+  const { error } = await $api.shop.deleteProduct(id);
+  if (error.value) {
+    toast.add({ title: 'Delete product success' });
+  } else {
+    toast.add({ title: 'Delete product success' });
+    refresh();
+  }
+}
 
 </script>
 
@@ -134,15 +164,95 @@ const items = (row: { id: string }) => [
     <UTable
       v-model="selected"
       :rows="rows"
+      :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No products.' }"
       :columns="columns"
       :loading="pending"
       :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
     >
-      <template #stock-data="{ row }">
-        {{ row.stock.value }}
+      <template #title-data="{ row }">
+        <div class="flex gap-2 max-w-[200px]">
+          <NuxtImg
+            :src="row.image"
+            width="50"
+            height="50"
+            class="rounded"
+            preload
+          />
+          <!--          <div class="inline-block max-w-[150px] break-words">-->
+          <div class="truncate">
+            {{ row.title }}
+          </div>
+        </div>
+      </template>
+
+      <template #sku-data="{ row }">
+        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+          {{ row.inventory.sku || '-' }}
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            {{ vari?.inventory?.sku || '-' }}
+          </div>
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+              {{ variOpt.inventory.sku || '-' }}
+            </div>
+          </div>
+        </div>
+      </template>
+
+      <template #variant-data="{ row }">
+        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+          None
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            {{ vari.variant_name }}
+          </div>
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+              {{ vari.variant_name }}, {{ variOpt.variant_name }}
+            </div>
+          </div>
+        </div>
       </template>
       <template #price-data="{ row }">
-        {{ row.price.value }}
+        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+          {{ formatCurrency(row.inventory.price) }}
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            {{ formatCurrency(vari?.inventory?.price) }}
+          </div>
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+              {{ formatCurrency(variOpt.inventory.price) }}
+            </div>
+          </div>
+        </div>
+      </template>
+      <template #stock-data="{ row }">
+        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+          {{ row.inventory.stock }}
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            {{ vari?.inventory?.stock }}
+          </div>
+        </div>
+        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+          <div v-for="vari of row.variants" :key="vari.id">
+            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+              {{ variOpt.inventory.stock }}
+            </div>
+          </div>
+        </div>
       </template>
 
       <template #actions-data="{ row }">
@@ -156,7 +266,7 @@ const items = (row: { id: string }) => [
               <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
             </UButton>
           </UTooltip>
-          <UDropdown :items="items(row)">
+          <UDropdown :items="itemsDropdown(row)">
             <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
           </UDropdown>
         </div>
