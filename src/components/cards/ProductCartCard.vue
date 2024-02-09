@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { IProductInventory } from '~/interfaces/product';
 import { ROUTES } from '~/config/enums/routes';
-import type { IProductCart } from '~/interfaces/cart';
+import type { IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
 
 
 const { data, index } = defineProps<{
-  data: IProductCart,
+  data: IProductCartPopulated,
   index: number
 }>();
 

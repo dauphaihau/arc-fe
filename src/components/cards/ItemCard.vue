@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { IItemCart } from '~/interfaces/cart';
+import type { IItemCartPopulated } from '~/interfaces/cart';
 
 const emit = defineEmits<{(e: 'onProductsEmpty', value: number): void }>();
 
 const { data, indexItem } = defineProps<{
-  data: IItemCart,
+  data: IItemCartPopulated,
   indexItem: number
 }>();
 

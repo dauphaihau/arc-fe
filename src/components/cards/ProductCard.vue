@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import type { IProduct } from '~/interfaces/product';
+import type { ResponseGetProducts } from '~/interfaces/product';
+import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 
 const { product } = defineProps<{
-  product: IProduct
+  product: ResponseGetProducts
 }>();
 
 const config = useRuntimeConfig();
 const router = useRouter();
-
 
 </script>
 
@@ -28,7 +28,11 @@ const router = useRouter();
         {{ product.title }}
       </h1>
       <p class="text-customGray-950 text-md font-medium">
-        {{ product?.inventory?.price || 0 }}$
+        {{
+          product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ?
+            formatCurrency(product?.summary_inventory?.lowest_price) :
+            formatCurrency(product?.inventory?.price)
+        }}
       </p>
       <p class="text-customGray-800 text-sm">
         {{ product?.shop?.shop_name }}

@@ -1,8 +1,21 @@
 <script setup lang="ts">
 
-import { PRODUCT_CATEGORIES } from '~/config/enums/product';
+import { useSessionStorage } from '@vueuse/core';
+import type { ICategory } from '~/interfaces/category';
 
-const categories = Object.values(PRODUCT_CATEGORIES);
+const { $api } = useNuxtApp();
+
+const { data, pending } = await $api.category.getCategories();
+
+const redirect = (category: ICategory) => {
+  const to = '/c/' + category.name.replaceAll(' ', '-').toLowerCase();
+  sessionStorage.removeItem('category');
+  sessionStorage.removeItem('categories');
+
+  useSessionStorage('category', category);
+  useSessionStorage('categories', [{ ...category, to }]);
+  navigateTo(to);
+};
 
 </script>
 
@@ -20,19 +33,23 @@ const categories = Object.values(PRODUCT_CATEGORIES);
 
       <template #panel="{ close }">
         <div class="p-2 flex flex-col gap-3">
-          <div v-for="(cg, index) of categories" :key="index">
-            <NuxtLink
-              :to="'/c/' + cg"
-              @click="close"
-            >
+          <div v-if="pending">
+            loading...
+          </div>
+          <div v-else>
+            <div v-for="(cg, index) of data?.categories" :key="index">
               <UButton
                 color="gray"
                 variant="ghost"
                 class="icon-button capitalize w-full"
+                @click="() => {
+                  redirect(cg)
+                  close()
+                }"
               >
-                {{ cg }}
+                {{ cg.name }}
               </UButton>
-            </NuxtLink>
+            </div>
           </div>
         </div>
       </template>

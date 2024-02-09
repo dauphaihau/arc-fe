@@ -8,12 +8,6 @@ export const PRODUCT_CONFIG = {
   MAX_CHAR_SKU: 100,
 };
 
-export enum PRODUCT_CATEGORIES {
-  ELECTRONIC = 'electronic',
-  CLOTHING = 'clothing',
-  // HOME = 'home'
-}
-
 export enum PRODUCT_STATES {
   ACTIVE = 'active', // currently for sale.
   INACTIVE = 'inactive', // When updating a product
@@ -35,17 +29,6 @@ export enum PRODUCT_VARIANT_TYPES {
   SINGLE = 'single',
   COMBINE = 'combine'
 }
-
-export enum PRODUCT_ATTR_CLOTHING_TYPES {
-  PANTS = 'pants',
-  T_SHIRT = 't-shirt',
-  HOODIE = 'hoodie',
-  SWEATERS = 'Sweaters'
-}
-
-export enum PRODUCT_ATTR_CLOTHING_SHAPES { SLIM = 'slim', OVERSIZE = 'oversize' }
-
-export enum PRODUCT_ATTR_CLOTHING_GENDER { MALE = 'male', FEMALE = 'female', UNISEX = 'unisex' }
 
 export const PRODUCT_REGEX_SLUG = /^[a-z0-9]+(?:(?:-|_)+[a-z0-9]+)*$/;
 export const PRODUCT_REGEX_NOT_URL = /^(?!http.*$).*/;

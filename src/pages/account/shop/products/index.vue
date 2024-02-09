@@ -24,10 +24,6 @@ const columns = [
     label: 'Title',
   },
   {
-    key: 'category',
-    label: 'Category',
-  },
-  {
     key: 'sku',
     label: 'SKU Variant',
   },
@@ -57,7 +53,6 @@ const rows = computed(() => {
     id: product.id,
     title: product.title,
     image: config.public.awsHostBucket + '/' + product.images[0].relative_url,
-    category: product.category,
     variants: product.variants,
     inventory: product.inventory,
     variant_type: product.variant_type,

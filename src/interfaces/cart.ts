@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import type { IProductInventory, IProductVariant } from './product';
+import type { IProduct, IProductInventory, IProductVariant } from './product';
+import type { Override } from './utils';
 import { cartSchema, itemCartSchema, productCartSchema } from '~/schemas/cart.schema';
 import type { ICoupon } from '~/interfaces/coupon';
 import type { IShop } from '~/interfaces/shop';
@@ -24,8 +25,20 @@ export type IUpdateCouponsItem = {
   coupon_codes: ICoupon['code'][]
 }
 
+export type IProductCartPopulated = Override<IProductCart, {
+  inventory: IProductInventory & {
+    product: IProduct
+  },
+}>
+
+export type IItemCartPopulated = Override<IItemCart, {
+  products: IProductCartPopulated[]
+}>
+
 export type IResponseGetCart = {
-  cart: ICart,
+  cart: Override<ICart, {
+    items: IItemCartPopulated[]
+  }>,
   tempOrder: ITempOrder
   totalProducts: number
 }

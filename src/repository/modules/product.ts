@@ -1,11 +1,11 @@
-import type { GetProductsParams, IProduct } from '~/interfaces/product';
+import type { ResponseGetProducts, GetProductsParams, IProduct } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
 
 export const productModule = {
 
   async getProducts(params: GetProductsParams) {
-    return await useCustomFetch.get<GetListResponse<IProduct>>(
+    return await useCustomFetch.get<GetListResponse<ResponseGetProducts>>(
       `${RESOURCES.PRODUCTS}`,
       params
     );

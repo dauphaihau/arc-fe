@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { productAttributeSchema } from './sub/prod-attribute.schema';
 import {
-  PRODUCT_CATEGORIES,
   PRODUCT_STATES,
   PRODUCT_REGEX_SLUG,
   PRODUCT_REGEX_NOT_URL,
@@ -74,10 +72,16 @@ export const productVariantSchema = z.object({
   variant_options: z.array(productVariantOptSchema),
 }).merge(productVariantOptSchema);
 
+export const productAttributeSchema = z.object({
+  attribute: objectIdSchema,
+  selected: z.string(),
+});
 
 export const productSchema = z.object({
   id: objectIdSchema,
   shop: shopSchema,
+  category: objectIdSchema,
+  attributes: z.array(productAttributeSchema),
   title: z
     .string()
     .min(2, 'Title must contain at least 2 characters')
@@ -113,8 +117,6 @@ export const productSchema = z.object({
     .boolean()
     .default(false)
     .optional(),
-  category: z.nativeEnum(PRODUCT_CATEGORIES),
-  attributes: productAttributeSchema,
   images: z
     .array(productImageSchema)
     .min(1)

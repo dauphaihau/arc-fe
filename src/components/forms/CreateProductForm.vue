@@ -3,12 +3,12 @@ import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import { productSchema } from '~/schemas/product.schema';
 import {
   PRODUCT_CONFIG,
-  PRODUCT_CATEGORIES,
   PRODUCT_WHO_MADE,
   PRODUCT_STATES
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
 import type { CreateProductPayload } from '~/interfaces/product';
+import type { ICategory } from '~/interfaces/category';
 
 const { $api } = useNuxtApp();
 const router = useRouter();
@@ -44,11 +44,12 @@ const state = reactive<CreateProductPayload>({
   who_made: PRODUCT_WHO_MADE.I_DID,
   is_digital: false,
   state: PRODUCT_STATES.ACTIVE,
-  attributes: {},
   variants: [],
   price: 0,
   stock: 1,
   sku: '',
+  category: '',
+  attributes: [],
 });
 
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
@@ -58,8 +59,6 @@ const isDigitalOpts = [
   { value: true, label: 'Digital', help: 'A digital file that buyers will download.' },
 ];
 
-const productCategoryOpts = Object.values(PRODUCT_CATEGORIES);
-
 const validate = (state: CreateProductPayload): FormError[] => {
   let errors: FormError[] = [];
 
@@ -68,9 +67,6 @@ const validate = (state: CreateProductPayload): FormError[] => {
     images: fileImages.value && fileImages.value.length > 0 ? [{ relative_url: 'shop' }] : [],
     is_digital: !!state.is_digital,
   };
-  if (data?.attributes) {
-    data.attributes.category = state.category;
-  }
 
   const result = productSchema.omit({
     id: true,
@@ -132,7 +128,6 @@ async function onSubmit(event: FormSubmitEvent<CreateProductPayload>) {
   }
   await Promise.all(promises);
 
-  delete event.data.category;
   const { error } = await $api.shop.createProduct({
     ...event.data,
     images: keys.map(key => ({ relative_url: key })),
@@ -156,7 +151,11 @@ function onError(event: FormErrorEvent) {
 }
 
 const onChangeAttributes = (values: any) => {
-  state.attributes = { ...state.attributes, ...values };
+  state.attributes = values;
+};
+
+const onChangeCategory = (id: ICategory['id']) => {
+  state.category = id;
 };
 
 const onChangeVariants = (values: any) => {
@@ -168,7 +167,7 @@ const onChangeImages = (values: File[]) => {
 };
 
 watch(() => state.category, () => {
-  state.attributes = {};
+  state.attributes = [];
 });
 
 </script>
@@ -247,14 +246,15 @@ watch(() => state.category, () => {
           <UFormGroup label="Who made it?" name="who_made" class="mb-4">
             <USelectMenu v-model="selectedWhoMade" size="lg" :options="productWhoMadeOpts" />
           </UFormGroup>
-          <UFormGroup
-            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"
-            class="mb-4"
-            label="Brand"
-            name="attributes.brand"
-          >
-            <UInput v-model="state.attributes.brand" :disabled="loading" size="lg" />
-          </UFormGroup>
+          <!--          <UFormGroup-->
+          <!--            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"-->
+          <!--            class="mb-4"-->
+          <!--            label="Brand"-->
+          <!--            name="attributes.brand"-->
+          <!--          >-->
+          <!--            <UInput v-model="state.attributes.brand"
+          :disabled="loading" size="lg" />-->
+          <!--          </UFormGroup>-->
           <!--            <UFormGroup-->
           <!--              label="What is it?"-->
           <!--              name="description"-->
@@ -280,25 +280,13 @@ watch(() => state.category, () => {
         </div>
 
         <UFormGroup label="Category" name="category" class="mb-4" required>
-          <USelectMenu
-            v-model="state.category"
-            clear-search-on-close
-            class="w-full lg:w-40"
-            placeholder="Select a category"
-            searchable
-            searchable-placeholder="Search a category..."
-            :options="productCategoryOpts"
-            size="lg"
-          />
+          <SelectCategoryDialog @on-change-category="onChangeCategory" />
         </UFormGroup>
 
         <div v-if="state.category">
-          <ProductCategoryClothingForm
-            v-if="state.category.toLowerCase() === PRODUCT_CATEGORIES.CLOTHING"
-            @on-change-attributes="onChangeAttributes"
-          />
-          <ProductCategoryElectronicForm
-            v-if="state.category.toLowerCase() === PRODUCT_CATEGORIES.ELECTRONIC"
+          <SelectAttributesForm
+            :key="state.category"
+            :category-id="state.category"
             @on-change-attributes="onChangeAttributes"
           />
         </div>
