@@ -4,13 +4,11 @@ import { ROUTES } from '~/config/enums/routes';
 import type { IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
 
-
-const { data, index } = defineProps<{
+const { data } = defineProps<{
   data: IProductCartPopulated,
-  index: number
 }>();
 
-const emit = defineEmits<{(e: 'onDeleteProduct', value: number): void }>();
+const emit = defineEmits<{(e: 'onDeleteProduct'): void }>();
 
 const cartStore = useCartStore();
 const { $api } = useNuxtApp();
@@ -23,11 +21,13 @@ const goToDetailProduct = () => {
 
 const removeProduct = async (id: IProductInventory['id']) => {
   const { error, data } = await $api.cart.deleteProduct(id);
-  if (!error.value) {
-    emit('onDeleteProduct', index);
-    cartStore.tempOrder = data.value?.tempOrder || null;
-  } else {
+  if (error.value) {
     toast.add({ title: 'Something Wrong' });
+  } else {
+    emit('onDeleteProduct');
+    await cartStore.getCartHeader();
+    cartStore.tempOrder = data.value?.tempOrder || null;
+    cartStore.totalProducts--;
   }
 };
 
@@ -46,14 +46,14 @@ const removeProduct = async (id: IProductInventory['id']) => {
       :src="config.public.awsHostBucket + '/' + data?.inventory?.product?.images[0]?.relative_url"
       width="180"
       height="180"
-      class="rounded max-w-[180px] max-h-[180px]"
+      class="rounded max-w-[180px] max-h-[180px] cursor-pointer"
       @click="goToDetailProduct"
     />
 
     <div class="flex justify-between w-full">
       <div class="space-y-2 w-full">
         <h1
-          class="text-xl font-semibold"
+          class="text-xl font-semibold cursor-pointer"
           @click="goToDetailProduct"
         >
           {{ data?.inventory?.product?.title }}
@@ -61,13 +61,13 @@ const removeProduct = async (id: IProductInventory['id']) => {
 
         <VariantsProdCart v-if="data?.variant" :data="data" />
 
-        <SelectQuantityProdCart :data="data" class="w-1/6" />
+        <ModifyQuantityProdCart :data="data" class="w-1/3" />
 
         <div class="flex gap-4">
-          <div class="flex items-center gap-1 cursor-pointer">
-            <Icon name="uil:pen" />
-            <p>Edit</p>
-          </div>
+          <!--          <div class="flex items-center gap-1 cursor-pointer">-->
+          <!--            <Icon name="uil:pen" />-->
+          <!--            <p>Edit</p>-->
+          <!--          </div>-->
           <div
             class="flex items-center gap-1 cursor-pointer"
             @click="removeProduct(data.inventory.id)"
@@ -79,7 +79,7 @@ const removeProduct = async (id: IProductInventory['id']) => {
       </div>
 
       <p class="text-customGray-950 text-xl font-medium">
-        {{ data.inventory.price }}$
+        {{ formatCurrency(data.inventory.price) }}
       </p>
     </div>
   </div>

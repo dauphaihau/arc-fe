@@ -5,6 +5,7 @@ import { shopSchema } from '~/schemas/shop.schema';
 import { productVariantSchema } from '~/schemas/product.schema';
 
 export const productCartSchema = z.object({
+  id: objectIdSchema,
   inventory: productInventorySchema,
   variant: productVariantSchema,
   quantity: productInventorySchema.shape.stock,
@@ -15,6 +16,7 @@ export const productCartSchema = z.object({
 });
 
 export const itemCartSchema = z.object({
+  id: objectIdSchema,
   shop: shopSchema,
   products: z.array(productCartSchema),
 });

@@ -81,7 +81,7 @@ const checkout = async () => {
       <UDivider class="my-2" />
       <div class="flex justify-between gap-3">
         <div class="text-lg font-bold">
-          Total ({{ data.totalProducts }} products)
+          Total ({{ data.totalProducts }} {{ data.totalProducts > 1 ? 'products' : 'product' }})
         </div>
         <div class="text-lg text-right">
           {{ formatCurrency(data.totalPrice) }}

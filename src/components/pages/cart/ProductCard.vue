@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ResponseGetProducts } from '~/interfaces/product';
-import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import { ROUTES } from '~/config/enums/routes';
 
 const { product } = defineProps<{
   product: ResponseGetProducts
@@ -14,28 +14,28 @@ const router = useRouter();
 <template>
   <div
     class="flex flex-col gap-2 cursor-pointer"
-    @click="() => router.push(`/products/${product.id}`)"
+    @click="() => router.push(`${ROUTES.PRODUCTS}/${product.id}`)"
   >
     <NuxtImg
-      :src="config.public.awsHostBucket + '/' + product.images[0].relative_url"
+      :src="config.public.awsHostBucket + '/' + product.image_relative_url"
       width="200"
       height="200"
       class="rounded"
       preload
     />
     <div class="space-y-0.5">
-      <h1 class="text-xl font-semibold">
+      <h1 class="text-xl font-semibold truncate">
         {{ product.title }}
       </h1>
       <p class="text-customGray-950 text-md font-medium">
-        {{
-          product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ?
-            formatCurrency(product?.summary_inventory?.lowest_price) :
-            formatCurrency(product?.inventory?.price)
-        }}
+        {{ formatCurrency(product?.summary_inventory?.lowest_price) }}
+        <!--        {{-->
+        <!--          product.summary_inventory.highest_price > 0 &&-->
+        <!--            ' - ' + formatCurrency(product?.summary_inventory?.highest_price)-->
+        <!--        }}-->
       </p>
       <p class="text-customGray-800 text-sm">
-        {{ product?.shop?.shop_name }}
+        {{ product?.shop_name }}
       </p>
     </div>
     <slot name="content" />

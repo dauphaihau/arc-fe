@@ -9,6 +9,10 @@ const cartStore = useCartStore();
 
 const { pending, data } = await $api.cart.getCart();
 
+onMounted(() => {
+  cartStore.totalProducts = data.value?.totalProducts || 0;
+});
+
 const items = ref(data.value?.cart?.items || []);
 
 const onProductsEmpty = (index: number) => {
@@ -24,21 +28,20 @@ const onProductsEmpty = (index: number) => {
       loading...
     </div>
     <div v-else>
-      <div v-if="data?.cart && data.cart.items.length > 0">
+      <div v-if="items.length > 0">
         <h1 class="text-2xl font-medium mb-4">
-          {{ cartStore.tempOrder?.totalProducts || data.totalProducts }} items in your card
+          {{ cartStore.totalProducts }} products in your card
         </h1>
 
         <div class="flex gap-4">
           <div class="grow">
             <div
               v-for="(item, index) of items"
-              :key="index"
+              :key="item.id"
             >
               <ItemCard
-                :index-item="index"
                 :data="item"
-                @on-products-empty="onProductsEmpty"
+                @on-products-empty="() => onProductsEmpty(index)"
               />
             </div>
           </div>

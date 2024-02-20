@@ -5,6 +5,7 @@ import type { LoginPayloadType } from '~/interfaces/user';
 import { ROUTES } from '~/config/enums/routes';
 
 const authStore = useAuthStore();
+const cartStore = useCartStore();
 const formRef = ref();
 const errorServerMsg = ref('');
 
@@ -18,6 +19,8 @@ async function onSubmit(event: FormSubmitEvent<LoginPayloadType>) {
   const errorMessage = await authStore.login(event.data);
   if (errorMessage) {
     errorServerMsg.value = errorMessage;
+  } else {
+    await cartStore.getCartHeader();
   }
 }
 

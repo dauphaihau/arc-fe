@@ -9,6 +9,8 @@ const emit = defineEmits<{(e: 'onChangeVariant', value: number): void }>();
 
 const { $api } = useNuxtApp();
 const toast = useToast();
+const cartStore = useCartStore();
+const authStore = useAuthStore();
 
 const { product } = defineProps<{
   product: IProduct
@@ -22,14 +24,6 @@ interface IStateSubmit extends IAddProductCart {
   variantField2: string,
 }
 
-const stateSubmit = reactive<IStateSubmit>({
-  quantity: 1,
-  inventory: '',
-  variant: '',
-  variantField1: '',
-  variantField2: '',
-});
-
 const state = reactive({
   firstVariantLabel: '',
   secondVariantLabel: '',
@@ -39,11 +33,20 @@ const state = reactive({
   qtyVariant: 0,
 });
 
-const quantityOpts = computed(() => {
-  const stock = (product.inventory && product.inventory.stock) || 1;
-  return new Array(state.isVariant ? state.qtyVariant : stock)
-    .fill('')
-    .map((_, index) => (index + 1).toString());
+const stateSubmit = reactive<IStateSubmit>({
+  quantity: 1,
+  inventory: '',
+  variant: '',
+  variantField1: '',
+  variantField2: '',
+});
+
+const maxQuantity = computed(() => {
+  if (state.isVariant) {
+    return state.qtyVariant;
+  } else {
+    return (product.inventory && product.inventory.stock) || 1;
+  }
 });
 
 onMounted(() => {
@@ -93,11 +96,13 @@ async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
   if (stateSubmit.variant) {
     payload.variant = stateSubmit.variant;
   }
-  const { error } = await $api.cart.addProduct(payload);
+  const { error, data } = await $api.cart.addProduct(payload);
   loading.value = false;
   if (error.value) {
     toast.add({ title: 'Something Wrong' });
   } else {
+    cartStore.tempOrder = data.value?.tempOrder || null;
+    await cartStore.getCartHeader();
     navigateTo(ROUTES.CART);
   }
 }
@@ -129,6 +134,33 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
   }
 }, { deep: true });
 
+const decreaseQty = () => {
+  if (stateSubmit.quantity === 1) {
+    return;
+  }
+  stateSubmit.quantity--;
+};
+
+function isNumber(evt: KeyboardEvent): void {
+  const keysAllowed: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
+  const keyPressed: string = evt.key;
+
+  if (!keysAllowed.includes(keyPressed)) {
+    evt.preventDefault();
+  }
+}
+
+watch(() => stateSubmit.quantity, () => {
+  if (maxQuantity.value && stateSubmit.quantity > maxQuantity.value) {
+    stateSubmit.quantity = maxQuantity.value;
+  }
+});
+
+const showLoginDialog = () => {
+  authStore.showLoginDialog = true;
+};
+
+
 </script>
 
 <template>
@@ -140,15 +172,11 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
     :validate="validate"
     @submit="onSubmit"
   >
-    <div
-      v-if="product?.variants && product.variants.length > 0"
-      class="w-1/3 flex flex-col gap-4 mb-6"
-    >
+    <div class="w-1/3 flex flex-col gap-4 mb-6">
       <UFormGroup
-        v-if="state.firstVariantLabel"
+        v-if="state.firstVariantLabel && state.isVariant"
         :label="state.firstVariantLabel"
         name="variantField1"
-        required
       >
         <USelectMenu
           v-model="stateSubmit.variantField1"
@@ -159,9 +187,8 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
       </UFormGroup>
 
       <UFormGroup
-        v-if="state.secondVariantLabel"
+        v-if="state.secondVariantLabel && state.isVariant"
         :label="state.secondVariantLabel"
-        required
         name="variantField2"
       >
         <USelectMenu
@@ -171,17 +198,36 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
           :options="state.secondVariantOpts"
         />
       </UFormGroup>
+
+      <div>
+        <label class="block font-medium text-gray-700 dark:text-gray-200 text-sm mb-1">
+          Quantity
+        </label>
+        <UButtonGroup size="lg" orientation="horizontal">
+          <UButton
+            icon="i-heroicons-minus"
+            color="white"
+            class="rounded-l-[0.375rem] rounded-r-none"
+            @click="decreaseQty"
+          />
+          <UInput
+            v-model.number="stateSubmit.quantity"
+            class="rounded-l-none"
+            type="number"
+            :ui="{ base: ' text-center rounded-l-none' }"
+            @keypress="isNumber($event)"
+          />
+          <UButton
+            icon="i-heroicons-plus"
+            color="white"
+            class="rounded-r-[0.375rem] rounded-l-none"
+            @click="() => stateSubmit.quantity++"
+          />
+        </UButtonGroup>
+      </div>
     </div>
 
-    <UFormGroup label="Quantity" class="w-1/4">
-      <USelectMenu
-        v-model="stateSubmit.quantity"
-        size="lg"
-        :options="quantityOpts"
-      />
-    </UFormGroup>
-
-    <div class="flex gap-4">
+    <div v-if="authStore.isLogged" class="flex gap-4">
       <UButton
         size="xl"
         variant="soft"
@@ -191,6 +237,21 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
       </UButton>
       <UButton
         size="xl"
+      >
+        Buy it now
+      </UButton>
+    </div>
+    <div v-else class="flex gap-4">
+      <UButton
+        size="xl"
+        variant="soft"
+        @click="showLoginDialog"
+      >
+        Add to card
+      </UButton>
+      <UButton
+        size="xl"
+        @click="showLoginDialog"
       >
         Buy it now
       </UButton>

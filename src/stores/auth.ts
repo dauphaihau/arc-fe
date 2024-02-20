@@ -9,6 +9,7 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as IUser | null,
     tokenResetPassword: '',
+    showLoginDialog: false,
   }),
   getters: {
     getUser: state => state.user,

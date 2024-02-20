@@ -89,8 +89,10 @@ export const useCustomFetch = {
     return await baseCustomFetch<T>(url, { method: 'patch', body, ...option });
   },
 
-  delete: async <T>(url: UrlType, body?: any, option?: HttpOption<T>) => {
+  delete: async <T>(url: UrlType, params?: any, body?: any, option?: HttpOption<T>) => {
     await checkAccessAndRefreshToken();
-    return await baseCustomFetch<T>(url, { method: 'delete', body, ...option });
+    return await baseCustomFetch<T>(url, {
+      method: 'delete', params, body, ...option,
+    });
   },
 };

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 
 const authStore = useAuthStore();
-const { user } = storeToRefs(authStore);
+const { showLoginDialog } = storeToRefs(authStore);
 const route = useRoute();
 
-const isOpen = ref(false);
+const isOpen = ref(showLoginDialog);
 const isLoginForm = ref(true);
 
 defineShortcuts({
@@ -35,14 +35,14 @@ authStore.$subscribe((_mutation, state) => {
 
 <template>
   <div>
-    <UButton
-      v-if="!user"
-      color="gray"
-      variant="ghost"
-      @click="isOpen = true"
-    >
-      {{ $t('Log in') }}
-    </UButton>
+    <!--    <UButton-->
+    <!--      v-if="!user"-->
+    <!--      color="gray"-->
+    <!--      variant="ghost"-->
+    <!--      @click="isOpen = true"-->
+    <!--    >-->
+    <!--      {{ $t('Log in') }}-->
+    <!--    </UButton>-->
 
     <UModal
       v-model="isOpen"

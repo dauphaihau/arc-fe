@@ -1,6 +1,6 @@
 import type { IShop } from '~/interfaces/shop';
 import type {
-  CreateProductPayload, GetProductsParams, IProduct, IProductVirtualFields
+  CreateProductPayload, GetProductsQueryParams, IProduct, IProductVirtualFields
 } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
@@ -36,10 +36,10 @@ export class ShopModule {
     );
   }
 
-  async getProducts(params: GetProductsParams) {
+  async getProducts(queryParams: GetProductsQueryParams) {
     return await useCustomFetch.get<GetListResponse<IProduct & IProductVirtualFields>>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}`,
-      params
+      queryParams
     );
   }
 
@@ -50,10 +50,10 @@ export class ShopModule {
     );
   }
 
-  async getCoupons(params: GetCouponsParams) {
+  async getCoupons(queryParams: GetCouponsParams) {
     return await useCustomFetch.get<GetListResponse<ICoupon>>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.COUPONS}`,
-      params
+      queryParams
     );
   }
 }

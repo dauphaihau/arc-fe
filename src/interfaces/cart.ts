@@ -42,3 +42,21 @@ export type IResponseGetCart = {
   tempOrder: ITempOrder
   totalProducts: number
 }
+
+export type IResponseGetCartForHeaders = {
+  cart: {
+    products: {
+      product: {
+        _id: IProduct['id']
+        title: IProduct['title']
+        image: {
+          relative_url: string
+        }
+      }
+      inventory: {
+        variant: IProductInventory['variant']
+      }
+    }[]
+    restProducts: number
+  }
+}

@@ -1,13 +1,24 @@
-import type { ResponseGetProducts, GetProductsParams, IProduct } from '~/interfaces/product';
+import type {
+  ResponseGetProducts, GetProductsQueryParams, IProduct,
+  GetProductsLowsetPriceQueries
+} from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
 
 export const productModule = {
 
-  async getProducts(params: GetProductsParams) {
+  async getProducts(queryParams: GetProductsQueryParams | Ref<GetProductsQueryParams>) {
     return await useCustomFetch.get<GetListResponse<ResponseGetProducts>>(
       `${RESOURCES.PRODUCTS}`,
-      params
+      queryParams
+    );
+  },
+
+  async getProductsLowestPrice(
+    queryParams: GetProductsLowsetPriceQueries | Ref<GetProductsLowsetPriceQueries>) {
+    return await useCustomFetch.delete<GetListResponse<ResponseGetProducts>>(
+      `${RESOURCES.PRODUCTS}`,
+      queryParams
     );
   },
 

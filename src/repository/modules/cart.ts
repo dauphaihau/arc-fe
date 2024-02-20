@@ -2,7 +2,8 @@ import { RESOURCES } from '~/config/enums/resources';
 import type {
   IUpdateCouponsItem, IUpdateProductCart,
   IAddProductCart,
-  IResponseGetCart
+  IResponseGetCart,
+  IResponseGetCartForHeaders
 } from '~/interfaces/cart';
 import type { IProductInventory } from '~/interfaces/product';
 import type { ITempOrder } from '~/interfaces/order';
@@ -15,8 +16,15 @@ export const cartModule = {
     );
   },
 
+  async getProductsForHeader() {
+    return await useCustomFetch.get<IResponseGetCartForHeaders>(
+      `${RESOURCES.USER}${RESOURCES.CART}`,
+      { type: 'header' }
+    );
+  },
+
   async addProduct(payload: IAddProductCart) {
-    return await useCustomFetch.post(
+    return await useCustomFetch.post<{ tempOrder: ITempOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       payload
     );

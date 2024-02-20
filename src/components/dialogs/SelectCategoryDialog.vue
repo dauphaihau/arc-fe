@@ -127,12 +127,6 @@ const onSave = () => {
           />
         </div>
 
-        <div>
-          {{ Object.values(subCategories).length > state.count }}
-          {{ Object.values(subCategories).length }}
-          {{ state.count }}
-        </div>
-
         <div v-if="pending && state.rootCategories.length === 0">
           loading root category ...
         </div>
@@ -178,7 +172,7 @@ const onSave = () => {
             Cancel
           </UButton>
           <UButton
-            :disabled="data.has_more"
+            :disabled="data?.has_more ?? true"
             size="md"
             @click="onSave"
           >

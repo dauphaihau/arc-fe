@@ -60,12 +60,12 @@ const summaryInventory = computed(() => {
 </script>
 
 <template>
-  <div class="mt-10">
+  <div class="mt-32">
     <div v-if="pending">
       loading...
     </div>
     <div v-else>
-      <div v-if="data?.product" class="flex gap-8">
+      <div v-if="data?.product" class="flex gap-16">
         <DetailImagesProduct :images="data.product.images" />
         <div class="space-y-6 grow">
           <div

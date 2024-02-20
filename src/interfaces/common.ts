@@ -9,5 +9,6 @@ export interface GetListResponse<T> {
 export interface RequestGetListParams {
   page: number | Ref<number>,
   limit: number,
-  populate: string
+  populate?: string
+  select?: string
 }

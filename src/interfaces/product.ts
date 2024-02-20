@@ -3,6 +3,7 @@ import { productSchema, productStateUserCanModify, productVariantSchema } from '
 import type { RequestGetListParams } from '~/interfaces/common';
 import type { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { Override } from '~/interfaces/utils';
+import type { IShop } from '~/interfaces/shop';
 
 export type IProduct = z.infer<typeof productSchema>;
 export type IProductInventory = z.infer<typeof productInventorySchema>;
@@ -21,7 +22,9 @@ export type CreateProductPayload =
    Pick<IProductInventory, 'price'| 'sku'|'stock'>
 
 
-export type GetProductsParams = Partial<Pick<IProduct, 'title' | 'category'> & RequestGetListParams>
+export type GetProductsLowsetPriceQueries = Partial<Pick<IProduct, 'category'> & RequestGetListParams>
+
+export type GetProductsQueryParams = Partial<Pick<IProduct, 'title' > & RequestGetListParams>
 
 type IVariantGetProducts = Omit<IProductVariant, 'variant_options'> & {
   variant_options: {
@@ -31,7 +34,9 @@ type IVariantGetProducts = Omit<IProductVariant, 'variant_options'> & {
 };
 
 export type ResponseGetProducts = Override<IProduct, {
+  shop_name: IShop['shop_name']
   variants?: IVariantGetProducts[]
+  image_relative_url: string
   summary_inventory: Record<
     'lowest_price' | 'highest_price' | 'stock'
     , number>

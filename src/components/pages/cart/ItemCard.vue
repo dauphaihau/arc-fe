@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { IItemCartPopulated } from '~/interfaces/cart';
 
-const emit = defineEmits<{(e: 'onProductsEmpty', value: number): void }>();
+const emit = defineEmits<{(e: 'onProductsEmpty'): void }>();
 
-const { data, indexItem } = defineProps<{
+const { data } = defineProps<{
   data: IItemCartPopulated,
-  indexItem: number
 }>();
 
 const products = ref(data.products || []);
@@ -13,7 +12,7 @@ const products = ref(data.products || []);
 const onDelete = (index: number) => {
   products.value.splice(index, 1);
   if (products.value.length === 0) {
-    emit('onProductsEmpty', indexItem);
+    emit('onProductsEmpty');
   }
 };
 
@@ -31,11 +30,10 @@ const onDelete = (index: number) => {
       </h3>
 
       <div>
-        <div v-for="(product, index) of products" :key="index">
+        <div v-for="(product, index) of products" :key="product.id">
           <ProductCartCard
-            :index="index"
             :data="product"
-            @on-delete-product="onDelete"
+            @on-delete-product="() => onDelete(index)"
           />
         </div>
       </div>
