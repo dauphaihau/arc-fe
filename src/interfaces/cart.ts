@@ -4,7 +4,8 @@ import type { Override } from './utils';
 import { cartSchema, itemCartSchema, productCartSchema } from '~/schemas/cart.schema';
 import type { ICoupon } from '~/interfaces/coupon';
 import type { IShop } from '~/interfaces/shop';
-import type { ITempOrder } from '~/interfaces/order';
+import type { IAdditionInfoItem, ISummaryOrder } from '~/interfaces/order';
+import type { IAddress } from '~/interfaces/address';
 
 export type ICart = z.infer<typeof cartSchema>;
 export type IItemCart = z.infer<typeof itemCartSchema>;
@@ -18,6 +19,7 @@ export type IAddProductCart = Pick<IProductCart, 'quantity'> & {
 export type IUpdateProductCart = Partial<Pick<IProductCart, 'quantity' | 'is_select_order'>> & {
   inventory: IProductInventory['id']
   variant?: IProductVariant['id']
+  additionInfoItems? : IAdditionInfoItem[]
 };
 
 export type IUpdateCouponsItem = {
@@ -39,8 +41,9 @@ export type IResponseGetCart = {
   cart: Override<ICart, {
     items: IItemCartPopulated[]
   }>,
-  tempOrder: ITempOrder
+  summaryOrder: ISummaryOrder
   totalProducts: number
+  address: IAddress
 }
 
 export type IResponseGetCartForHeaders = {

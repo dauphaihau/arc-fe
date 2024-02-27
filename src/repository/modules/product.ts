@@ -1,6 +1,6 @@
 import type {
   ResponseGetProducts, GetProductsQueryParams, IProduct,
-  GetProductsLowsetPriceQueries
+  GetProductsLowestPriceQueries
 } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
@@ -15,7 +15,7 @@ export const productModule = {
   },
 
   async getProductsLowestPrice(
-    queryParams: GetProductsLowsetPriceQueries | Ref<GetProductsLowsetPriceQueries>) {
+    queryParams: GetProductsLowestPriceQueries | Ref<GetProductsLowestPriceQueries>) {
     return await useCustomFetch.delete<GetListResponse<ResponseGetProducts>>(
       `${RESOURCES.PRODUCTS}`,
       queryParams

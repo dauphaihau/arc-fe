@@ -1,18 +1,32 @@
-import type { ITempOrder } from '~/interfaces/order';
-import type { IUpdateCouponsItem } from '~/interfaces/cart';
+import type { ILineItemOrder, ISummaryOrder } from '~/interfaces/order';
+import type { IAddress } from '~/interfaces/address';
+import type { IItemCartPopulated } from '~/interfaces/cart';
 
 export const useCartStore = defineStore('cart', () => {
-  const shopCodes = ref<IUpdateCouponsItem[]>([]);
-  const tempOrder = ref<ITempOrder | null>(null);
-  const totalProducts = ref(0);
+  const summaryOrderPrev = ref<ISummaryOrder | null>(null);
+  const summaryOrder = ref<ISummaryOrder | null>(null);
+
+  const totalProductsCart = ref(0);
+  const productCheckoutNow = ref();
+  const itemsCart = ref<IItemCartPopulated[]>([]);
+
+  const stateCheckout = ref({
+    payment_type: '',
+    address: {} as IAddress,
+  });
+
+  const mapAdditionInfoItems = ref(new Map<string, Partial<Pick<ILineItemOrder, 'note' | 'coupon_codes'>>>());
+  const additionInfoItems = ref({});
+
+  watch(() => summaryOrder.value, (_, oldVal) => {
+    if (oldVal) {
+      summaryOrderPrev.value = oldVal;
+    }
+  });
 
   const cartHeader = reactive({
     products: [] as Record<'id' | 'title' | 'image_url', string>[],
     restProducts: 0,
-  });
-
-  const getShopCodes = computed(() => {
-    return shopCodes.value;
   });
 
   const getCountAllProducts = computed(() => {
@@ -40,12 +54,16 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   return {
-    totalProducts,
+    totalProductsCart,
     cartHeader,
-    shopCodes,
-    tempOrder,
-    getShopCodes,
+    summaryOrder,
     getCountAllProducts,
     getCartHeader,
+    productCheckoutNow,
+    additionInfoItems,
+    stateCheckout,
+    summaryOrderPrev,
+    mapAdditionInfoItems,
+    itemsCart,
   };
 });

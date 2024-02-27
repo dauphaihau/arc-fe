@@ -123,10 +123,10 @@ watch(() => route.fullPath, () => {
         <FilterProducts />
       </div>
 
-      <div v-if="pendingProducts">
-        loading...
+      <div v-if="pendingProducts" class="w-full grid place-content-center h-[80vh]">
+        <Loading :child-class="'!w-12 !h-12'" />
       </div>
-      <div v-else class="pb-20">
+      <div v-else class="">
         <div v-if="data?.results" class="grid grid-cols-5 gap-3 mb-6">
           <div v-for="(product, i) of data.results" :key="i">
             <ProductCard :product="product" />

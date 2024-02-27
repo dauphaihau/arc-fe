@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core';
-import type { IProductCart } from '~/interfaces/cart';
+import type { IUpdateProductCart, IProductCart } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
 
 const { data: { quantity, inventory } } = defineProps<{
@@ -20,15 +20,6 @@ const decreaseQty = () => {
   stateInput.value--;
 };
 
-function isNumber(evt: KeyboardEvent): void {
-  const keysAllowed: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
-  const keyPressed: string = evt.key;
-
-  if (!keysAllowed.includes(keyPressed)) {
-    evt.preventDefault();
-  }
-}
-
 watch(() => stateInput.value, () => {
   if (stateInput.value > inventory.stock) {
     stateInput.value = inventory.stock;
@@ -38,14 +29,24 @@ watch(() => stateInput.value, () => {
 watchDebounced(
   stateInput,
   async () => {
-    const { error, data } = await $api.cart.updateProduct({
+    const body: IUpdateProductCart = {
       inventory: inventory.id,
       quantity: Number(stateInput.value),
-    });
+    };
+    if (cartStore.mapAdditionInfoItems) {
+      body.additionInfoItems = Array
+        .from(cartStore.mapAdditionInfoItems)
+        .map(([keyShopId, value]) => ({
+          shop: keyShopId,
+          coupon_codes: value?.coupon_codes || [],
+        }));
+    }
+
+    const { error, data } = await $api.cart.updateProduct(body);
     if (error.value) {
       toast.add({ title: 'Something Wrong' });
     } else {
-      cartStore.tempOrder = data.value?.tempOrder || null;
+      cartStore.summaryOrder = data.value?.summaryOrder || null;
     }
   },
   { debounce: 500, maxWait: 1000 }
@@ -66,7 +67,7 @@ watchDebounced(
       class="rounded-l-none"
       type="number"
       :ui="{ base: 'text-center rounded-l-none' }"
-      @keypress="isNumber($event)"
+      @keypress="keyPressIsNumber($event)"
     />
     <UButton
       icon="i-heroicons-plus"

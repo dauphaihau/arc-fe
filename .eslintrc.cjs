@@ -15,6 +15,7 @@ module.exports = {
     sourceType: 'module',
   },
   rules: {
+    'func-call-spacing': 'off',
     camelcase: 'off',
     semi: ['error', 'always',
       {

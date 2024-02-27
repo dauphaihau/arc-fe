@@ -3,5 +3,7 @@ definePageMeta({ layout: 'home', middleware: ['auth'] });
 </script>
 
 <template>
-  <div>account page</div>
+  <h3 class="text-2xl font-medium">
+    Account
+  </h3>
 </template>

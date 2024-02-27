@@ -5,12 +5,13 @@ import { ROUTES } from '~/config/enums/routes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import type { IAddProductCart } from '~/interfaces/cart';
 
-const emit = defineEmits<{(e: 'onChangeVariant', value: number): void }>();
+const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
 
 const { $api } = useNuxtApp();
 const toast = useToast();
 const cartStore = useCartStore();
 const authStore = useAuthStore();
+const config = useRuntimeConfig();
 
 const { product } = defineProps<{
   product: IProduct
@@ -30,7 +31,11 @@ const state = reactive({
   isVariant: product.variants && product.variants.length > 0,
   firstVariantOpts: [] as string[],
   secondVariantOpts: [] as string[],
-  qtyVariant: 0,
+  stockVariant: 0,
+  priceVariant: 0,
+  variantName1: '',
+  variantName2: '',
+  isBuyNow: false,
 });
 
 const stateSubmit = reactive<IStateSubmit>({
@@ -43,7 +48,7 @@ const stateSubmit = reactive<IStateSubmit>({
 
 const maxQuantity = computed(() => {
   if (state.isVariant) {
-    return state.qtyVariant;
+    return state.stockVariant;
   } else {
     return (product.inventory && product.inventory.stock) || 1;
   }
@@ -85,6 +90,12 @@ const validate = (stateValidate: IStateSubmit): FormError[] => {
 
 async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
   formRef.value.clear();
+
+  if (state.isBuyNow) {
+    onBuyNow();
+    return;
+  }
+
   loading.value = true;
 
   const payload: IAddProductCart = {
@@ -101,7 +112,7 @@ async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
   if (error.value) {
     toast.add({ title: 'Something Wrong' });
   } else {
-    cartStore.tempOrder = data.value?.tempOrder || null;
+    cartStore.summaryOrder = data.value?.summaryOrder || null;
     await cartStore.getCartHeader();
     navigateTo(ROUTES.CART);
   }
@@ -115,7 +126,9 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
     });
     if (foundVariant1 && product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
       emit('onChangeVariant', foundVariant1.inventory.price);
-      state.qtyVariant = foundVariant1.inventory.stock;
+      state.stockVariant = foundVariant1.inventory.stock;
+      state.priceVariant = foundVariant1.inventory?.price;
+      state.variantName1 = foundVariant1.variant_name;
       stateSubmit.inventory = foundVariant1.inventory.id;
       stateSubmit.variant = foundVariant1.id;
     }
@@ -126,7 +139,10 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
       });
       if (foundVariant2) {
         emit('onChangeVariant', foundVariant2.inventory.price);
-        state.qtyVariant = foundVariant2.inventory.stock;
+        state.stockVariant = foundVariant2.inventory.stock;
+        state.priceVariant = foundVariant2.inventory.price;
+        state.variantName1 = foundVariant1.variant_name;
+        state.variantName2 = foundVariant2.variant_name;
         stateSubmit.inventory = foundVariant2.inventory.id;
         stateSubmit.variant = foundVariant1.id;
       }
@@ -141,15 +157,6 @@ const decreaseQty = () => {
   stateSubmit.quantity--;
 };
 
-function isNumber(evt: KeyboardEvent): void {
-  const keysAllowed: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.'];
-  const keyPressed: string = evt.key;
-
-  if (!keysAllowed.includes(keyPressed)) {
-    evt.preventDefault();
-  }
-}
-
 watch(() => stateSubmit.quantity, () => {
   if (maxQuantity.value && stateSubmit.quantity > maxQuantity.value) {
     stateSubmit.quantity = maxQuantity.value;
@@ -160,6 +167,23 @@ const showLoginDialog = () => {
   authStore.showLoginDialog = true;
 };
 
+const onBuyNow = () => {
+  cartStore.productCheckoutNow = {
+    variant: stateSubmit.variant,
+    quantity: stateSubmit.quantity,
+    inventory: stateSubmit.inventory,
+    title: product.title,
+    url_image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
+    price: state.priceVariant,
+    stock: state.stockVariant,
+    firstVariantLabel: state.firstVariantLabel,
+    secondVariantLabel: state.secondVariantLabel,
+    variantName1: state.variantName1,
+    variantName2: state.variantName2,
+    shop: product.shop,
+  };
+  navigateTo('/checkout');
+};
 
 </script>
 
@@ -215,7 +239,7 @@ const showLoginDialog = () => {
             class="rounded-l-none"
             type="number"
             :ui="{ base: ' text-center rounded-l-none' }"
-            @keypress="isNumber($event)"
+            @keypress="keyPressIsNumber($event)"
           />
           <UButton
             icon="i-heroicons-plus"
@@ -237,6 +261,8 @@ const showLoginDialog = () => {
       </UButton>
       <UButton
         size="xl"
+        type="submit"
+        @click="state.isBuyNow = true"
       >
         Buy it now
       </UButton>

@@ -6,7 +6,7 @@ import type {
   IResponseGetCartForHeaders
 } from '~/interfaces/cart';
 import type { IProductInventory } from '~/interfaces/product';
-import type { ITempOrder } from '~/interfaces/order';
+import type { ISummaryOrder } from '~/interfaces/order';
 
 export const cartModule = {
 
@@ -24,28 +24,28 @@ export const cartModule = {
   },
 
   async addProduct(payload: IAddProductCart) {
-    return await useCustomFetch.post<{ tempOrder: ITempOrder }>(
+    return await useCustomFetch.post<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       payload
     );
   },
 
-  async updateProduct(payload: IUpdateProductCart) {
-    return await useCustomFetch.patch<{ tempOrder: ITempOrder }>(
+  async updateProduct(body: IUpdateProductCart) {
+    return await useCustomFetch.patch<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
-      payload
+      body
     );
   },
 
   async updateCouponsItem(payload: IUpdateCouponsItem[]) {
-    return await useCustomFetch.put<{ tempOrder: ITempOrder }>(
+    return await useCustomFetch.put<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       payload
     );
   },
 
   async deleteProduct(id: IProductInventory['id']) {
-    return await useCustomFetch.delete<{ tempOrder: ITempOrder }>(
+    return await useCustomFetch.delete<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.CART}`,
       { inventory: id }
     );

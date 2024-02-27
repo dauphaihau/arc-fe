@@ -16,3 +16,8 @@ export enum PAYMENT_TYPES {
   CASH = 'cash',
   CARD = 'card'
 }
+
+export const ORDER_CONFIG = {
+  MAX_CHAR_NOTE: 10000,
+  MAX_ORDER_TOTAL: 999999.99,
+};

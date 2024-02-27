@@ -36,9 +36,9 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
   switch (error.value?.data.code) {
     case StatusCodes.INTERNAL_SERVER_ERROR:
       toast.add({
-        id: '2',
         title: 'Unknown erorr from server',
         icon: 'i-heroicons-exclamation-circle',
+        color: 'red',
       });
   }
 }

@@ -61,8 +61,6 @@ const cartStore = useCartStore();
           </div>
 
           <div v-else class="flex items-center gap-1">
-            <!--            <RegisterLoginDialog />-->
-
             <UButton
               size="sm"
               variant="link"
@@ -90,7 +88,7 @@ const cartStore = useCartStore();
           <div class="flex flex-col gap-2">
             <div
               class="item-profile"
-              @click="() => router.push(`${ROUTES.ACCOUNT}${ROUTES.ORDERS}`)"
+              @click="() => router.push(ROUTES.ORDERS)"
             >
               <UIcon name="i-heroicons-cube" color="gray" />
               Orders

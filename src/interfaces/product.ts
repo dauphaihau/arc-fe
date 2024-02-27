@@ -22,7 +22,7 @@ export type CreateProductPayload =
    Pick<IProductInventory, 'price'| 'sku'|'stock'>
 
 
-export type GetProductsLowsetPriceQueries = Partial<Pick<IProduct, 'category'> & RequestGetListParams>
+export type GetProductsLowestPriceQueries = Partial<Pick<IProduct, 'category'> & RequestGetListParams>
 
 export type GetProductsQueryParams = Partial<Pick<IProduct, 'title' > & RequestGetListParams>
 

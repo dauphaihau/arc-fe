@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-ts-boilerplate",
+  "name": "web-arc-app",
   "private": true,
   "type": "module",
   "author": {
@@ -7,7 +7,7 @@
     "email": "hautran.job@outlook.com",
     "url": "https://github.com/dauphaihau"
   },
-  "description": "Nuxt 3 with TypeScript boilerplate",
+  "description": "Web app for arc app build with nuxt 3, typescripts, pinia, tailwind, nuxt/ui, zod",
   "scripts": {
     "generate": "nuxt generate",
     "dev": "nuxt dev",

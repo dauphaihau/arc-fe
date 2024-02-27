@@ -3,9 +3,11 @@ import type { IProductInventory } from '~/interfaces/product';
 import { ROUTES } from '~/config/enums/routes';
 import type { IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
+import type { IShop } from '~/interfaces/shop';
 
-const { data } = defineProps<{
+const { data, shopId } = defineProps<{
   data: IProductCartPopulated,
+  shopId: IShop['id']
 }>();
 
 const emit = defineEmits<{(e: 'onDeleteProduct'): void }>();
@@ -14,6 +16,7 @@ const cartStore = useCartStore();
 const { $api } = useNuxtApp();
 const toast = useToast();
 const config = useRuntimeConfig();
+const route = useRoute();
 
 const goToDetailProduct = () => {
   navigateTo(`${ROUTES.PRODUCTS}/${data.inventory.product.id}`);
@@ -26,8 +29,8 @@ const removeProduct = async (id: IProductInventory['id']) => {
   } else {
     emit('onDeleteProduct');
     await cartStore.getCartHeader();
-    cartStore.tempOrder = data.value?.tempOrder || null;
-    cartStore.totalProducts--;
+    cartStore.summaryOrder = data.value?.summaryOrder || null;
+    cartStore.totalProductsCart--;
   }
 };
 
@@ -35,8 +38,12 @@ const removeProduct = async (id: IProductInventory['id']) => {
 
 <template>
   <div v-if="data?.inventory" class="flex gap-4 mb-8">
-    <div class="flex flex-col justify-center">
-      <CheckboxOrderProdCart
+    <div
+      v-if="route.path === ROUTES.CART"
+      class="flex flex-col justify-center"
+    >
+      <CheckboxOrderProductCart
+        :shop-id="shopId"
         :checked="(data.is_select_order as boolean)"
         :inventory-id="data.inventory.id"
       />
@@ -69,6 +76,7 @@ const removeProduct = async (id: IProductInventory['id']) => {
           <!--            <p>Edit</p>-->
           <!--          </div>-->
           <div
+            v-if="route.path === ROUTES.CART"
             class="flex items-center gap-1 cursor-pointer"
             @click="removeProduct(data.inventory.id)"
           >

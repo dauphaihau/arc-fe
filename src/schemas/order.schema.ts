@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PAYMENT_TYPES, ORDER_STATUSES } from '~/config/enums/order';
+import { ORDER_CONFIG, PAYMENT_TYPES, ORDER_STATUSES } from '~/config/enums/order';
 import { COUPON_CONFIG } from '~/config/enums/coupon';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 import { couponSchema } from '~/schemas/coupon.schema';
@@ -18,14 +18,9 @@ export const lineItemSchema = z.object({
     }))
     .min(1)
     .max(20),
-});
-
-export const shopCodesSchema = z.object({
-  shop: objectIdSchema,
-  coupon_codes: z
-    .array(couponSchema.shape.code)
-    .min(1)
-    .max(COUPON_CONFIG.MAX_USE_PER_ORDER)
+  note: z
+    .string()
+    .max(ORDER_CONFIG.MAX_CHAR_NOTE)
     .optional(),
 });
 

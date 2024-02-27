@@ -8,4 +8,5 @@ export enum RESOURCES {
   ORDERS = '/orders',
   CATEGORIES = '/categories',
   ATTRIBUTES = '/attributes',
+  ADDRESSES = '/addresses',
 }
