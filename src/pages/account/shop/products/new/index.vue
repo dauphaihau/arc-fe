@@ -1,17 +1,17 @@
 <script lang="ts" setup>
-definePageMeta({ layout: 'shop' });
+definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
 </script>
 
 <template>
-  <div class="pb-20">
-    <div class="flex justify-between">
-      <h1 class="shop-dashboard-title">
-        Create a product
-      </h1>
-    </div>
-    <div class="max-w-[1150px] mx-auto mt-4">
-      <CreateProductForm />
-    </div>
-  </div>
+  <LayoutShopWrapperContent>
+    <template #title>
+      Create a product
+    </template>
+    <template #content>
+      <div class="mb-20">
+        <CreateProductForm />
+      </div>
+    </template>
+  </LayoutShopWrapperContent>
 </template>

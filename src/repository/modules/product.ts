@@ -1,6 +1,7 @@
 import type {
   ResponseGetProducts, GetProductsQueryParams, IProduct,
-  GetProductsLowestPriceQueries
+  GetProductsLowestPriceQueries,
+  ResponseGetDetailProduct
 } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
@@ -23,7 +24,7 @@ export const productModule = {
   },
 
   async getDetailProduct(id: IProduct['id']) {
-    return await useCustomFetch.get<{ product: IProduct }>(
+    return await useCustomFetch.get<{ product: ResponseGetDetailProduct }>(
       `${RESOURCES.PRODUCTS}/${id}`
     );
   },

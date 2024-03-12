@@ -4,8 +4,9 @@ import type { NitroFetchRequest } from 'nitropack';
 export type ErrorServer = {
   data: {
     code: number,
-    message: string,
   }
+  message: string,
+  code: number,
 }
 
 const $api = <

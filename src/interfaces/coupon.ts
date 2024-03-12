@@ -9,4 +9,4 @@ export type CreateCouponPayload =
   Override<Omit<ICoupon, 'id' | 'shop' | 'uses_count'>,
     Partial<Pick<ICoupon, 'is_active'>>>
 
-export type GetCouponsParams = Partial<Pick<ICoupon, 'code' | 'title'> & RequestGetListParams>
+export type GetCouponsParams = Partial<Pick<ICoupon, 'code' | 'title' | 'is_auto_sale'> & RequestGetListParams>

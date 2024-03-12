@@ -5,13 +5,19 @@ import { ROUTES } from '~/config/enums/routes';
 import { PAYMENT_TYPES } from '~/config/enums/order';
 import type { CreateOrderFromCartBody } from '~/interfaces/order';
 
-definePageMeta({ layout: 'home', middleware: ['auth'] });
+definePageMeta({ layout: 'home', middleware: ['auth', 'cart-checkout'] });
 
 const { $api } = useNuxtApp();
 const cartStore = useCartStore();
 const toast = useToast();
 
 enum STEPS { ADDRESS_SHIPPING, PAYMENT, REVIEW_CONFIRMATION, ORDER }
+
+onBeforeUnmount(() => {
+  if (cartStore.mapAdditionInfoItems.size) {
+    cartStore.mapAdditionInfoItems.clear();
+  }
+});
 
 const state = reactive({
   currentStep: STEPS.ADDRESS_SHIPPING,
@@ -64,28 +70,22 @@ const onCreateOrder = async () => {
   }
 };
 
-onBeforeUnmount(() => {
-  if (cartStore.mapAdditionInfoItems.size) {
-    cartStore.mapAdditionInfoItems.clear();
-  }
-});
-
 </script>
 
 <template>
   <div class="py-16">
-    <StepperCheckout
+    <CheckoutStepper
       class="mb-24 max-w-[30rem] mx-auto"
       :steps="state.steps"
       :step="state.currentStep"
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
-        <AddressShipping
+        <CheckoutAddressShipping
           v-if="state.currentStep === STEPS.ADDRESS_SHIPPING"
           class="mb-10"
         />
-        <PaymentOptions v-if="state.currentStep === STEPS.PAYMENT" />
+        <CheckoutPaymentOptions v-if="state.currentStep === STEPS.PAYMENT" />
 
         <ReviewAndConfirmation
           v-if="state.currentStep === STEPS.REVIEW_CONFIRMATION
@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="col-span-4">
-        <SummaryOrder
+        <CheckoutSummaryOrder
           v-if="cartStore.summaryOrder"
           :data="cartStore.summaryOrder"
         />
@@ -105,7 +105,7 @@ onBeforeUnmount(() => {
           size="xl"
           :loading="state.loadingOrder"
           :ui="{
-            rounded: '!shadow-[0_3px_10px_rgb(0,0,0,0.2)]'
+            rounded: 'shadow-border'
           }"
           @click="onCreateOrder"
         >

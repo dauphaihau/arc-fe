@@ -1,17 +1,21 @@
 <script lang="ts" setup>
-definePageMeta({ layout: 'shop' });
+definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
 </script>
 
 <template>
-  <div class="pb-20">
-    <div class="flex justify-between">
-      <h1 class="shop-dashboard-title">
-        Create a coupon
-      </h1>
-    </div>
-    <div class="max-w-[1150px] mx-auto mt-4">
-      <CreateCouponForm />
-    </div>
-  </div>
+  <LayoutShopWrapperContent>
+    <template #title>
+      Create a coupon
+    </template>
+    <template #description>
+      A promo code is an easy way to share a discount with anyone you choose.
+      It can also be a great way to encourage purchases and build loyalty.
+    </template>
+    <template #content>
+      <div class="mb-20">
+        <CreateCouponForm />
+      </div>
+    </template>
+  </LayoutShopWrapperContent>
 </template>

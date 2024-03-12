@@ -1,76 +1,33 @@
-# Nuxt 3 Minimal Starter
+# Arc
+A ecommerce marketplace web application  where people come together to make, sell, buy, and collect unique items
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+[//]: # (![Screenshot]&#40;./public/marketing/app.png&#41;)
 
-## Setup
+## Tech stack
 
-Make sure to install the dependencies:
+#### Frontend:
+1. Nuxt.js (Vue.js)
+2. Pinia.js (State management)
+3. Tailwind (Styling)
+4. Typescript (Statically Checked Types)
+5. zod (Validate form)
 
-```bash
-# npm
-npm install
+#### Backend:
+1. Express.js (Node.js)
+2. MongoDB (NoSQL)
+3. JSON Web Tokens (Authenticate)
+4. Typescript (Statically checked types)
+5. Stripe (Payment)
+6. Redis (Distributed lock)
+7. AWS S3 (Store assets)
+8. zod (Validate request)
 
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-# arc-fe
+## Features
+- Log in, register, log out, reset password
+- Create shop
+- CRUD product, coupon by shop
+- Search, filter products by category
+- CRUD products on cart
+- Checkout now or checkout with multiple products in cart
+- CRUD Account's address
+- Pay via cash/card

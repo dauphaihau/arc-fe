@@ -11,4 +11,5 @@ export const categorySchema = z.object({
     .string()
     .min(1)
     .max(CATEGORY_CONFIG.MAX_CHAR_NAME),
+  relative_url_image: z.string().optional(),
 });

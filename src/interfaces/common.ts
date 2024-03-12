@@ -1,3 +1,5 @@
+import type { ICategory } from '~/interfaces/category';
+
 export interface GetListResponse<T> {
   results: T[],
   page: number,
@@ -13,3 +15,9 @@ export type RequestGetListParams = Partial<{
   select: string
   sortBy: string
 }>
+
+export interface IUserActivitiesSessionStorage {
+  categoryProductVisited: ICategory['id']
+  rootCategoryVisited: ICategory
+  subCategories: ICategory[] & GetListResponse<ICategory>;
+}

@@ -1,6 +1,9 @@
 <script lang="ts" setup>
 
+import { useSessionStorage } from '@vueuse/core';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
+import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
 
 definePageMeta({ layout: 'home' });
 
@@ -18,6 +21,20 @@ if (notFound.value) {
     fatal: true,
   });
 }
+
+onMounted(() => {
+  if (data.value) {
+    const userActivities = parseJSON<IUserActivitiesSessionStorage>(
+      sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
+      ));
+    sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
+
+    useSessionStorage(
+      SESSION_STORAGE_KEYS.USER_ACTIVITIES,
+      { ...userActivities, categoryProductVisited: data.value.product.category }
+    );
+  }
+});
 
 const priceVariantSelected = ref(0);
 
@@ -60,40 +77,50 @@ const summaryInventory = computed(() => {
 </script>
 
 <template>
-  <div class="mt-32">
-    <div v-if="pending">
-      loading...
+  <div class="mt-24">
+    <div v-if="pending" class="w-full grid place-content-center h-[80vh]">
+      <Loading :child-class="'!w-12 !h-12'" />
     </div>
-    <div v-else>
-      <div v-if="data?.product" class="flex gap-16">
-        <DetailImagesProduct :images="data.product.images" />
-        <div class="space-y-6 grow">
-          <div
-            v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
-            class="font-bold text-xl"
-          >
-            {{ formatCurrency(data.product.inventory?.price) }}
-          </div>
-          <div
-            v-else
-            class="font-bold text-xl"
-          >
-            {{ priceVariantSelected ? formatCurrency(priceVariantSelected) :
-              `${formatCurrency(summaryInventory.lowestPrice)} -
-             ${formatCurrency(summaryInventory.highestPrice)}`
-            }}
-          </div>
+    <div v-else class="space-y-20">
+      <div v-if="data?.product">
+        <div class="grid grid-cols-7 mb-20">
+          <DetailProductImages :images="data.product.images" class="col-span-4" />
+          <div class="space-y-6 col-span-2">
+            <!--            <div class="text-red-800 text-md font-semibold">-->
+            <!--              Only 6 left and in 7 baskets-->
+            <!--            </div>-->
+            <div
+              v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
+              class="font-bold text-xl"
+            >
+              {{ formatCurrency(data.product.inventory?.price) }}
+            </div>
+            <div
+              v-else
+              class="font-bold text-xl"
+            >
+              {{ priceVariantSelected ?
+                formatCurrency(priceVariantSelected) :
+                summaryInventory.lowestPrice === summaryInventory.highestPrice ?
+                  `${formatCurrency(summaryInventory.lowestPrice)}` :
+                  `${formatCurrency(summaryInventory.lowestPrice)} -
+                ${formatCurrency(summaryInventory.highestPrice)}`
+              }}
+            </div>
 
-          {{ data.product.title }}
+            {{ data.product.title }}
 
-          <AddToCartForm
-            :product="data.product"
-            @on-change-variant="(val) => priceVariantSelected = val"
-          />
+            <DetailProductAddToCartForm
+              :product="data.product"
+              @on-change-variant="(val) => priceVariantSelected = val"
+            />
+            <DetailProductInformation
+              :product="data.product"
+            />
+          </div>
         </div>
-      </div>
-      <div v-else>
-        product not found
+        <DetailProductMoreProductsByShop :shop-id="data.product.shop.id" class="mb-16" />
+        <DetailProductMoreProductsByCategory :category-id="data.product.category" />
       </div>
     </div>
   </div>

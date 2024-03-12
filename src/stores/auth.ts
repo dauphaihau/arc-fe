@@ -1,9 +1,8 @@
 import dayjs from 'dayjs';
-import { StatusCodes } from 'http-status-codes';
-import type { FormError } from '@nuxt/ui/dist/runtime/types';
-import type { IUser, LoginPayloadType, RegisterPayloadType } from '~/interfaces/user';
+import type { IUser, LoginBody, RegisterBody } from '~/interfaces/user';
 import { TOKEN_TYPES, KEY_LS_ACCESS_TOKEN, KEY_LS_REFRESH_TOKEN } from '~/config/enums/token';
 import { ROUTES } from '~/config/enums/routes';
+import { RESOURCES } from '~/config/enums/resources';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -18,103 +17,88 @@ export const useAuthStore = defineStore('auth', {
     isOwnedShop: state => !!state.user?.shop,
   },
   actions: {
+
     async getCurrentUser() {
-      const { data } = await useCustomFetch.get<{ user: IUser }>('/user/me');
-      if (data.value?.user) {
-        this.user = data.value?.user;
-      } else {
-        navigateTo(ROUTES.HOME);
-      }
+      const { data } = await useCustomFetch.get<{ user: IUser }>(`${RESOURCES.USER}/me`);
+      this.afterUserAuthenticated(data.value?.user);
     },
-    async register(payload: RegisterPayloadType): Promise<FormError | null> {
-      const { data, error } = await useAsyncData<{ user: IUser }, ErrorServer>(
-        'login',
-        () => useCustomOFetch.post('/auth/register', payload)
-      );
-      if (error.value) {
-        if (error.value.data.code === StatusCodes.CONFLICT) {
-          return { path: 'email', message: error.value.data.message };
-        }
-        return { path: '', message: error.value.data.message || 'An unknown error occurred. Please try again' };
-      }
-      if (data.value?.user) {
-        this.afterUserAuthenticated(data.value.user);
-      }
-      return null;
-    },
-    async login(payload: LoginPayloadType): Promise<string> {
-      const { data, error } = await useAsyncData<{ user: IUser }, ErrorServer>(
+
+    async register(body: RegisterBody) {
+      const response = await useAsyncData<{ user: IUser }, ErrorServer>(
         'register',
-        () => useCustomOFetch.post('/auth/login', payload)
+        () => useCustomOFetch.post(`${RESOURCES.AUTH}/register`, body)
       );
-      if (error.value) {
-        return error.value.data.message || 'An unknown error occurred. Please try again';
-      }
-      if (data.value?.user) {
-        this.afterUserAuthenticated(data.value.user);
-      }
-      return '';
+      this.afterUserAuthenticated(response.data.value?.user);
+      return response;
     },
-    async forgetPassword(email: IUser['email']): Promise<string> {
-      const { error } = await useAsyncData<{}, ErrorServer>(
+
+    async login(payload: LoginBody) {
+      const response = await useAsyncData<{ user: IUser }, ErrorServer>(
+        'login',
+        () => useCustomOFetch.post(`${RESOURCES.AUTH}/login`, payload)
+      );
+      this.afterUserAuthenticated(response.data.value?.user);
+      return response;
+    },
+
+    async forgetPassword(email: IUser['email']) {
+      return await useAsyncData<{}, ErrorServer>(
         'forget-password',
-        () => useCustomOFetch.post('/auth/forgot-password', { email })
+        () => useCustomOFetch.post(`${RESOURCES.AUTH}/forgot-password`, { email })
       );
-      if (error.value) {
-        return error.value.data.message || 'An unknown error occurred. Please try again';
-      }
-      return '';
     },
-    async verifyToken(): Promise<boolean> {
+
+    async verifyToken() {
       const route = useRoute();
-      const { error } = await useAsyncData<{}, ErrorServer>(
+      const response = await useAsyncData<{}, ErrorServer>(
         'verifyToken',
         () => useCustomOFetch.get(
-          `/auth/verify-token?token=${route.query.t}&type=${TOKEN_TYPES.RESET_PASSWORD}`
+          `${RESOURCES.AUTH}/verify-token?token=${route.query.t}&type=${TOKEN_TYPES.RESET_PASSWORD}`
         )
       );
-      if (error.value) {
-        return false;
+      if (!response.error.value) {
+        this.tokenResetPassword = route.query.t as string;
       }
-      this.tokenResetPassword = route.query.t as string;
-      return true;
+      return response;
     },
-    async resetPassword(password: IUser['password']): Promise<string> {
-      const { data, error } = await useAsyncData<{ user: IUser }, ErrorServer>(
-        'forget',
-        () => useCustomOFetch.post('/auth/reset-password',
+
+    async resetPassword(password: IUser['password']) {
+      const response = await useAsyncData<{ user: IUser }, ErrorServer>(
+        'reset-password',
+        () => useCustomOFetch.post(`${RESOURCES.AUTH}/reset-password`,
           { password },
           {
             query: { token: this.tokenResetPassword },
           }
         )
       );
-      if (error.value) {
-        return error.value.data.message || 'An unknown error occurred. Please try again';
-      }
-      if (data.value?.user) {
-        this.afterUserAuthenticated(data.value.user);
+      const user = response.data.value?.user;
+      if (user) {
+        this.afterUserAuthenticated(user);
         this.tokenResetPassword = '';
       }
-      return '';
+      return response;
     },
+
     async logout() {
-      const { status } = await useCustomFetch.post('/auth/logout');
+      const { status } = await useCustomFetch.post(`${RESOURCES.AUTH}/logout`);
       if (status.value === 'success') {
         this.clearAll();
         navigateTo(ROUTES.HOME);
       }
     },
+
+
     clearAll() {
       localStorage.removeItem(KEY_LS_REFRESH_TOKEN);
       localStorage.removeItem(KEY_LS_ACCESS_TOKEN);
       this.user = null;
     },
-    // login, register, reset-password
     afterUserAuthenticated(user?: IUser) {
-      if (user) {
-        this.user = user;
+      if (!user) {
+        return;
       }
+      this.user = user;
       const config = useRuntimeConfig();
       localStorage[KEY_LS_ACCESS_TOKEN] = dayjs().add(Number(config.public.accessTokenExpirationMins), 'minutes');
       localStorage[KEY_LS_REFRESH_TOKEN] = dayjs().add(Number(config.public.refreshTokenExpirationDays), 'minutes');

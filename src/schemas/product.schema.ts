@@ -8,7 +8,6 @@ import {
   PRODUCT_VARIANT_TYPES
 } from '~/config/enums/product';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
-import { shopSchema } from '~/schemas/shop.schema';
 
 export const productInventorySchema = z.object({
   id: objectIdSchema,
@@ -22,7 +21,9 @@ export const productInventorySchema = z.object({
   stock: z
     .number()
     .min(0)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY),
+    .max(PRODUCT_CONFIG.MAX_QUANTITY,
+      `Stock must be less than or equal to ${PRODUCT_CONFIG.MAX_QUANTITY}`
+    ),
   sku: z
     .string()
     .max(PRODUCT_CONFIG.MAX_CHAR_SKU)
@@ -79,7 +80,7 @@ export const productAttributeSchema = z.object({
 
 export const productSchema = z.object({
   id: objectIdSchema,
-  shop: shopSchema,
+  shop: objectIdSchema,
   category: objectIdSchema,
   attributes: z.array(productAttributeSchema),
   title: z
@@ -131,7 +132,8 @@ export const productSchema = z.object({
     .nativeEnum(PRODUCT_VARIANT_TYPES)
     .default(PRODUCT_VARIANT_TYPES.NONE),
   variants: z
-    .array(productVariantSchema)
+    .array(productVariantOptSchema.shape.id)
+    // .array(productVariantSchema),
     .optional(),
   inventory: productInventorySchema.optional(),
 });

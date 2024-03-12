@@ -2,6 +2,7 @@
 
 import type { FormSubmitEvent } from '#ui/types';
 import type { IAddress, CreateBodyAddress } from '~/interfaces/address';
+import { ADDRESS_CONFIG } from '~/config/enums/address';
 import { addressSchema } from '~/schemas/address.schema';
 
 const props = defineProps<{ dataEdit?: IAddress | null }>();
@@ -24,12 +25,12 @@ const stateLocal = reactive({
   loadingGetCountries: false,
 });
 
-let stateSubmit = reactive<Partial<CreateBodyAddress>>({});
+const stateSubmit = ref<Partial<CreateBodyAddress>>({});
 
 watch(() => props.dataEdit, () => {
   if (props.dataEdit) {
     isOpenDialog.value = true;
-    stateSubmit = props.dataEdit;
+    stateSubmit.value = props.dataEdit;
   }
 });
 
@@ -55,9 +56,15 @@ async function onSubmit(event: FormSubmitEvent<CreateBodyAddress>) {
   }
 }
 
-watch(() => [stateSubmit.country, props.dataEdit], async () => {
-  if (stateSubmit.country) {
-    const { data, pending, error } = await $api.address.getStatesByCountry(stateSubmit.country);
+watch(() => [stateSubmit.value.country, props.dataEdit], async () => {
+  if (stateSubmit.value.country) {
+    stateSubmit.value.state = undefined;
+    stateSubmit.value.zip = undefined;
+
+    stateLocal.loadingStateOptions = true;
+    const {
+      data, pending, error,
+    } = await $api.address.getStatesByCountry(stateSubmit.value.country);
     stateLocal.loadingStateOptions = pending.value;
     if (!error.value && data.value) {
       stateLocal.stateOptions = data.value.data.states.map(co => co.name);
@@ -67,10 +74,12 @@ watch(() => [stateSubmit.country, props.dataEdit], async () => {
 
 watch(isOpenDialog, async () => {
   if (!isOpenDialog.value) {
-    stateSubmit = {};
+    stateSubmit.value = {};
     emit('onCancelDialog');
   } else if (!stateLocal.countriesOptions.length) {
+    stateLocal.loadingGetCountries = true;
     const { pending, data } = await $api.address.getCountries();
+
     stateLocal.loadingGetCountries = pending.value;
     if (data.value && data.value.data.length > 0) {
       stateLocal.countriesOptions = data.value.data.map(co => co.name);
@@ -95,7 +104,8 @@ watch(isOpenDialog, async () => {
       <div class="p-12 space-y-5">
         <div class="space-y-1.5">
           <h1 class="text-3xl font-bold">
-            Add new address
+            {{ dataEdit ? 'Update': 'Add new' }}
+            address
           </h1>
         </div>
 
@@ -108,16 +118,32 @@ watch(isOpenDialog, async () => {
             @submit="onSubmit"
           >
             <UFormGroup required label="Full Name" name="full_name" class="mb-4">
-              <UInput v-model="stateSubmit.full_name" size="xl" />
+              <UInput
+                v-model="stateSubmit.full_name"
+                :maxlength="ADDRESS_CONFIG.MAX_CHAR_FULL_NAME"
+                size="xl"
+              />
             </UFormGroup>
             <UFormGroup required label="Street Address" name="address1" class="mb-4">
-              <UInput v-model="stateSubmit.address1" size="xl" />
+              <UInput
+                v-model="stateSubmit.address1"
+                :maxlength="ADDRESS_CONFIG.MAX_CHAR_ADDRESS"
+                size="xl"
+              />
             </UFormGroup>
             <UFormGroup label="Apt / Suite / Other" name="address2" class="mb-4">
-              <UInput v-model="stateSubmit.address2" size="xl" />
+              <UInput
+                v-model="stateSubmit.address2"
+                :maxlength="ADDRESS_CONFIG.MAX_CHAR_ADDRESS"
+                size="xl"
+              />
             </UFormGroup>
             <UFormGroup required label="City" name="city" class="mb-4">
-              <UInput v-model="stateSubmit.city" size="xl" />
+              <UInput
+                v-model="stateSubmit.city"
+                :maxlength="ADDRESS_CONFIG.MAX_CHAR_CITY"
+                size="xl"
+              />
             </UFormGroup>
             <UFormGroup required label="Country" name="country" class="mb-4">
               <USelectMenu
@@ -133,15 +159,16 @@ watch(isOpenDialog, async () => {
                 <USelectMenu
                   v-model="stateSubmit.state"
                   :loading="stateLocal.loadingStateOptions"
-                  :disabled="!stateSubmit.country"
+                  :disabled="!stateSubmit.country || stateLocal.loadingStateOptions"
                   :options="stateLocal.stateOptions"
                   size="xl"
                   trailing
                 />
               </UFormGroup>
-              <UFormGroup required label="Zip/Postal code" name="zip">
+              <UFormGroup required label="Zip/Postal code" name="zip" class="w-1/2">
                 <UInput
                   v-model="stateSubmit.zip"
+                  :maxlength="ADDRESS_CONFIG.MAX_CHAR_ZIP"
                   size="xl"
                   @keypress="keyPressIsNumber($event)"
                 />
@@ -151,6 +178,7 @@ watch(isOpenDialog, async () => {
               <UInput
                 v-model="stateSubmit.phone"
                 size="xl"
+                :maxlength="ADDRESS_CONFIG.MAX_CHAR_PHONE"
                 type="phone"
                 @keypress="keyPressIsNumber($event)"
               />
@@ -162,7 +190,11 @@ watch(isOpenDialog, async () => {
               name="is_primary"
             />
             <div class="mt-6 flex gap-3 justify-end">
-              <UButton size="xl" variant="ghost" @click="isOpenDialog = false">
+              <UButton
+                size="xl"
+                color="gray"
+                @click="isOpenDialog = false"
+              >
                 Cancel
               </UButton>
               <UButton size="xl" type="submit">

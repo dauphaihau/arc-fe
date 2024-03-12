@@ -13,3 +13,9 @@ export type ResponseGetCategories = {
 export interface ICategorySessionStorage extends ICategory {
   to?: string;
 }
+
+export type ICategorySearch = {
+  id: ICategory['id']
+  lastNameCategory: ICategory['name']
+  categoriesRelated: ICategory['name'][]
+};

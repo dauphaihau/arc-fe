@@ -1,4 +1,10 @@
 
+/** ================== Base ================== **/
+
+body {
+  @apply relative min-h-screen dark:bg-black dark:text-white;
+}
+
 /*
   Remove Arrows/Spinners from Input Number
 */
@@ -11,6 +17,29 @@ input::-webkit-inner-spin-button {
 /* Firefox */
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+.max-w-home-layout {
+  max-width: 1300px;
+}
+
+.max-w-shop-layout {
+  max-width: 1650px;
+}
+
+.w-shop-layout-sidebar {
+  width: 220px;
+}
+.w-shop-layout-content {
+  @apply w-[calc(100%-220px)] max-w-[1400px];
+}
+
+.bg-layout-shop {
+ @apply bg-gradient-to-t from-[#f6f8fa] via-[#f6f8fa] to-[#fcfcfd]
+}
+
+.shadow-border {
+ @apply shadow-[0_3px_10px_rgb(0,0,0,0.2)];
 }
 
 /* Set heroicon's stroke width */
@@ -27,6 +56,36 @@ input[type=number] {
   stroke-width: 1.2 !important;
 }
 
-.shop-dashboard-title {
-  @apply text-2xl font-semibold text-customGray-950
+/** ================== Animations ================== **/
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s;
 }
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: max-height 0.4s ease-in-out;
+}
+
+.slide-down-enter-to,
+.slide-down-leave-from {
+  overflow: hidden;
+  max-height: 100%;
+  height: auto;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  overflow: hidden;
+  max-height: 0;
+  height: 0;
+}
+
+
+/** ================== Others ================== **/

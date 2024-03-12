@@ -8,7 +8,7 @@ definePageMeta({ layout: 'home' });
 const { $api } = useNuxtApp();
 const route = useRoute();
 
-const limit = 30;
+const limit = 40;
 const page = ref(1);
 
 const redirectErrorPage = () => {
@@ -58,7 +58,13 @@ if (error.value) {
 }
 
 const state = reactive({
-  currentCategory: route.params.categories[route.params.categories.length - 1],
+  currentCategory: computed(() => {
+    let str = route.params.categories[route.params.categories.length - 1];
+    if (str.includes('-')) {
+      str = str.replaceAll('-', ' ');
+    }
+    return str;
+  }),
   categoriesBreadcrumb: computed(() => {
     let categoriesInSS = parseJSON<ICategorySessionStorage[]>(
       sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
@@ -106,6 +112,7 @@ watch(() => route.fullPath, () => {
       <div>
         <UBreadcrumb
           v-if="state.categoriesBreadcrumb && route.params.categories.length > 1"
+          divider="i-heroicons-chevron-right-20-solid"
           :links="state.categoriesBreadcrumb"
           :ui="{ active: 'text-gray-700' }"
         />
@@ -119,7 +126,7 @@ watch(() => route.fullPath, () => {
 
     <div class="flex gap-12">
       <div class="min-w-[200px] max-w-[200px]">
-        <SubCategories />
+        <CategoriesSubCategories />
         <FilterProducts />
       </div>
 
@@ -127,7 +134,7 @@ watch(() => route.fullPath, () => {
         <Loading :child-class="'!w-12 !h-12'" />
       </div>
       <div v-else class="">
-        <div v-if="data?.results" class="grid grid-cols-5 gap-3 mb-6">
+        <div v-if="data?.results" class="grid grid-cols-4 gap-x-3 gap-y-8 mb-6">
           <div v-for="(product, i) of data.results" :key="i">
             <ProductCard :product="product" />
           </div>

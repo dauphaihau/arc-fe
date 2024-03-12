@@ -27,6 +27,7 @@ export class AddressModule {
 
   async updateAddress(addressUpdate: Partial<IAddress>) {
     const { id, ...body } = addressUpdate;
+    delete body.user;
     return await useCustomFetch.patch<{ address: IAddress }>(
       `${RESOURCES.USER}${RESOURCES.ADDRESSES}/${id}`,
       body

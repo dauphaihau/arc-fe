@@ -89,4 +89,8 @@ export const couponSchema = z.object({
   users_used: z
     .array(objectIdSchema)
     .optional(),
+  is_auto_sale: z
+    .boolean()
+    .default(false)
+    .optional(),
 });

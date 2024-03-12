@@ -1,4 +1,5 @@
 export enum SESSION_STORAGE_KEYS {
   CATEGORY = 'category',
-  CATEGORIES = 'categories'
+  CATEGORIES = 'categories',
+  USER_ACTIVITIES = 'user_activities'
 }

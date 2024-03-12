@@ -9,6 +9,11 @@ export default defineAppConfig({
         base: '!hidden',
       },
     },
+    select: {
+      default: {
+        loadingIcon: 'i-eos-icons:loading',
+      },
+    },
     selectMenu: {
       option: {
         base: 'capitalize',
@@ -16,13 +21,26 @@ export default defineAppConfig({
       select: 'capitalize',
     },
     card: {
-      shadow: 'shadow-[0_3px_10px_rgb(0,0,0,0.2)]',
+      shadow: 'shadow-border',
     },
     formGroup: {
       description: 'text-customGray-800',
     },
     radio: {
       help: 'text-customGray-800',
+    },
+    button: {
+      default: {
+        loadingIcon: 'i-eos-icons:loading',
+      },
+    },
+    input: {
+      default: {
+        loadingIcon: 'i-eos-icons:loading',
+      },
+    },
+    icons: {
+      dynamic: true,
     },
   },
   nuxtIcon: {

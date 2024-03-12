@@ -15,7 +15,6 @@ const { $api } = useNuxtApp();
 const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
-
 const { pending, data } = await $api.shop.getCoupons({
   page,
 });
@@ -107,94 +106,96 @@ const itemsDropdown = (row: { id: string }) => [
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between mb-6">
-      <h1 class="shop-dashboard-title">
-        Coupons
-      </h1>
+  <LayoutShopWrapperContent>
+    <template #title>
+      Coupons
+    </template>
+    <template #actions>
+      <UButton
+        :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}${ROUTES.NEW}`"
+        size="md"
+      >
+        + Create a coupon
+      </UButton>
+    </template>
 
-      <NuxtLink to="/account/shop/coupons/new">
-        <UButton size="md" type="submit">
-          + Create coupon
-        </UButton>
-      </NuxtLink>
-    </div>
-
-
-    <UTable
-      v-model="selected"
-      :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No coupons.' }"
-      :rows="rows"
-      :columns="columns"
-      :loading="pending"
-      :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
-    >
-      <template #title-code-data="{ row }">
-        <div>
-          <div class="text-sm">
-            {{ row.title }}
+    <template #content>
+      <UTable
+        v-model="selected"
+        :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No coupons.' }"
+        :rows="rows"
+        :columns="columns"
+        :loading="pending"
+        :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
+      >
+        <template #title-code-data="{ row }">
+          <div>
+            <div class="text-sm truncate max-w-80">
+              {{ row.title }}
+            </div>
+            <div class="text-xs">
+              CODE: {{ row.code }}
+            </div>
           </div>
-          <div class="text-xs">
-            CODE: {{ row.code }}
+        </template>
+
+        <template #applies-to-data="{ row }">
+          <div class="text-center">
+            {{ row.applies_to === COUPON_APPLIES_TO.ALL ? 'All' : 'specify products' }}
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template #applies-to-data="{ row }">
-        <div class="text-center">
-          {{ row.applies_to === COUPON_APPLIES_TO.ALL ? 'All' : 'specify products' }}
-        </div>
-      </template>
+        <template #discount-data="{ row }">
+          <div v-if="row.type === COUPON_TYPES.FREE_SHIP" class="text-center">
+            Freeship
+          </div>
+          <div v-if="row.type === COUPON_TYPES.PERCENTAGE" class="text-center">
+            {{ row.percent_off }}%
+          </div>
+          <div v-if="row.type === COUPON_TYPES.FIXED_AMOUNT" class="text-center">
+            {{ formatCurrency(row.amount_off) }}
+          </div>
+        </template>
 
-      <template #discount-data="{ row }">
-        <div v-if="row.type === COUPON_TYPES.FREE_SHIP" class="text-center">
-          Freeship
-        </div>
-        <div v-if="row.type === COUPON_TYPES.PERCENTAGE" class="text-center">
-          {{ row.percent_off }}%
-        </div>
-        <div v-if="row.type === COUPON_TYPES.FIXED_AMOUNT" class="text-center">
-          {{ formatCurrency(row.amount_off) }}
-        </div>
-      </template>
+        <template #max_uses-data="{ row }">
+          <div class="text-center">
+            {{ row.max_uses }}
+          </div>
+        </template>
 
-      <template #max_uses-data="{ row }">
-        <div class="text-center">
-          {{ row.max_uses }}
-        </div>
-      </template>
+        <template #status-data="{ row }">
+          <div class="text-center">
+            {{ row.start_date }} - {{ row.end_date }}
+          </div>
+        </template>
 
-      <template #status-data="{ row }">
-        <div class="text-center">
-          {{ row.start_date }} - {{ row.end_date }}
-        </div>
-      </template>
-
-      <template #actions-data="{ row }">
-        <div class="flex items-center justify-end">
-          <UTooltip text="Edit">
-            <UButton
-              color="gray"
-              variant="ghost"
-              class="p-1.5"
-            >
-              <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
-            </UButton>
-          </UTooltip>
-          <UDropdown :items="itemsDropdown(row)">
-            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
-          </UDropdown>
-        </div>
-      </template>
-    </UTable>
-
-    <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-      <UPagination
-        v-model="page"
+        <template #actions-data="{ row }">
+          <div class="flex items-center justify-end">
+            <UTooltip text="Edit">
+              <UButton
+                color="gray"
+                variant="ghost"
+                class="p-1.5"
+              >
+                <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
+              </UButton>
+            </UTooltip>
+            <UDropdown :items="itemsDropdown(row)">
+              <UButton
+                color="gray"
+                variant="ghost"
+                icon="i-heroicons-ellipsis-horizontal-20-solid"
+              />
+            </UDropdown>
+          </div>
+        </template>
+      </UTable>
+      <FixedPagination
+        :page="page"
         :page-count="pageCount"
-        :total="data?.totalResults ?? 0"
-        :inactive-button="{ color: 'gray' }"
+        :total="data?.totalResults"
+        @on-change-page="(val) => page = val"
       />
-    </div>
-  </div>
+    </template>
+  </LayoutShopWrapperContent>
 </template>

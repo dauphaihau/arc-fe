@@ -1,15 +1,14 @@
 import { KEY_LS_ACCESS_TOKEN } from '~/config/enums/token';
 import { ROUTES } from '~/config/enums/routes';
 
-export default defineNuxtRouteMiddleware((to, _from) => {
+export default defineNuxtRouteMiddleware(async (to, _from) => {
   const authStore = useAuthStore();
-  const { user } = storeToRefs(authStore);
 
-  if (!user.value && localStorage[KEY_LS_ACCESS_TOKEN]) {
-    authStore.getCurrentUser();
+  if (!authStore.isLogged && localStorage[KEY_LS_ACCESS_TOKEN]) {
+    await authStore.getCurrentUser();
   }
 
-  if (user.value && [ROUTES.RESET].includes(to.path as ROUTES)) {
+  if (authStore.isLogged && [ROUTES.RESET].includes(to.path as ROUTES)) {
     return navigateTo(ROUTES.HOME);
   }
 });

@@ -1,4 +1,5 @@
 export enum RESOURCES {
+  AUTH = '/auth',
   PRODUCTS = '/products',
   SHOPS = '/shops',
   UPLOAD = '/upload',

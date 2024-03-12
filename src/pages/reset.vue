@@ -22,15 +22,15 @@ const nextStep = (step: STEPS, data?: string) => {
 
 onMounted(async () => {
   if (route.query?.v) {
-    navigateTo('/reset');
+    navigateTo(ROUTES.RESET);
   }
   if (route.query?.t) {
-    const isVerify = await authStore.verifyToken();
-    if (isVerify) {
+    const { error } = await authStore.verifyToken();
+    if (error.value) {
+      steps.value = STEPS.TOKEN_INVALID;
+    } else {
       steps.value = STEPS.RESET_PASSWORD;
       navigateTo('/reset?v=1');
-    } else {
-      steps.value = STEPS.TOKEN_INVALID;
     }
   }
 });
@@ -43,7 +43,7 @@ async function resendEmail() {
 </script>
 
 <template>
-  <div class="mt-12 max-w-lg mx-auto">
+  <div class="max-w-lg mx-auto mt-12">
     <!--    Send email-->
     <ResetPasswordCard v-if="steps === STEPS.SEND_EMAIL">
       <template #title>
@@ -56,7 +56,7 @@ async function resendEmail() {
       <template #content>
         <ForgetPasswordForm
           :email="email"
-          @next="(email) => nextStep(STEPS.SEND_EMAIL_SUCCESS, email)"
+          @next-step="(email) => nextStep(STEPS.SEND_EMAIL_SUCCESS, email)"
         />
       </template>
     </ResetPasswordCard>
@@ -129,7 +129,7 @@ async function resendEmail() {
         Reset your password
       </template>
       <template #content>
-        <ResetPasswordForm @next="nextStep(STEPS.RESET_PASSWORD_SUCCESS)" />
+        <ResetPasswordForm @next-step="nextStep(STEPS.RESET_PASSWORD_SUCCESS)" />
       </template>
     </ResetPasswordCard>
 

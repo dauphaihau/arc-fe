@@ -3,6 +3,6 @@ import { userSchema } from '~/schemas/user.schema';
 
 export type IUser = z.infer<typeof userSchema>;
 
-export type LoginPayloadType = Pick<IUser, 'email' | 'password'>;
+export type LoginBody = Pick<IUser, 'email' | 'password'>;
 
-export type RegisterPayloadType = Pick<IUser, 'email' | 'password' | 'name'>;
+export type RegisterBody = Pick<IUser, 'email' | 'password' | 'name'>;

@@ -28,6 +28,7 @@ const state = reactive({
   loadingOrder: false,
   showNoteInput: false,
   note: '',
+  isAddressEmpty: false,
 });
 
 const getSummaryOder = async () => {
@@ -87,7 +88,7 @@ const onCreateOrder = async () => {
     return;
   }
 
-  if (state.payment_type === PAYMENT_TYPES.CARD && data.value?.checkoutSessionUrl) {
+  if (payment_type === PAYMENT_TYPES.CARD && data.value?.checkoutSessionUrl) {
     navigateTo(data.value.checkoutSessionUrl, {
       external: true,
     });
@@ -105,25 +106,26 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
 
 <template>
   <div class="py-16">
-    <StepperCheckout
+    <CheckoutStepper
       class="mb-24 max-w-[30rem] mx-auto"
       :steps="state.steps"
       :step="state.currentStep"
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
-        <AddressShipping
+        <CheckoutAddressShipping
           v-if="state.currentStep === STEPS.ADDRESS_SHIPPING"
           class="mb-10"
+          @on-address-empty="(val) => state.isAddressEmpty = val"
         />
 
-        <PaymentOptions v-if="state.currentStep === STEPS.PAYMENT" />
+        <CheckoutPaymentOptions v-if="state.currentStep === STEPS.PAYMENT" />
 
         <div
           v-if="state.currentStep === STEPS.REVIEW_CONFIRMATION
             || state.currentStep === STEPS.ORDER"
         >
-          <ReviewShippingAndPayment class="mb-12" />
+          <CheckoutReviewShippingAndPayment class="mb-12" />
 
           <!--          as Item cart-->
           <UCard
@@ -196,7 +198,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
               <UDivider />
 
               <div class="flex flex-col gap-4 w-fit mt-6">
-                <AddCouponsCheckout
+                <ChekcoutAddCoupons
                   :shop="state.shop?.id"
                   :state-parent="state"
                   @on-modify-coupons="onModifyCoupons"
@@ -228,7 +230,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
       </div>
 
       <div class="col-span-4">
-        <SummaryOrder
+        <CheckoutSummaryOrder
           v-if="state.dataGetSummaryOder?.summaryOrder"
           :data="state.dataGetSummaryOder.summaryOrder"
         />
@@ -236,10 +238,11 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
         <UButton
           class="mx-auto mt-8"
           block
+          :disabled="state.isAddressEmpty"
           size="xl"
           :loading="state.loadingOrder"
           :ui="{
-            rounded: '!shadow-[0_3px_10px_rgb(0,0,0,0.2)]'
+            rounded: 'shadow-border'
           }"
           @click="onCreateOrder"
         >

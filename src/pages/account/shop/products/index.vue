@@ -64,21 +64,23 @@ const rows = computed(() => {
 
 const itemsDropdown = (row: { id: string }) => [
   [
-    {
-      label: 'Edit',
-      icon: 'i-heroicons-pencil-square-20-solid',
-      click: () => row,
-      // click: () => console.log('Edit', row.id),
-    },
+    // {
+    //   label: 'Edit',
+    //   icon: 'i-heroicons-pencil-square-20-solid',
+    //   click: () => row,
+    //   // click: () => console.log('Edit', row.id),
+    // },
     {
       label: 'Duplicate',
       icon: 'i-heroicons-document-duplicate-20-solid',
+      disabled: true,
     },
   ],
   [
     {
       label: 'Archive',
       icon: 'i-heroicons-archive-box-20-solid',
+      disabled: true,
     },
     {
       label: 'Preview',
@@ -112,169 +114,171 @@ async function removeProduct(id: IProduct['id']) {
 </script>
 
 <template>
-  <div>
-    <div class="flex justify-between mb-6">
-      <!--      <h1 class="text-2xl font-semibold text-customGray-950">-->
-      <h1 class="shop-dashboard-title">
-        Products
-      </h1>
+  <LayoutShopWrapperContent>
+    <template #title>
+      Products
+    </template>
+    <template #actions>
+      <UButton
+        :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}${ROUTES.NEW}`"
+        size="md"
+      >
+        + Create product
+      </UButton>
+    </template>
+    <template #content>
+      <!--    <div class="w-fit">-->
+      <!--      <UPopover>-->
+      <!--    <UButton-->
+      <!--      color="white"-->
+      <!--      label="Status"-->
+      <!--      trailing-icon="i-heroicons-chevron-down-20-solid"-->
+      <!--    />-->
 
-      <NuxtLink to="/account/shop/products/new">
-        <UButton size="md" type="submit">
-          + Create product
-        </UButton>
-      </NuxtLink>
-    </div>
+      <!--        <template #panel>-->
+      <!--          <div class="p-4">-->
+      <!--            <Placeholder class="h-20 w-48"/>-->
+      <!--            <h3 class="font-semibold mb-3">-->
+      <!--              Filter by status-->
+      <!--            </h3>-->
+      <!--            <div v-for="status of productStates">-->
+      <!--              <UCheckbox-->
+      <!--                  :id="status"-->
+      <!--                  v-model="selectedCheckbox"-->
+      <!--                  name="status"-->
+      <!--                  :label="status"-->
+      <!--                  :value="status"-->
+      <!--                  class="mb-2"-->
+      <!--              />-->
+      <!--            </div>-->
+      <!--          </div>-->
+      <!--        </template>-->
+      <!--      </UPopover>-->
+      <!--    </div>-->
 
-
-    <!--    <div class="w-fit">-->
-    <!--      <UPopover>-->
-    <!--    <UButton-->
-    <!--      color="white"-->
-    <!--      label="Status"-->
-    <!--      trailing-icon="i-heroicons-chevron-down-20-solid"-->
-    <!--    />-->
-
-    <!--        <template #panel>-->
-    <!--          <div class="p-4">-->
-    <!--            <Placeholder class="h-20 w-48"/>-->
-    <!--            <h3 class="font-semibold mb-3">-->
-    <!--              Filter by status-->
-    <!--            </h3>-->
-    <!--            <div v-for="status of productStates">-->
-    <!--              <UCheckbox-->
-    <!--                  :id="status"-->
-    <!--                  v-model="selectedCheckbox"-->
-    <!--                  name="status"-->
-    <!--                  :label="status"-->
-    <!--                  :value="status"-->
-    <!--                  class="mb-2"-->
-    <!--              />-->
-    <!--            </div>-->
-    <!--          </div>-->
-    <!--        </template>-->
-    <!--      </UPopover>-->
-    <!--    </div>-->
-
-    <UTable
-      v-model="selected"
-      :rows="rows"
-      :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No products.' }"
-      :columns="columns"
-      :loading="pending"
-      :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
-    >
-      <template #title-data="{ row }">
-        <div class="flex gap-2 max-w-[200px]">
-          <NuxtImg
-            :src="row.image"
-            width="50"
-            height="50"
-            class="rounded"
-            preload
-          />
-          <!--          <div class="inline-block max-w-[150px] break-words">-->
-          <div class="truncate">
-            {{ row.title }}
-          </div>
-        </div>
-      </template>
-
-      <template #sku-data="{ row }">
-        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-          {{ row.inventory.sku || '-' }}
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            {{ vari?.inventory?.sku || '-' }}
-          </div>
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
-              {{ variOpt.inventory.sku || '-' }}
+      <UTable
+        v-model="selected"
+        class="mb-20"
+        :rows="rows"
+        :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No products.' }"
+        :columns="columns"
+        :loading="pending"
+        :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
+      >
+        <template #title-data="{ row }">
+          <div class="flex gap-2 max-w-[200px]">
+            <NuxtImg
+              :src="row.image"
+              width="50"
+              height="50"
+              class="rounded"
+              preload
+            />
+            <!--          <div class="inline-block max-w-[150px] break-words">-->
+            <div class="truncate">
+              {{ row.title }}
             </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template #variant-data="{ row }">
-        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-          None
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            {{ vari.variant_name }}
+        <template #sku-data="{ row }">
+          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+            {{ row.inventory.sku || '-' }}
           </div>
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
-              {{ vari.variant_name }}, {{ variOpt.variant_name }}
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              {{ vari?.inventory?.sku || '-' }}
             </div>
           </div>
-        </div>
-      </template>
-      <template #price-data="{ row }">
-        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-          {{ formatCurrency(row.inventory.price) }}
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            {{ formatCurrency(vari?.inventory?.price) }}
-          </div>
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
-              {{ formatCurrency(variOpt.inventory.price) }}
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+                {{ variOpt.inventory.sku || '-' }}
+              </div>
             </div>
           </div>
-        </div>
-      </template>
-      <template #stock-data="{ row }">
-        <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-          {{ row.inventory.stock }}
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            {{ vari?.inventory?.stock }}
+        </template>
+
+        <template #variant-data="{ row }">
+          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+            None
           </div>
-        </div>
-        <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-          <div v-for="vari of row.variants" :key="vari.id">
-            <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
-              {{ variOpt.inventory.stock }}
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              {{ vari.variant_name }}
             </div>
           </div>
-        </div>
-      </template>
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+                {{ vari.variant_name }}, {{ variOpt.variant_name }}
+              </div>
+            </div>
+          </div>
+        </template>
+        <template #price-data="{ row }">
+          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+            {{ formatCurrency(row.inventory.price) }}
+          </div>
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              {{ formatCurrency(vari?.inventory?.price) }}
+            </div>
+          </div>
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+                {{ formatCurrency(variOpt.inventory.price) }}
+              </div>
+            </div>
+          </div>
+        </template>
+        <template #stock-data="{ row }">
+          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
+            {{ row.inventory.stock }}
+          </div>
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              {{ vari?.inventory?.stock }}
+            </div>
+          </div>
+          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
+            <div v-for="vari of row.variants" :key="vari.id">
+              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+                {{ variOpt.inventory.stock }}
+              </div>
+            </div>
+          </div>
+        </template>
 
-      <template #actions-data="{ row }">
-        <div class="flex items-center justify-end">
-          <UTooltip text="Edit">
-            <UButton
-              color="gray"
-              variant="ghost"
-              class="p-1.5"
-            >
-              <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
-            </UButton>
-          </UTooltip>
-          <UDropdown :items="itemsDropdown(row)">
-            <UButton color="gray" variant="ghost" icon="i-heroicons-ellipsis-horizontal-20-solid" />
-          </UDropdown>
-        </div>
-      </template>
-    </UTable>
-
-    <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-      <UPagination
-        v-model="page"
+        <template #actions-data="{ row }">
+          <div class="flex items-center justify-end">
+            <UTooltip text="Edit">
+              <UButton
+                :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}/${row.id}`"
+                color="gray"
+                variant="ghost"
+                class="p-1.5"
+              >
+                <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
+              </UButton>
+            </UTooltip>
+            <UDropdown :items="itemsDropdown(row)">
+              <UButton
+                color="gray"
+                variant="ghost"
+                icon="i-heroicons-ellipsis-horizontal-20-solid"
+              />
+            </UDropdown>
+          </div>
+        </template>
+      </UTable>
+      <FixedPagination
+        :page="page"
         :page-count="pageCount"
-        :total="data?.totalResults ?? 0"
-        :inactive-button="{ color: 'gray' }"
+        :total="data?.totalResults"
+        @on-change-page="(val) => page = val"
       />
-    </div>
-  </div>
+    </template>
+  </LayoutShopWrapperContent>
 </template>

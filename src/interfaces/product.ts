@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { productSchema, productStateUserCanModify, productVariantSchema } from '../schemas/product.schema';
+import type { ICoupon } from './coupon';
 import type { RequestGetListParams } from '~/interfaces/common';
 import type { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { Override } from '~/interfaces/utils';
@@ -15,14 +16,14 @@ export type IProductVirtualFields = {
 }
 
 export type CreateProductPayload =
-  Omit<IProduct, 'id' | 'rating_average' | 'views' | 'images' | 'shop' | 'state' | 'variant_type'> &
+  Omit<IProduct, 'id' | 'rating_average' | 'views' | 'images' | 'shop' | 'state'> &
   Partial<Pick<IProduct, 'category' | 'images'>> &
   { category?: IProduct['category'] } &
   { state: PRODUCT_STATES_USER_CAN_MODIFY } &
    Pick<IProductInventory, 'price'| 'sku'|'stock'>
 
 
-export type GetProductsLowestPriceQueries = Partial<Pick<IProduct, 'category'> & RequestGetListParams>
+export type GetProductsLowestPriceQueries = Partial<Pick<IProduct, 'category' | 'shop'> & RequestGetListParams>
 
 export type GetProductsQueryParams = Partial<Pick<IProduct, 'title' > & RequestGetListParams>
 
@@ -38,6 +39,11 @@ export type ResponseGetProducts = Override<IProduct, {
   variants?: IVariantGetProducts[]
   image_relative_url: string
   summary_inventory: Record<
-    'lowest_price' | 'highest_price' | 'stock'
-    , number>
+    'lowest_price' | 'highest_price' | 'stock' | 'sale_price' | 'percent_off'
+    , number> & { discount_types: ICoupon['type'][] }
+}>;
+
+export type ResponseGetDetailProduct = Override<IProduct, {
+  shop: IShop,
+  variants: IProductVariant[],
 }>;

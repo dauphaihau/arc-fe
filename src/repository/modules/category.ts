@@ -1,5 +1,7 @@
 import { RESOURCES } from '~/config/enums/resources';
-import type { ResponseGetCategories, GetCategoriesParams, ICategory } from '~/interfaces/category';
+import type {
+  ResponseGetCategories, GetCategoriesParams, ICategory, ICategorySearch
+} from '~/interfaces/category';
 import type { IAttribute } from '~/interfaces/attribute';
 
 export class CategoryModule {
@@ -7,6 +9,15 @@ export class CategoryModule {
     return await useCustomFetch.get<ResponseGetCategories>(
       RESOURCES.CATEGORIES,
       params || null
+    );
+  }
+
+  async getSearchCategories(name: string) {
+    return await useCustomFetch.delete<{categories: ICategorySearch[] }>(
+      RESOURCES.CATEGORIES,
+      {
+        name,
+      }
     );
   }
 
