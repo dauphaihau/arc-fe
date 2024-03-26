@@ -100,22 +100,7 @@ function highlightText(text: string) {
 
 <style scoped>
 
-.slide-down-enter-active,
-.slide-down-leave-active {
-  transition: max-height 0.3s ease-in-out;
-}
-
-.slide-down-enter-to,
-.slide-down-leave-from {
-  overflow: hidden;
-  max-height: 1000px;
-}
-
-.slide-down-enter-from,
-.slide-down-leave-to {
-  overflow: hidden;
-  max-height: 0;
-}
+@import url("src/assets/css/animations.css");
 
 .product {
   @apply flex items-center gap-1 text-gray-500 font-normal text-[12px]

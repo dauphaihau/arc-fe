@@ -1,13 +1,7 @@
 <script setup lang="ts">
 
 import { PRODUCT_CONFIG } from '~/config/enums/product';
-
-const props = defineProps({
-  errorImageField: {
-    type: Boolean,
-    default: false,
-  },
-});
+import { toastCustom } from '~/config/toast';
 
 const toast = useToast();
 
@@ -20,10 +14,6 @@ const state = reactive({
 
 const emit = defineEmits<{(e: 'onChange', value: File[]): void }>();
 
-watch(state, () => {
-  emit('onChange', state.fileImages);
-});
-
 const onPickFile = () => {
   fileInputRef?.value?.click();
 };
@@ -31,12 +21,19 @@ const onPickFile = () => {
 function onFilePicked(event: Event) {
   const target = event.target as HTMLInputElement;
   const files = (target.files as FileList);
+
   if (
     files.length > PRODUCT_CONFIG.MAX_IMAGES ||
-      files.length + state.urlImages.length > PRODUCT_CONFIG.MAX_IMAGES) {
-    toast.add({ title: `max ${PRODUCT_CONFIG.MAX_IMAGES} files` });
+      files.length + state.urlImages.length > PRODUCT_CONFIG.MAX_IMAGES
+  ) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Upload failed',
+      description: `You only have ${PRODUCT_CONFIG.MAX_IMAGES - state.fileImages.length} images left to upload`,
+    });
     return;
   }
+
   for (let i = 0; i < files.length; i++) {
     state.fileImages.push(files[i]);
     const reader = new FileReader();
@@ -52,6 +49,10 @@ const removeImage = (index: number) => {
   state.urlImages.splice(index, 1);
 };
 
+watch(state, () => {
+  emit('onChange', state.fileImages);
+});
+
 
 </script>
 
@@ -62,7 +63,7 @@ const removeImage = (index: number) => {
     :description="`Add up to ${PRODUCT_CONFIG.MAX_IMAGES} photos.`"
     required
   >
-    <div class="flex gap-3">
+    <div class="flex flex-wrap gap-3">
       <div v-for="(url, index) in state.urlImages" :key="url" class="size-image">
         <div
           class="relative group"
@@ -100,16 +101,12 @@ const removeImage = (index: number) => {
           class="hidden"
           type="file"
           multiple
-          :disabled="state.urlImages.length === 10"
+          :disabled="state.urlImages.length === PRODUCT_CONFIG.MAX_IMAGES"
           accept="image/*"
           @change="onFilePicked"
         >
       </div>
     </div>
-
-    <p v-if="props.errorImageField" class="text-red-500 mt-2 text-sm">
-      Required at least 1 photo
-    </p>
   </UFormGroup>
 </template>
 

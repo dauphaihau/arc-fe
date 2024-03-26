@@ -192,7 +192,7 @@ onMounted(async () => {
 
 .overlay {
   @apply fixed z-[1] inset-0 transition-opacity
-  bg-gray-200/75 dark:bg-gray-800/75
+  bg-gray-200/75
 }
 
 .header {

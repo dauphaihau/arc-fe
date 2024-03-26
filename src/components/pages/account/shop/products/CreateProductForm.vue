@@ -1,49 +1,37 @@
 <script setup lang="ts">
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import { productInventorySchema, productSchema } from '~/schemas/product.schema';
+import { createProductSchema } from '~/schemas/product.schema';
 import {
-  PRODUCT_VARIANT_TYPES, PRODUCT_CONFIG, PRODUCT_STATES, PRODUCT_WHO_MADE
+  PRODUCT_VARIANT_TYPES, PRODUCT_CONFIG, PRODUCT_STATES,
+  productWhoMadeOpts, isDigitalOpts
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
-import type { CreateProductPayload } from '~/interfaces/product';
-import type { ICategory } from '~/interfaces/category';
-import type { UndefinableFields } from '~/interfaces/utils';
+import type { CreateProductBody, IProductAttribute } from '~/interfaces/product';
+import { toastCustom } from '~/config/toast';
+
+export type IOnChangeCreateVariant = Pick<CreateProductBody,
+    'variant_group_name' | 'variant_sub_group_name' | 'variant_type' | 'new_combine_variants'
+> | null
 
 const { $api } = useNuxtApp();
 const router = useRouter();
 const toast = useToast();
 
-const fileImages = ref<File[]>();
+const fileImages = ref<File[]>([]);
 const formRef = ref();
-const isDraftProd = ref(false);
-const loading = ref(false);
-const errorImageField = ref(false);
-const isVariantProd = ref(false);
-const btnSubmit = ref();
-const isSubmit = ref(0);
+const isDraftProduct = ref(false);
+const isVariantProduct = ref(false);
+const loadingSubmit = ref(false);
+const btnSubmitRef = ref();
+const disabledButtonSubmit = ref(true);
 const countValidate = ref(0);
 
-const productWhoMadeOpts = [
-  {
-    id: PRODUCT_WHO_MADE.I_DID,
-    label: 'I did',
-  },
-  {
-    id: PRODUCT_WHO_MADE.COLLECTIVE,
-    label: 'A member of my shop',
-  },
-  {
-    id: PRODUCT_WHO_MADE.SOMEONE_ELSE,
-    label: 'Another company or person',
-  },
-];
+const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
-type InitState = UndefinableFields<CreateProductPayload, 'price'>;
-
-const state = reactive<InitState>({
+const state = reactive<CreateProductBody>({
   title: '',
   description: '',
-  who_made: PRODUCT_WHO_MADE.I_DID,
+  who_made: computed(() => selectedWhoMade.value.id),
   is_digital: false,
   state: PRODUCT_STATES.ACTIVE,
   variants: [],
@@ -52,42 +40,36 @@ const state = reactive<InitState>({
   stock: 1,
   sku: '',
   category: '',
+  images: [],
+  tags: [],
   attributes: [],
 });
 
-const selectedWhoMade = ref(productWhoMadeOpts[0]);
-
-const isDigitalOpts = [
-  { value: false, label: 'Physical', help: 'A tangible product that you will ship to buyers.' },
-  { value: true, label: 'Digital', help: 'A digital file that buyers will download.' },
-];
-
-const onChangeVariants = (values: any) => {
-  state.variants = values;
+const onChangeImages = (values: File[]) => {
+  fileImages.value = values;
 };
 
-const validate = (state: CreateProductPayload): FormError[] => {
+const onChangeVariants = (values: IOnChangeCreateVariant): any => {
+  if (!values) {
+    return;
+  }
+  Object.keys(values).forEach((key) => {
+    state[key] = values[key];
+  });
+};
+
+const validate = (state: CreateProductBody): FormError[] => {
   let errors: FormError[] = [];
   countValidate.value++;
 
-  const data = {
-    ...state,
-    images: fileImages.value && fileImages.value.length > 0 ? [{ relative_url: 'shop' }] : [],
-    is_digital: !!state.is_digital,
-  };
-
-  const result = productSchema
-    .merge(productInventorySchema.pick({ price: true, stock: true, sku: true }))
+  const result = createProductSchema
     .omit({
-      id: true,
-      shop: true,
-      views: true,
-      rating_average: true,
       variants: true,
-      price: isVariantProd.value || undefined,
-      stock: isVariantProd.value || undefined,
-      sku: isVariantProd.value || undefined,
-    }).safeParse(data);
+      images: true,
+      price: isVariantProduct.value || undefined,
+      stock: isVariantProduct.value || undefined,
+      sku: isVariantProduct.value || undefined,
+    }).safeParse(state);
 
   if (!result.success) {
     errors = result.error.issues.map((detail) => {
@@ -101,20 +83,25 @@ const validate = (state: CreateProductPayload): FormError[] => {
   return errors;
 };
 
-async function onSubmit(event: FormSubmitEvent<CreateProductPayload>) {
-  if (isDraftProd.value) {
-    event.data.state = PRODUCT_STATES.DRAFT;
+async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
+  const data = { ...event.data };
+  if (isDraftProduct.value) {
+    data.state = PRODUCT_STATES.DRAFT;
   }
-  errorImageField.value = false;
+  if (isVariantProduct.value && data.variants.length === 0) {
+    return;
+  }
+  if (!fileImages.value || fileImages.value.length === 0) {
+    return;
+  }
+  if (data.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
+    delete data.price;
+    delete data.sku;
+    delete data.stock;
+  }
 
-  if (isVariantProd.value && event.data.variants?.length === 0) {
-    return;
-  }
-  if (!fileImages.value) {
-    toast.add({ title: 'Error images' });
-    return;
-  }
-  loading.value = true;
+  loadingSubmit.value = true;
+
   const promisesUploadImages = [];
   const keys = [];
   for (let i = 0; i < fileImages.value.length; i++) {
@@ -140,51 +127,65 @@ async function onSubmit(event: FormSubmitEvent<CreateProductPayload>) {
   await Promise.all(promisesUploadImages);
 
   const { error } = await $api.shop.createProduct({
-    ...event.data,
-    images: keys.map(key => ({ relative_url: key })),
-    is_digital: !!event.data.is_digital,
+    ...data,
+    images: keys.map((key, index) => ({ relative_url: key, rank: index + 1 })),
+    is_digital: !!data.is_digital,
   });
-  loading.value = false;
+  loadingSubmit.value = false;
   if (error.value) {
-    toast.add({ title: 'Create product failed' });
+    toast.add({
+      ...toastCustom.error,
+      title: 'Oops',
+      description: 'Something wrong',
+    });
   } else {
     router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
-    toast.add({ title: 'Create product success' });
+    toast.add({
+      ...toastCustom.success,
+      title: 'Saved',
+      description: 'Create product success',
+    });
   }
 }
 
 function onError(event: FormErrorEvent) {
-  errorImageField.value = event.errors.some(item => item.path === 'images');
-
+  event.errors.sort((a, b) => {
+    const sortingArr = ['description', 'title'];
+    return sortingArr.indexOf(b.path) - sortingArr.indexOf(a.path);
+  });
   const element = document.getElementById(event.errors[0].id);
   element?.focus();
   element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-const onChangeAttributes = (values: any) => {
-  state.attributes = values;
-};
-
-const onChangeCategory = (id: ICategory['id']) => {
-  state.category = id;
-};
-
-const onChangeImages = (values: File[]) => {
-  fileImages.value = values;
-};
-
 watch(() => state.category, () => {
   state.attributes = [];
 });
 
-watch(isVariantProd, () => {
-  if (isVariantProd.value) {
+watchDebounced(
+  () => [state, fileImages.value],
+  () => {
+    const result = createProductSchema
+      .omit({
+        variants: true,
+        images: true,
+        price: isVariantProduct.value || undefined,
+        stock: isVariantProduct.value || undefined,
+        sku: isVariantProduct.value || undefined,
+      }).safeParse(state);
+    disabledButtonSubmit.value = !result.success || fileImages.value.length === 0;
+  },
+  { debounce: 500, maxWait: 1000, deep: true }
+);
+
+watch(isVariantProduct, () => {
+  if (isVariantProduct.value) {
     formRef.value.clear('price');
     formRef.value.clear('stock');
     state.price = undefined;
     state.stock = 1;
   }
-  state.variant_type = isVariantProd.value ?
+  state.variant_type = isVariantProduct.value ?
     PRODUCT_VARIANT_TYPES.SINGLE :
     PRODUCT_VARIANT_TYPES.NONE;
 });
@@ -193,8 +194,8 @@ watch(() => [state.stock, state.price], () => {
   if (state.price && state.price > PRODUCT_CONFIG.MAX_PRICE) {
     state.price = PRODUCT_CONFIG.MAX_PRICE;
   }
-  if (state.stock > PRODUCT_CONFIG.MAX_QUANTITY) {
-    state.stock = PRODUCT_CONFIG.MAX_QUANTITY;
+  if (state.stock && state.stock > PRODUCT_CONFIG.MAX_STOCK) {
+    state.stock = PRODUCT_CONFIG.MAX_STOCK;
   }
   if (!state.stock) {
     state.stock = 0;
@@ -213,14 +214,13 @@ watch(() => [state.stock, state.price], () => {
     @error="onError"
     @submit="onSubmit"
   >
-    <CreateProductCard>
+    <WrapperFormGroupCard>
       <template #title>
         Basic info
       </template>
       <template #content>
-        <CreateProductImagesForm
+        <CreateProductImagesInput
           class="mb-4"
-          :error-image-field="errorImageField"
           @on-change="onChangeImages"
         />
         <UFormGroup
@@ -230,7 +230,7 @@ watch(() => [state.stock, state.price], () => {
           description="Include keywords that buyers would use to search for your product."
           required
         >
-          <UInput v-model="state.title" :disabled="loading" size="lg" />
+          <UInput v-model="state.title" :disabled="loadingSubmit" size="lg" />
         </UFormGroup>
         <UFormGroup
           label="Description"
@@ -245,14 +245,14 @@ watch(() => [state.stock, state.price], () => {
             autoresize
             :maxlength="PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION"
             :rows="5"
-            :disabled="loading"
+            :disabled="loadingSubmit"
             size="lg"
           />
         </UFormGroup>
       </template>
-    </CreateProductCard>
+    </WrapperFormGroupCard>
 
-    <CreateProductCard>
+    <WrapperFormGroupCard>
       <template #title>
         Details
       </template>
@@ -262,92 +262,102 @@ watch(() => [state.stock, state.price], () => {
         to expect.
       </template>
       <template #content>
-        <UFormGroup label="Type" name="is_digital" class="mb-4">
-          <div class="flex gap-16">
-            <URadio
-              v-for="type of isDigitalOpts"
-              :key="type.value.toString()"
-              v-model="state.is_digital"
-              v-bind="type"
-            />
-          </div>
-        </UFormGroup>
-
-        <div class="grid grid-cols-4 gap-4">
-          <UFormGroup label="Who made it?" name="who_made" class="mb-4">
-            <USelectMenu v-model="selectedWhoMade" size="lg" :options="productWhoMadeOpts" />
+        <div>
+          <UFormGroup label="Type" name="is_digital" class="mb-4">
+            <div class="flex gap-16">
+              <URadio
+                v-for="type of isDigitalOpts"
+                :key="type.value.toString()"
+                v-model="state.is_digital"
+                :disabled="loadingSubmit"
+                v-bind="type"
+              />
+            </div>
           </UFormGroup>
-          <!--          <UFormGroup-->
-          <!--            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"-->
-          <!--            class="mb-4"-->
-          <!--            label="Brand"-->
-          <!--            name="attributes.brand"-->
-          <!--          >-->
-          <!--            <UInput v-model="state.attributes.brand"
-          :disabled="loading" size="lg" />-->
-          <!--          </UFormGroup>-->
-          <!--            <UFormGroup-->
-          <!--              label="What is it?"-->
-          <!--              name="description"-->
-          <!--              class="mb-4"-->
-          <!--            >-->
-          <!--              <USelectMenu-->
-          <!--                v-model="selected"-->
-          <!--                size="lg"-->
-          <!--                :options="productWhoMadeOpts"-->
-          <!--              />-->
-          <!--            </UFormGroup>-->
-          <!--            <UFormGroup-->
-          <!--              label="When did you make it?"-->
-          <!--              name="description"-->
-          <!--              class="mb-4"-->
-          <!--            >-->
-          <!--              <USelectMenu-->
-          <!--                v-model="selected"-->
-          <!--                size="lg"-->
-          <!--                :options="productWhoMadeOpts"-->
-          <!--              />-->
-          <!--            </UFormGroup>-->
-        </div>
 
-        <UFormGroup
-          label="Category"
-          name="category"
-          class="mb-4"
-          required
-          description="Type a two- or three-word description of your product
-             to get category suggestions that will help more shoppers find it."
-        >
-          <CreateProductSearchCategoryInput :title="state.title" @on-change="onChangeCategory" />
-        </UFormGroup>
+          <div class="grid grid-cols-4">
+            <UFormGroup
+              label="Who made it?"
+              name="who_made"
+              required
+              class="mb-4 max-w-[218px]"
+            >
+              <USelectMenu
+                v-model="selectedWhoMade"
+                size="lg"
+                :disabled="loadingSubmit"
+                :options="productWhoMadeOpts"
+              />
+            </UFormGroup>
+            <!--          <UFormGroup-->
+            <!--            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"-->
+            <!--            class="mb-4"-->
+            <!--            label="Brand"-->
+            <!--            name="attributes.brand"-->
+            <!--          >-->
+            <!--            <UInput v-model="state.attributes.brand"
+            :disabled="loadingSubmit" size="lg" />-->
+            <!--          </UFormGroup>-->
+            <!--            <UFormGroup-->
+            <!--              label="What is it?"-->
+            <!--              name="description"-->
+            <!--              class="mb-4"-->
+            <!--            >-->
+            <!--              <USelectMenu-->
+            <!--                v-model="selected"-->
+            <!--                size="lg"-->
+            <!--                :options="productWhoMadeOpts"-->
+            <!--              />-->
+            <!--            </UFormGroup>-->
+            <!--            <UFormGroup-->
+            <!--              label="When did you make it?"-->
+            <!--              name="description"-->
+            <!--              class="mb-4"-->
+            <!--            >-->
+            <!--              <USelectMenu-->
+            <!--                v-model="selected"-->
+            <!--                size="lg"-->
+            <!--                :options="productWhoMadeOpts"-->
+            <!--              />-->
+            <!--            </UFormGroup>-->
+          </div>
 
-        <div v-if="state.category">
-          <CreateProductSelectAttributesForm
+          <UpdateCreateProductSearchCategoryInput
+            :title="state.title"
+            @on-change="(categoryId) => state.category = categoryId"
+          />
+
+          <UpdateCreateProductSelectAttributesInput
+            v-if="state.category"
             :key="state.category"
             :category-id="state.category"
-            @on-change="onChangeAttributes"
+            @on-change="(attrs: IProductAttribute[]) => state.attributes = attrs"
+          />
+
+          <UpdateCreateProductTagsInput
+            :count-validate="countValidate"
+            @on-change="(tags) => state.tags = tags"
           />
         </div>
       </template>
-    </CreateProductCard>
+    </WrapperFormGroupCard>
 
-    <CreateProductCard>
+    <WrapperFormGroupCard>
       <template #title>
         Inventory and pricing
       </template>
       <template #content>
-        <div class="">
+        <div>
           <UButton
             class="mb-4"
             color="gray"
             variant="solid"
-            @click="() => isVariantProd = !isVariantProd"
+            @click="() => isVariantProduct = !isVariantProduct"
           >
-            {{ !isVariantProd ? 'Add variantions' : 'Remove variantions' }}
+            {{ !isVariantProduct ? 'Add variantions' : 'Remove variantions' }}
           </UButton>
-
-          <CreateProductVariantForm
-            v-if="isVariantProd"
+          <CreateProductVariantInput
+            v-if="isVariantProduct"
             :count-validate="countValidate"
             @on-change="onChangeVariants"
           />
@@ -356,7 +366,7 @@ watch(() => [state.stock, state.price], () => {
             <UFormGroup class="mb-4" label="Price" name="price" required>
               <UInput
                 v-model.number="state.price"
-                :disabled="loading"
+                :disabled="loadingSubmit"
                 size="lg"
                 type="number"
                 class="w-1/2"
@@ -367,10 +377,10 @@ watch(() => [state.stock, state.price], () => {
                 </template>
               </UInput>
             </UFormGroup>
-            <UFormGroup class="mb-4" label="Quantity" name="stock" required>
+            <UFormGroup class="mb-4" label="Stock" name="stock" required>
               <UInput
                 v-model.number="state.stock"
-                :disabled="loading"
+                :disabled="loadingSubmit"
                 size="lg"
                 type="number"
                 class="w-1/2"
@@ -383,40 +393,48 @@ watch(() => [state.stock, state.price], () => {
               label="SKU"
               name="sku"
             >
-              <UInput v-model="state.sku" :disabled="loading" size="lg" class="w-1/2" />
+              <UInput v-model="state.sku" :disabled="loadingSubmit" size="lg" class="w-1/2" />
             </UFormGroup>
           </div>
         </div>
       </template>
-    </CreateProductCard>
+    </WrapperFormGroupCard>
 
-    <button ref="btnSubmit" type="submit" class="hidden" />
+    <button ref="btnSubmitRef" type="submit" class="hidden" />
   </UForm>
 
-  <div
-    class="flex justify-end items-center gap-2
-       fixed bottom-0 bg-white w-full left-0 pr-8 py-2.5 border-t"
-  >
+  <div class="fixed-actions-form">
     <UButton
-      :disabled="loading"
+      :disabled="loadingSubmit"
+      size="md"
+      color="gray"
+      :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}`"
+    >
+      Cancel
+    </UButton>
+    <UButton
+      :disabled="loadingSubmit || disabledButtonSubmit"
       size="md"
       type="submit"
-      variant="outline"
+      variant="soft"
       @click="() => {
-        isSubmit++
-        btnSubmit.click();
-        isDraftProd = true
+        btnSubmitRef.click();
+        isDraftProduct = true
       }"
     >
       Save
     </UButton>
     <UButton
-      :disabled="loading"
+      :disabled="loadingSubmit || disabledButtonSubmit"
       size="md"
       type="submit"
-      @click="() => btnSubmit.click()"
+      @click="() => btnSubmitRef.click()"
     >
       Save & Display
     </UButton>
   </div>
 </template>
+
+<style scoped>
+@import url("src/assets/css/layout-shop.css");
+</style>

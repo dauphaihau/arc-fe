@@ -1,0 +1,199 @@
+<script setup lang="ts">
+
+import { PRODUCT_CONFIG } from '~/config/enums/product';
+import type { IProduct, IProductImage } from '~/interfaces/product';
+import { toastCustom } from '~/config/toast';
+import type { IOnChangeUpdateImages } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
+
+const props = withDefaults(
+  defineProps<{
+      countValidate: number,
+      loading: boolean,
+      images: IProduct['images'],
+    }>(),
+  {
+    images: () => [],
+  }
+);
+
+const toast = useToast();
+const config = useRuntimeConfig();
+
+const fileInputRef = ref<HTMLInputElement | null>(null);
+
+const state = reactive({
+  fileImages: [] as File[],
+  urlImages: [] as string[],
+  imagesInDB: [...props.images],
+  idsImagesForDelete: [] as IProductImage['id'][],
+});
+
+const emit = defineEmits<{
+  (e: 'onChange', value: IOnChangeUpdateImages): void
+}>();
+
+const onPickFile = () => {
+  fileInputRef?.value?.click();
+};
+
+function onFilePicked(event: Event) {
+  const target = event.target as HTMLInputElement;
+  const files = (target.files as FileList);
+  const totalImagesCurrent = state.urlImages.length + state.imagesInDB.length;
+  if (
+    files.length > PRODUCT_CONFIG.MAX_IMAGES ||
+      files.length + totalImagesCurrent > PRODUCT_CONFIG.MAX_IMAGES
+  ) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Upload failed',
+      description: `You only have ${PRODUCT_CONFIG.MAX_IMAGES - totalImagesCurrent} images left to upload`,
+    });
+    return;
+  }
+  for (let i = 0; i < files.length; i++) {
+    state.fileImages.push(files[i]);
+    const reader = new FileReader();
+    reader.addEventListener('load', () => {
+      state.urlImages.push(reader.result as string);
+    });
+    reader.readAsDataURL(files[i]);
+  }
+}
+
+const removeImage = (index: number) => {
+  state.fileImages.splice(index, 1);
+  state.urlImages.splice(index, 1);
+};
+
+const removeImageInDB = (id: IProductImage['id'], index: number) => {
+  state.imagesInDB.splice(index, 1);
+  state.idsImagesForDelete.push(id);
+};
+
+watch(state, () => {
+  emit('onChange', {
+    fileImages: state.fileImages,
+    idsImagesForDelete: state.idsImagesForDelete,
+  });
+});
+
+</script>
+
+<template>
+  <UFormGroup
+    label="Photos"
+    name="photos"
+    :description="`Add up to ${PRODUCT_CONFIG.MAX_IMAGES} photos.`"
+    required
+  >
+    <div class="flex flex-wrap gap-3">
+      <div
+        v-for="(img, index) in state.imagesInDB"
+        :key="img.id"
+        class="size-image"
+      >
+        <div
+          class="relative group"
+          @click="removeImageInDB(img.id, index)"
+        >
+          <NuxtImg
+            :src="config.public.awsHostBucket + '/' + img?.relative_url"
+            class="size-image"
+          />
+          <div v-if="!props.loading" class="wrapper-close-icon">
+            <UIcon
+              name="i-material-symbols:cancel-rounded"
+              class="text-white h-full w-full p-12"
+            />
+          </div>
+          <UBadge
+            v-if="index === 0"
+            class="absolute bottom-3 right-3"
+            size="sm"
+          >
+            Primary
+          </UBadge>
+        </div>
+      </div>
+
+      <div
+        v-for="(url, index) in state.urlImages"
+        :key="url"
+        class="size-image"
+      >
+        <div
+          class="relative group"
+          @click="removeImage(index)"
+        >
+          <NuxtImg
+            :src="url"
+            class="size-image"
+          />
+          <div v-if="!props.loading" class="wrapper-close-icon">
+            <UIcon
+              name="i-material-symbols:cancel-rounded"
+              class="text-white h-full w-full p-12"
+            />
+          </div>
+          <UBadge
+            v-if="state.imagesInDB.length === 0 && index === 0"
+            class="absolute bottom-3 right-3"
+            size="sm"
+          >
+            Primary
+          </UBadge>
+        </div>
+      </div>
+
+      <div
+        class="wrapper-input-file"
+        :class="[ props.loading ? 'cursor-wait' : 'cursor-pointer']"
+        @click="onPickFile"
+      >
+        <Icon name="material-symbols:android-camera" class="w-full" />
+        <p>Add a photo</p>
+        <input
+          id="formFile"
+          ref="fileInputRef"
+          class="hidden"
+          type="file"
+          multiple
+          :disabled="state.urlImages.length + state.imagesInDB.length === PRODUCT_CONFIG.MAX_IMAGES"
+          accept="image/*"
+          @change="onFilePicked"
+        >
+      </div>
+    </div>
+  </UFormGroup>
+</template>
+
+<style scoped>
+
+.rounded-shape {
+  @apply rounded-xl;
+}
+
+.size-image {
+  @apply h-[145px] w-[145px] rounded-shape;
+}
+
+.wrapper-input-file {
+  @apply size-image border-dashed border-4 border-zinc-300
+  grid place-content-center text-center;
+}
+
+.wrapper-close-icon {
+  @apply
+  rounded-shape
+  transform duration-200 ease-in-out
+  absolute z-[2] group-hover:block hidden
+  inset-0
+  w-full h-full
+  hover:bg-black
+  opacity-30
+  grid place-content-center
+  cursor-pointer;
+}
+
+</style>

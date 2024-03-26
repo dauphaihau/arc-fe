@@ -1,18 +1,26 @@
 <script setup lang="ts">
 
-import type { IProductInventory, IProductVariant } from '~/interfaces/product';
-import { PRODUCT_CONFIG } from '~/config/enums/product';
+import type {
+  IProduct,
+  IProductInventory,
+  IProductVariant,
+  ResponseGetDetailProductByShop,
+  UpdateProductBody, VariantOptionsUpdate
+} from '~/interfaces/product';
+import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product.schema';
+import type { IOnChangeUpdateVariants } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
 
-const props = defineProps<{ countValidate: number }>();
+const props = defineProps<{
+  countValidate: number,
+  product: ResponseGetDetailProductByShop
+}>();
 
-const generateRandomId = () => new Date().getTime();
+const generateRandomId = () => new Date().getTime().toString();
 
-type VariantOption = { id: number, name: string, errorMsg: string };
+type VariantOption = { id: IProductVariant['id'], variant_name: string, errorMsg: string };
 
 type State = {
-  variants: VariantOption[]
-  subVariants: VariantOption[]
   isActiveSubVariant: boolean
   variantOption: string
   subVariantOption: string
@@ -20,31 +28,39 @@ type State = {
   errorSubVariantOption: string
   errorVariantGroupName: string
   errorVariantSubGroupName: string
-} & Pick<IProductVariant, 'variant_group_name' | 'sub_variant_group_name'>
+  variantIdsDelete: IProductVariant['id'][]
+  variantsCurrent: Map<IProductVariant['id'], IProductVariant['variant_name']>
+} & Record<'variants' | 'subVariants', VariantOption[]>
+    & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
 
 type VariantTable = {
   id: number
+  inventoryId?: IProductInventory['id'] | null
+  subVariantId?: IProductVariant['id'] | null
   sub_variant_name?: string,
   errorPrice: string,
   errorStock: string,
+  isUpdated?: boolean,
   price?: IProductInventory['price']
 } & Pick<IProductVariant, 'variant_name'> &
     Pick<IProductInventory, | 'stock' | 'sku'>
 
-const emit = defineEmits<{ (e: 'onChange', value: any[]): void }>();
+const emit = defineEmits<{ (e: 'onChange', value: IOnChangeUpdateVariants | null): void }>();
 
 const state = reactive<State>({
-  variant_group_name: '',
-  sub_variant_group_name: '',
+  variant_group_name: props.product.variant_group_name,
+  variant_sub_group_name: props.product?.variant_sub_group_name,
   isActiveSubVariant: false,
   variantOption: '',
+  subVariantOption: '',
   errorVariantGroupName: '',
   errorSubVariantOption: '',
   errorVariantSubGroupName: '',
   errorVariantOption: '',
-  subVariantOption: '',
   variants: [],
   subVariants: [],
+  variantIdsDelete: [],
+  variantsCurrent: new Map(),
 });
 
 const defaultVariantTable: VariantTable = {
@@ -55,9 +71,73 @@ const defaultVariantTable: VariantTable = {
   sku: '',
   errorPrice: '',
   errorStock: '',
+  inventoryId: null,
+  isUpdated: false,
 };
 
 const variantsTable = ref<VariantTable[]>([defaultVariantTable]);
+
+onMounted(() => {
+  const { variants, variant_type } = props.product;
+
+  state.variants = variants.map((variant) => {
+    state.variantsCurrent.set(variant.id, variant.variant_name);
+    state.variantsCurrent.set(variant.variant_name, variant.id);
+    return {
+      id: variant.id,
+      variant_name: variant.variant_name,
+      errorMsg: '',
+    };
+  });
+
+  if (variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
+    variantsTable.value = variants.map((variant, index) => ({
+      id: index + 1,
+      inventoryId: variant.inventory.id,
+      variant_name: variant.variant_name || '',
+      price: variant.inventory?.price || undefined,
+      stock: variant.inventory?.stock || 0,
+      sku: variant.inventory?.sku || '',
+      isUpdated: false,
+      errorPrice: '',
+      errorStock: '',
+    }));
+  }
+
+  if (variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+    openSubVariant();
+    state.subVariants = variants[0].variant_options.map((variantOpt) => {
+      state.variantsCurrent.set(variantOpt.variant.id, variantOpt.variant.variant_name);
+      state.variantsCurrent.set(variantOpt.variant.variant_name, variantOpt.variant.id);
+      return {
+        id: variantOpt.variant.id,
+        variant_name: variantOpt.variant.variant_name,
+        errorMsg: '',
+      };
+    });
+
+    let id = 0;
+    const initVariantsTable: VariantTable[] = [];
+    variants.forEach((variant) => {
+      variant.variant_options.forEach((variantOpt) => {
+        id++;
+        initVariantsTable.push({
+          id,
+          variant_name: variant.variant_name || '',
+          sub_variant_name: variantOpt.variant.variant_name || '',
+          subVariantId: variantOpt.variant.id,
+          inventoryId: variantOpt.inventory.id,
+          price: variantOpt.inventory?.price || undefined,
+          stock: variantOpt.inventory?.stock || 0,
+          sku: variantOpt.inventory?.sku || '',
+          errorPrice: '',
+          errorStock: '',
+        });
+      });
+    });
+    variantsTable.value = initVariantsTable;
+  }
+});
 
 function mixVariantsTable() {
   let id = 0;
@@ -66,13 +146,15 @@ function mixVariantsTable() {
     state.subVariants.forEach((stateSubVariant) => {
       id++;
       const result = variantsTable.value.find(
-        variant => variant.variant_name === stateVariant.name &&
-              variant.sub_variant_name === stateSubVariant.name
+        variant => variant.variant_name === stateVariant.variant_name &&
+              variant.sub_variant_name === stateSubVariant.variant_name
       );
       newVariantsTable.push({
         id,
-        variant_name: stateVariant.name || '',
-        sub_variant_name: stateSubVariant.name || '',
+        variant_name: stateVariant.variant_name || '',
+        sub_variant_name: stateSubVariant.variant_name || '',
+        subVariantId: state.variantsCurrent.get(stateSubVariant.variant_name),
+        inventoryId: result?.inventoryId || null,
         price: result?.price || undefined,
         stock: result?.stock || 0,
         sku: result?.sku || '',
@@ -85,7 +167,7 @@ function mixVariantsTable() {
 }
 
 const addVariant = () => {
-  state.variants.push({ id: generateRandomId(), name: state.variantOption, errorMsg: '' });
+  state.variants.push({ id: generateRandomId(), variant_name: state.variantOption, errorMsg: '' });
 
   // case add variant_name into first element table
   if (variantsTable.value.length === 1 && !variantsTable.value[0].variant_name) {
@@ -116,7 +198,7 @@ const addVariant = () => {
 };
 
 const addSubVariant = () => {
-  state.subVariants.push({ id: generateRandomId(), name: state.subVariantOption, errorMsg: '' });
+  state.subVariants.push({ id: generateRandomId(), variant_name: state.subVariantOption, errorMsg: '' });
 
   // case add variant_name into first element table at sub variant column
   if (!variantsTable.value[0].sub_variant_name && variantsTable.value.length === 1) {
@@ -132,7 +214,7 @@ const addSubVariant = () => {
       newVariants.push({
         ...defaultVariantTable,
         id: index + 1,
-        sub_variant_name: subVariant.name,
+        sub_variant_name: subVariant.variant_name,
       });
     });
     variantsTable.value = newVariants;
@@ -145,31 +227,33 @@ const addSubVariant = () => {
   state.subVariantOption = '';
 };
 
-const removeVariant = ({ id, name }: VariantOption) => {
+const removeVariant = ({ id, variant_name }: VariantOption) => {
+  state.variantIdsDelete.push(id);
   state.variants = state.variants.filter(variant => variant.id !== id);
-  variantsTable.value = variantsTable.value.filter(variant => variant.variant_name !== name);
+  variantsTable.value = variantsTable.value.filter(variant => variant.variant_name !== variant_name);
 };
 
-const removeSubVariant = ({ id, name }: VariantOption) => {
+const removeSubVariant = ({ id, variant_name }: VariantOption) => {
+  state.variantIdsDelete.push(id);
   state.subVariants = state.subVariants.filter(variant => variant.id !== id);
   variantsTable.value = variantsTable.value.filter((variant) => {
-    return variant.sub_variant_name !== name;
+    return variant.sub_variant_name !== variant_name;
   });
 };
 
 const updateVariantName = (currentVariant: VariantOption, e: Event) => {
-  const { id, name } = currentVariant;
+  const { id, variant_name } = currentVariant;
   const newVariantName = (e.target as HTMLInputElement).value;
 
   state.variants = state.variants.map((variant) => {
     if (variant.id === id) {
-      return { ...variant, name: newVariantName };
+      return { ...variant, variant_name: newVariantName };
     }
     return variant;
   });
 
   variantsTable.value = variantsTable.value.map((variant) => {
-    if (variant.variant_name === name) {
+    if (variant.variant_name === variant_name) {
       return { ...variant, variant_name: newVariantName };
     }
     return variant;
@@ -177,16 +261,16 @@ const updateVariantName = (currentVariant: VariantOption, e: Event) => {
 };
 
 const updateSubVariantName = (currentVariant: VariantOption, e: Event) => {
-  const { id, name } = currentVariant;
+  const { id, variant_name } = currentVariant;
   const newSubVariantName = (e.target as HTMLInputElement).value;
   state.subVariants = state.subVariants.map((variant) => {
     if (variant.id === id) {
-      return { ...variant, name: newSubVariantName };
+      return { ...variant, variant_name: newSubVariantName };
     }
     return variant;
   });
   variantsTable.value = variantsTable.value.map((variant) => {
-    if (variant.sub_variant_name === name) {
+    if (variant.sub_variant_name === variant_name) {
       return { ...variant, sub_variant_name: newSubVariantName };
     }
     return variant;
@@ -226,29 +310,32 @@ const onChangeInputTable = (event: Event, row: VariantTable) => {
   if (name === 'price' || name === 'stock') {
     value = Number(value);
   }
-  console.log('row', row);
   if (row.id) {
-    console.log('variants-table', variantsTable.value);
     variantsTable.value[row.id - 1][name] = value;
+    variantsTable.value[row.id - 1].isUpdated = true;
   }
 };
 
-const openSubVariant = () => {
+function openSubVariant() {
   state.isActiveSubVariant = true;
 
   columns.value = insert(columns.value, {
     key: 'sub_variant_name',
-    label: 'Group variant 2',
+    label: state.variant_sub_group_name || 'Group variant 2',
   }, 1);
 
   if (state.variants.length) {
     variantsTable.value = state.variants.map((variant) => {
-      return { ...defaultVariantTable, variant_name: variant.name, sub_variant_name: '' };
+      return {
+        ...defaultVariantTable,
+        variant_name: variant.variant_name,
+        sub_variant_name: '',
+      };
     });
   } else {
     variantsTable.value[0].sub_variant_name = '';
   }
-};
+}
 
 const closeSubVariant = () => {
   state.isActiveSubVariant = false;
@@ -260,7 +347,7 @@ const closeSubVariant = () => {
       return {
         ...defaultVariantTable,
         id: index + 1,
-        variant_name: variant.name,
+        variant_name: variant.variant_name,
       };
     });
   } else {
@@ -270,10 +357,10 @@ const closeSubVariant = () => {
 
 const rowsTable = computed(() => variantsTable.value);
 
-watch(() => [state.variant_group_name, state.sub_variant_group_name], () => {
+watch(() => [state.variant_group_name, state.variant_sub_group_name], () => {
   columns.value[0].label = state.variant_group_name || 'Group variant 1';
   if (state.isActiveSubVariant) {
-    columns.value[1].label = state.sub_variant_group_name || 'Group variant 2';
+    columns.value[1].label = state.variant_sub_group_name || 'Group variant 2';
   }
 });
 
@@ -281,22 +368,22 @@ watch(() => props.countValidate, () => {
   state.errorVariantGroupName = !state.variant_group_name ? 'Required' : '';
   state.errorVariantOption = state.variants.length === 0 ? 'Required at least 1 variant' : '';
   if (state.isActiveSubVariant) {
-    state.errorVariantSubGroupName = !state.sub_variant_group_name ? 'Required' : '';
+    state.errorVariantSubGroupName = !state.variant_sub_group_name ? 'Required' : '';
     state.errorSubVariantOption = state.subVariants.length === 0 ? 'Required at least 1 variant' : '';
   }
 
   // validate duplicate variant name
-  const variantNameMap = new Map<string, number>();
+  const variantNameMap = new Map<IProductVariant['variant_name'], number>();
   const errorMsg = 'Duplicate';
   let isAnyDuplicateVariantName = false;
   state.variants.forEach((variant, idx) => {
     variant.errorMsg = '';
-    const isHasVariantName = variantNameMap.has(variant.name);
+    const isHasVariantName = variantNameMap.has(variant.variant_name);
 
     if (!isHasVariantName) {
-      variantNameMap.set(variant.name, idx);
+      variantNameMap.set(variant.variant_name, idx);
     } else {
-      const indexInMap = variantNameMap.get(variant.name);
+      const indexInMap = variantNameMap.get(variant.variant_name);
       variant.errorMsg = errorMsg;
       isAnyDuplicateVariantName = true;
       if (indexInMap || indexInMap === 0) {
@@ -338,60 +425,119 @@ watch(() => props.countValidate, () => {
       !isAnyDuplicateVariantName &&
       parsedVariantsTable.success
   ) {
-    emitVariantsTable();
+    emitData();
   } else {
-    emit('onChange', []);
+    emit('onChange', null);
   }
 });
 
-function emitVariantsTable() {
-  if (state.isActiveSubVariant) {
-    const groupedVariants = Object.entries(
-      variantsTable.value.reduce((acc, variant) => {
-        const {
-          price, sku, stock, variant_name, sub_variant_name,
-        } = variant;
+function emitData() {
+  const variant_inventories: UpdateProductBody['variant_inventories'] = [];
+  const new_variants: UpdateProductBody['new_variants'] = [];
+  const update_variants: UpdateProductBody['update_variants'] = [];
+  let new_combine_variants: UpdateProductBody['new_combine_variants'] = [];
 
-        if (!acc[variant_name]) {
-          acc[variant_name] = [];
-        }
-        acc[variant_name].push({
-          price,
-          sku,
-          stock,
-          variant_name: sub_variant_name,
-        });
-        return acc;
-      }, {})
+  // add new variant ( case combine variant )
+  if (state.isActiveSubVariant) {
+    new_combine_variants = Object.entries<VariantOptionsUpdate[]>(
+      variantsTable.value
+        .filter(variant => !variant.inventoryId)
+        .reduce((acc, variant) => {
+          const {
+            price, sku, stock, variant_name, sub_variant_name, subVariantId,
+          } = variant;
+
+          if (!acc[variant_name]) {
+            acc[variant_name] = [];
+          }
+          acc[variant_name].push({
+            price,
+            sku,
+            stock,
+            variant: subVariantId,
+            variant_name: sub_variant_name,
+          });
+          return acc;
+        }, {})
     ).map(([variant_name, variant_options]) => ({
-      variant_group_name: state.variant_group_name,
-      sub_variant_group_name: state.sub_variant_group_name,
       variant_name,
       variant_options,
     }));
-    emit('onChange', groupedVariants);
-    return;
   }
 
-  const groupedVariants = Object.entries(
-    variantsTable.value.reduce((acc, variant) => {
-      const {
-        price, sku, stock, variant_name,
-      } = variant;
-      if (!acc[variant_name]) {
-        acc[variant_name] = {};
+  // update inventory or add new variant ( single variant )
+  variantsTable.value.forEach((variant) => {
+    const {
+      isUpdated, inventoryId, price, stock, sku, variant_name,
+    } = variant;
+
+    if (!price) {
+      return;
+    }
+
+    if (isUpdated && inventoryId) {
+      variant_inventories.push({
+        id: inventoryId,
+        price,
+        stock,
+        sku: sku || '',
+      });
+    }
+    if (!state.isActiveSubVariant && !inventoryId) {
+      new_variants.push({
+        variant_name,
+        price,
+        stock,
+        sku: sku || '',
+      });
+    }
+  });
+
+  // update variant name
+  state.variants.forEach((variant) => {
+    if (state.variantsCurrent.has(variant.id)) {
+      if (state.variantsCurrent.get(variant.id) !== variant.variant_name) {
+        update_variants.push({
+          id: variant.id,
+          variant_name: variant.variant_name,
+        });
       }
-      acc[variant_name] = {
-        price, sku, stock, variant_name,
-      };
-      return acc;
-    }, {})
-  ).map(([variant_name, resValuesVariant]) => ({
-    ...resValuesVariant as object,
+    }
+  });
+
+  // update sub variant name
+  if (state.isActiveSubVariant) {
+    state.subVariants.forEach((variant) => {
+      if (
+        state.variantsCurrent.has(variant.id) &&
+          state.variantsCurrent.get(variant.id) !== variant.variant_name
+      ) {
+        update_variants.push({
+          id: variant.id,
+          variant_name: variant.variant_name,
+        });
+      }
+    });
+  }
+
+  // delete variant + inv
+  if (state.variantIdsDelete.length > 0) {
+    state.variantIdsDelete.forEach((id) => {
+      if (state.variantsCurrent.has(id)) {
+        update_variants.push({ id });
+      }
+    });
+  }
+
+  emit('onChange', {
     variant_group_name: state.variant_group_name,
-    variant_name,
-  }));
-  emit('onChange', groupedVariants);
+    variant_sub_group_name: state.variant_sub_group_name,
+    variant_type: state.isActiveSubVariant ? PRODUCT_VARIANT_TYPES.COMBINE : PRODUCT_VARIANT_TYPES.SINGLE,
+    update_variants,
+    variant_inventories,
+    new_variants,
+    new_combine_variants,
+  });
 }
 
 watchDebounced(
@@ -401,7 +547,7 @@ watchDebounced(
     if (state.variants.length > 0) {
       state.variants.forEach((variant) => {
         variant.errorMsg = '';
-        if (variant.name === state.variantOption) {
+        if (variant.variant_name === state.variantOption) {
           variant.errorMsg = 'Duplicate';
           state.errorVariantOption = 'Duplicate';
         }
@@ -418,7 +564,7 @@ watchDebounced(
     if (state.subVariants.length > 0) {
       state.subVariants.forEach((variant) => {
         variant.errorMsg = '';
-        if (variant.name === state.subVariantOption) {
+        if (variant.variant_name === state.subVariantOption) {
           variant.errorMsg = 'Duplicate';
           state.errorSubVariantOption = 'Duplicate';
         }
@@ -444,7 +590,7 @@ watchDebounced(
         >
           <template #hint>
             <span class="hint-text-input">
-              {{ state.variant_group_name.length ?? 0 }}/
+              {{ state.variant_group_name?.length ?? 0 }}/
               {{ PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME }}
             </span>
           </template>
@@ -495,7 +641,7 @@ watchDebounced(
                 orientation="horizontal"
               >
                 <UInput
-                  :model-value="option.name"
+                  :model-value="option.variant_name"
                   :maxlength="PRODUCT_CONFIG.MAX_CHAR_VARIANT_NAME"
                   @change="(e: Event) => updateVariantName(option, e)"
                 />
@@ -541,17 +687,17 @@ watchDebounced(
             class="mb-4"
             label="Group variant 2"
             required
-            name="sub_variant_group_name"
+            name="variant_sub_group_name"
             :error="state.errorVariantSubGroupName ?? ''"
           >
             <UInput
-              v-model="state.sub_variant_group_name"
+              v-model="state.variant_sub_group_name"
               size="lg"
               :maxlength="PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME"
             />
             <template #hint>
               <span class="hint-text-input">
-                {{ state.sub_variant_group_name?.length ?? 0 }}/
+                {{ state.variant_sub_group_name?.length ?? 0 }}/
                 {{ PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME }}
               </span>
             </template>
@@ -591,7 +737,7 @@ watchDebounced(
                   orientation="horizontal"
                 >
                   <UInput
-                    :model-value="option.name"
+                    :model-value="option.variant_name"
                     @change="(e: Event) => updateSubVariantName(option, e)"
                   />
                   <UButton
@@ -656,7 +802,7 @@ watchDebounced(
             v-model.number="row.stock"
             name="stock"
             size="lg"
-            :maxlength="PRODUCT_CONFIG.MAX_QUANTITY.toString().length"
+            :maxlength="PRODUCT_CONFIG.MAX_STOCK.toString().length"
             @change="(e: Event) => onChangeInputTable(e, row)"
             @keypress="keyPressIsNumber($event)"
           />

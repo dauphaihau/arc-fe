@@ -123,6 +123,8 @@ const cartStore = useCartStore();
 
 <style scoped>
 
+@import url("src/assets/css/animations.css");
+
 .item-profile {
   @apply font-medium flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100
 }

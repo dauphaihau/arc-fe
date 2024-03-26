@@ -28,12 +28,14 @@ export type IUpdateCouponsItem = {
 }
 
 export type IProductCartPopulated = Override<IProductCart, {
+  variant: Pick<IProductVariant, 'variant_name'>
   inventory: IProductInventory & {
     product: IProduct
   },
 }>
 
 export type IItemCartPopulated = Override<IItemCart, {
+  shop: IShop
   products: IProductCartPopulated[]
 }>
 

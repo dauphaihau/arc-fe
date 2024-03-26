@@ -6,20 +6,49 @@ import { ROUTES } from '~/config/enums/routes';
 const routes = useRoute();
 const authStore = useAuthStore();
 
-const { ACCOUNT, SHOP, PRODUCTS } = ROUTES;
+const {
+  ACCOUNT, SHOP, PRODUCTS, COUPONS, SALES,
+} = ROUTES;
 
-const itemsLinkSidebar = [
-  { id: 'db', title: 'Dashboard', route: `${ACCOUNT}${SHOP}/dashboard` },
-  { id: 'pd', title: 'Products', route: ACCOUNT + SHOP + PRODUCTS },
+type ILinkBase = {
+  title: string
+  route?: string
+  disabled?: boolean
+}
+
+export type ILink = {
+  sub?: ILinkBase[]
+} & ILinkBase
+
+const itemsLinkSidebar: ILink[] = [
+  { title: 'Dashboard', route: `${ACCOUNT}${SHOP}/dashboard` },
+  { title: 'Products', route: ACCOUNT + SHOP + PRODUCTS },
   {
-    id: 'ms', title: 'Messages', route: `${ACCOUNT}${SHOP}/messages`, disabled: true,
+    title: 'Messages', route: `${ACCOUNT}${SHOP}/messages`, disabled: true,
   },
   {
-    id: 'os', title: 'Orders & Shipping', route: `${ACCOUNT}${SHOP}/orders`, disabled: true,
+    title: 'Orders & Shipping', route: `${ACCOUNT}${SHOP}/orders`, disabled: true,
   },
-  { id: 'mt', title: 'Marketing +', route: `${ACCOUNT}${SHOP}/marketing` },
   {
-    id: 'fc', title: 'Finances', route: `${ACCOUNT}${SHOP}/finances`, disabled: true,
+    title: 'Marketing',
+    sub: [
+      {
+        title: 'Ads',
+        disabled: true,
+        route: `${ACCOUNT}${SHOP}/ads`,
+      },
+      {
+        title: 'Sales',
+        route: `${ACCOUNT}${SHOP}${SALES}`,
+      },
+      {
+        title: 'Coupons',
+        route: `${ACCOUNT}${SHOP}${COUPONS}`,
+      },
+    ],
+  },
+  {
+    title: 'Finances', route: `${ACCOUNT}${SHOP}/finances`, disabled: true,
   },
 ];
 
@@ -64,7 +93,7 @@ const itemsShopDropdown = [
     <UDropdown
       :items="itemsShopDropdown"
       :popper="{ placement: 'bottom-start', offsetDistance: 20, offsetSkid: -8 }"
-      class="mb-4 mx-4 mt-3 p-2 pr-3 rounded  hover:bg-customGray-200/50 duration-200"
+      class="mb-6 mx-4 mt-3 p-2 pr-3 rounded-md  hover:bg-customGray-200/50 duration-200"
     >
       <div class="flex items-center gap-2">
         <UButton
@@ -79,23 +108,34 @@ const itemsShopDropdown = [
       </div>
     </UDropdown>
 
-    <div class="flex flex-col gap-3 relative">
+    <div class="flex flex-col gap-1 relative">
       <div v-for="(item, index) of itemsLinkSidebar" :key="index">
-        <LayoutShopMarketingSlide v-if="item.id === 'mt'" @open-slide="(val) => isOpen = val " />
-        <ULink
+        <LayoutShopSidebarSubLinks v-if="item?.sub || !item.route" :data="item" />
+
+        <div
           v-else
-          prefetch
-          :to="item.route"
-          :disabled="item?.disabled"
-          active-class="text-primary border-l-2 border-primary"
-          inactive-class="text-customGray-900 hover:text-customGray-950 border-l-2 border-transparent"
-          :class="[
-            'font-medium w-full text-sm pl-5',
-            routes.path.includes(item.route) && 'text-primary border-l-2 !border-primary'
-          ]"
+          class="flex"
+          :class="[item.disabled && 'opacity-50']"
         >
-          {{ item.title }}
-        </ULink>
+          <UDivider
+            :ui="{ border: { base: routes.path.indexOf(item.route) > -1 ? 'border-primary' : 'border-transparent'}}"
+            orientation="vertical"
+            class="w-[3px] h-auto"
+            size="sm"
+          />
+
+          <NuxtLink
+            :to="item?.disabled ? '' : item.route"
+            prefetch
+            class="w-full link-default link-theme ml-2 mr-4"
+            :class="[
+              'pl-5',
+              routes.path.includes(item.route) ? 'link-active' : 'link-inactive'
+            ]"
+          >
+            {{ item.title }}
+          </NuxtLink>
+        </div>
       </div>
     </div>
   </aside>
@@ -103,8 +143,6 @@ const itemsShopDropdown = [
 
 <style scoped>
 
-.icon-button {
-  padding: 8px;
-}
+@import url("src/assets/css/layout-shop.css");
 
 </style>

@@ -1,6 +1,11 @@
 import type { IShop } from '~/interfaces/shop';
 import type {
-  CreateProductPayload, GetProductsQueryParams, IProduct, IProductVirtualFields
+  CreateProductBody,
+  GetProductsQueryParams,
+  IProduct,
+  IProductVirtualFields,
+  ResponseGetDetailProductByShop,
+  UpdateProductBody
 } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
@@ -16,23 +21,38 @@ export class ShopModule {
     });
   }
 
-  async createShop(payload: Pick<IShop, 'shop_name'>) {
+  async createShop(body: Pick<IShop, 'shop_name'>) {
     return await useAsyncData<{ shop: IShop }, ErrorServer>(
       'createShop',
-      () => useCustomOFetch.post(`${RESOURCES.SHOPS}`, payload)
+      () => useCustomOFetch.post(`${RESOURCES.SHOPS}`, body)
     );
   }
 
-  async createProduct(payload: CreateProductPayload) {
+  async createProduct(body: CreateProductBody) {
     return await useCustomFetch.post<{ product: IProduct }>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}`,
-      payload
+      body
     );
   }
 
-  async deleteProduct(productId: IProduct['id']) {
+  async updateProduct(bodyParam: UpdateProductBody) {
+    const { id, ...body } = bodyParam;
+    return await useCustomFetch.patch<{ product: IProduct }>(
+      `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${id}`,
+      body
+    );
+  }
+
+  async deleteProduct(id: IProduct['id']) {
     return await useCustomFetch.delete(
-      `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${productId}`
+      `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${id}`
+    );
+  }
+
+  async getDetailProduct(id: IProduct['id']) {
+    return await useCustomFetch.get<{product: ResponseGetDetailProductByShop}>(
+    // return await useCustomFetch.get<{product: ResponseGetDetailProductByShop}>(
+      `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${id}`
     );
   }
 
@@ -43,10 +63,10 @@ export class ShopModule {
     );
   }
 
-  async createCoupon(payload: CreateCouponPayload) {
+  async createCoupon(body: CreateCouponPayload) {
     return await useCustomFetch.post<{ product: IProduct }>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.COUPONS}`,
-      payload
+      body
     );
   }
 

@@ -115,7 +115,7 @@ const itemsDropdown = (row: { id: string }) => [
     <template #actions>
       <UButton
         :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.SALES}/new`"
-        size="md"
+        size="sm"
       >
         + Run a sale
       </UButton>

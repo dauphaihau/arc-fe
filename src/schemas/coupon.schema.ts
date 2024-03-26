@@ -57,9 +57,9 @@ export const couponSchema = z.object({
        ${COUPON_CONFIG.MIN_USES_PER_USER} and ${COUPON_CONFIG.MAX_USES_PER_USER}.`),
   max_uses: z
     .number()
-    .min(1, `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_QUANTITY}.`)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY,
-      `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_QUANTITY}.`),
+    .min(1, `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_STOCK}.`)
+    .max(PRODUCT_CONFIG.MAX_STOCK,
+      `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_STOCK}.`),
   min_order_type: z
     .nativeEnum(COUPON_MIN_ORDER_TYPES)
     .default(COUPON_MIN_ORDER_TYPES.ORDER_TOTAL),

@@ -5,8 +5,6 @@ import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import type { IAddProductCart } from '~/interfaces/cart';
 import type { ResponseGetDetailProduct } from '~/interfaces/product';
 
-const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
-
 const { $api } = useNuxtApp();
 const toast = useToast();
 const cartStore = useCartStore();
@@ -17,6 +15,8 @@ const { product } = defineProps<{
   product: ResponseGetDetailProduct
 }>();
 
+const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
+
 const formRef = ref();
 const loading = ref(false);
 
@@ -26,8 +26,8 @@ interface IStateSubmit extends IAddProductCart {
 }
 
 const state = reactive({
-  firstVariantLabel: '',
-  secondVariantLabel: '',
+  firstVariantLabel: product.variant_group_name,
+  secondVariantLabel: product.variant_sub_group_name,
   isVariant: product.variants && product.variants.length > 0,
   firstVariantOpts: [] as string[],
   secondVariantOpts: [] as string[],
@@ -56,13 +56,11 @@ const maxQuantity = computed(() => {
 
 onMounted(() => {
   if (product?.variants && product.variants.length > 0) {
-    const variant = product.variants[0];
-    state.firstVariantLabel = variant?.variant_group_name;
-    state.secondVariantLabel = variant?.sub_variant_group_name as string;
-
     state.firstVariantOpts = product.variants.map(val => val.variant_name);
+
+    const variant = product.variants[0];
     if (variant?.variant_options) {
-      state.secondVariantOpts = variant.variant_options?.map(val => val.variant_name);
+      state.secondVariantOpts = variant.variant_options.map(val => val.variant.variant_name);
     }
   }
 });
@@ -89,13 +87,16 @@ const validate = (stateValidate: IStateSubmit): FormError[] => {
 };
 
 async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
+  if (!authStore.isLogged) {
+    authStore.showLoginDialog = true;
+    return;
+  }
   formRef.value.clear();
 
   if (state.isBuyNow) {
     onBuyNow();
     return;
   }
-
   loading.value = true;
 
   const payload: IAddProductCart = {
@@ -135,14 +136,14 @@ watch(() => [stateSubmit.variantField1, stateSubmit.variantField2], () => {
 
     if (product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE && foundVariant1) {
       const foundVariant2 = foundVariant1?.variant_options?.find((val) => {
-        return val.variant_name === stateSubmit.variantField2;
+        return val.variant.variant_name === stateSubmit.variantField2;
       });
       if (foundVariant2) {
         emit('onChangeVariant', foundVariant2.inventory.price);
         state.stockVariant = foundVariant2.inventory.stock;
         state.priceVariant = foundVariant2.inventory.price;
         state.variantName1 = foundVariant1.variant_name;
-        state.variantName2 = foundVariant2.variant_name;
+        state.variantName2 = foundVariant2.variant.variant_name;
         stateSubmit.inventory = foundVariant2.inventory.id;
         stateSubmit.variant = foundVariant1.id;
       }
@@ -162,10 +163,6 @@ watch(() => stateSubmit.quantity, () => {
     stateSubmit.quantity = maxQuantity.value;
   }
 });
-
-const showLoginDialog = () => {
-  authStore.showLoginDialog = true;
-};
 
 const onBuyNow = () => {
   cartStore.productCheckoutNow = {
@@ -251,7 +248,7 @@ const onBuyNow = () => {
       </div>
     </div>
 
-    <div v-if="authStore.isLogged" class="flex gap-4">
+    <div class="flex gap-4">
       <UButton
         size="xl"
         variant="soft"
@@ -263,21 +260,6 @@ const onBuyNow = () => {
         size="xl"
         type="submit"
         @click="state.isBuyNow = true"
-      >
-        Buy it now
-      </UButton>
-    </div>
-    <div v-else class="flex gap-4">
-      <UButton
-        size="xl"
-        variant="soft"
-        @click="showLoginDialog"
-      >
-        Add to card
-      </UButton>
-      <UButton
-        size="xl"
-        @click="showLoginDialog"
       >
         Buy it now
       </UButton>

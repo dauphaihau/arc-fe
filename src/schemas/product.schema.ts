@@ -15,48 +15,45 @@ export const productInventorySchema = z.object({
   product: objectIdSchema,
   price: z
     .number()
-    .min(0.2, 'Price must at least 0.2$')
+    .min(PRODUCT_CONFIG.MIN_PRICE, `Price must at least ${PRODUCT_CONFIG.MIN_PRICE}$`)
     .max(PRODUCT_CONFIG.MAX_PRICE,
       `Price must be less than or equal to ${PRODUCT_CONFIG.MAX_PRICE}$`),
   stock: z
     .number()
     .min(0)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY,
-      `Stock must be less than or equal to ${PRODUCT_CONFIG.MAX_QUANTITY}`
+    .max(PRODUCT_CONFIG.MAX_STOCK,
+      `Stock must be less than or equal to ${PRODUCT_CONFIG.MAX_STOCK}`
     ),
   sku: z
     .string()
-    .max(PRODUCT_CONFIG.MAX_CHAR_SKU)
-    .optional(),
+    .max(PRODUCT_CONFIG.MAX_CHAR_SKU),
   variant: z.string().optional(),
   reservations: z.array(z.any()),
 });
 
 export const productImageSchema = z.object({
-  id: objectIdSchema.optional(),
+  id: objectIdSchema,
   relative_url: z
     .string()
     .startsWith('shop', 'must start with shop')
     .regex(PRODUCT_REGEX_NOT_URL, 'must not absolute url'),
   rank: z
     .number()
-    .min(1)
-    .max(10)
-    .default(1)
-    .optional(),
+    .min(PRODUCT_CONFIG.MIN_IMAGES)
+    .max(PRODUCT_CONFIG.MAX_IMAGES)
+    .default(1),
 });
 
 export const productVariantOptSchema = z.object({
   id: objectIdSchema,
-  variant_group_name: z
-    .string()
-    .min(1)
-    .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME),
-  sub_variant_group_name: z
-    .string()
-    .min(1)
-    .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME)
-    .optional(),
+  variant: objectIdSchema,
+  inventory: objectIdSchema,
+});
+
+export const productVariantSchema = z.object({
+  id: objectIdSchema,
+  product: objectIdSchema,
+  inventory: objectIdSchema.optional(),
   variant_name: z
     .string()
     .min(1)
@@ -66,12 +63,8 @@ export const productVariantOptSchema = z.object({
     .startsWith('shop', 'must start with shop')
     .regex(PRODUCT_REGEX_NOT_URL, 'must not absolute url')
     .optional(),
-  inventory: productInventorySchema,
+  variant_options: z.array(productVariantOptSchema).optional(),
 });
-
-export const productVariantSchema = z.object({
-  variant_options: z.array(productVariantOptSchema),
-}).merge(productVariantOptSchema);
 
 export const productAttributeSchema = z.object({
   attribute: objectIdSchema,
@@ -85,11 +78,11 @@ export const productSchema = z.object({
   attributes: z.array(productAttributeSchema),
   title: z
     .string()
-    .min(2, 'Title must contain at least 2 characters')
+    .min(PRODUCT_CONFIG.MIN_CHAR_TITLE, `Title must contain at least ${PRODUCT_CONFIG.MIN_CHAR_TITLE} characters`)
     .max(110),
   description: z
     .string()
-    .min(2, 'Description must contain at least 2 characters')
+    .min(PRODUCT_CONFIG.MIN_CHAR_DESCRIPTION, `Description must contain at least ${PRODUCT_CONFIG.MIN_CHAR_DESCRIPTION} characters`)
     .max(PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION),
   slug: z
     .string()
@@ -97,10 +90,11 @@ export const productSchema = z.object({
     .optional(),
   tags: z.array(
     z.string()
-      .min(2)
-      .max(21)
+      .min(PRODUCT_CONFIG.MIN_CHAR_TAG)
+      .max(PRODUCT_CONFIG.MAX_CHAR_TAG)
   )
-    .max(11).optional(),
+    .max(PRODUCT_CONFIG.MAX_TAGS)
+    .default([]),
   state: z
     .nativeEnum(PRODUCT_STATES)
     .default(PRODUCT_STATES.ACTIVE),
@@ -109,8 +103,7 @@ export const productSchema = z.object({
     .default(false),
   who_made: z
     .nativeEnum(PRODUCT_WHO_MADE)
-    .default(PRODUCT_WHO_MADE.I_DID)
-    .optional(),
+    .default(PRODUCT_WHO_MADE.I_DID),
   views: z
     .number()
     .optional(),
@@ -120,7 +113,7 @@ export const productSchema = z.object({
     .optional(),
   images: z
     .array(productImageSchema)
-    .min(1)
+    .min(PRODUCT_CONFIG.MIN_IMAGES)
     .max(PRODUCT_CONFIG.MAX_IMAGES),
   rating_average: z
     .number()
@@ -131,10 +124,19 @@ export const productSchema = z.object({
   variant_type: z
     .nativeEnum(PRODUCT_VARIANT_TYPES)
     .default(PRODUCT_VARIANT_TYPES.NONE),
+  variant_group_name: z
+    .string()
+    .min(1)
+    .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME)
+    .optional(),
+  variant_sub_group_name: z
+    .string()
+    .min(1)
+    .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME)
+    .optional(),
   variants: z
     .array(productVariantOptSchema.shape.id)
-    // .array(productVariantSchema),
-    .optional(),
+    .default([]),
   inventory: productInventorySchema.optional(),
 });
 
@@ -143,3 +145,80 @@ export const productStateUserCanModify = z.union([
   z.literal(PRODUCT_STATES.INACTIVE),
   z.literal(PRODUCT_STATES.DRAFT),
 ]).default(PRODUCT_STATES.ACTIVE);
+
+export const variantOptionCreateSchema = productInventorySchema
+  .pick({ price: true, sku: true, stock: true }).merge(
+    productVariantSchema.pick({ variant_name: true })
+  );
+
+export const createProductSchema = productSchema
+  .omit({
+    id: true,
+    shop: true,
+    rating_average: true,
+    views: true,
+  }).merge(
+    z.object({
+      state: productStateUserCanModify,
+      images: z
+        .array(productImageSchema.omit({ id: true }))
+        .min(PRODUCT_CONFIG.MIN_IMAGES)
+        .max(PRODUCT_CONFIG.MAX_IMAGES),
+      tags: productSchema.shape.tags.optional(),
+      new_combine_variants: z.array(
+        productVariantSchema
+          .pick({ variant_name: true })
+          .merge(z.object({
+            variant_options: z.array(variantOptionCreateSchema),
+          }))
+          .merge(productInventorySchema.pick({ sku: true, price: true, stock: true })).partial()
+      ).optional(),
+    })
+  )
+  .merge(
+    productInventorySchema.pick({ price: true, sku: true, stock: true }).partial()
+  );
+
+export const variantOptionsUpdateSchema = productInventorySchema
+  .pick({ price: true, sku: true, stock: true }).merge(
+    productVariantSchema.pick({ variant_name: true }).merge(
+      productVariantOptSchema.pick({ variant: true })
+    )
+  );
+
+export const updateProductSchema = productSchema
+  .omit({
+    shop: true,
+    rating_average: true,
+    views: true,
+    variants: true,
+  }).merge(
+    z.object({
+      state: productStateUserCanModify,
+      images: z
+        .array(productImageSchema.partial())
+        .min(PRODUCT_CONFIG.MIN_IMAGES)
+        .max(PRODUCT_CONFIG.MAX_IMAGES),
+      update_variants: z.array(productVariantSchema.pick({ id: true, variant_name: true }).partial()).optional(),
+      variant_inventories: z
+        .array(
+          productInventorySchema
+            .pick({
+              id: true, price: true, sku: true, stock: true,
+            })
+            .strict()
+        )
+        .optional(),
+      new_variants: z.array(
+        productInventorySchema.pick({ price: true, sku: true, stock: true }).merge(
+          productVariantSchema.pick({ variant_name: true })
+        )),
+      new_combine_variants: z.array(productVariantSchema.pick({ variant_name: true }).merge(
+        z.object({
+          variant_options: z.array(variantOptionsUpdateSchema),
+        })
+      )),
+    })
+  ).merge(
+    productInventorySchema.pick({ price: true, sku: true, stock: true })
+  ).partial();

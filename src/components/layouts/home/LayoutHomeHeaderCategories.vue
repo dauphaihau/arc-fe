@@ -38,6 +38,7 @@ const redirectCategoriesPage = (category: ICategory) => {
     <!--        color="gray"-->
     <!--        variant="ghost"-->
     <!--        class="icon-button"-->
+
     <!--      >-->
     <!--        <Icon name="i-material-symbols:menu" color="black" />-->
     <!--        Categories-->

@@ -1,0 +1,31 @@
+.slide-down-enter-active {
+   -moz-transition-duration: 0.1s;
+   -webkit-transition-duration: 0.1s;
+   -o-transition-duration: 0.1s;
+   transition-duration: 0.1s;
+   -moz-transition-timing-function: ease-in;
+   -webkit-transition-timing-function: ease-in;
+   -o-transition-timing-function: ease-in;
+   transition-timing-function: ease-in;
+}
+
+.slide-down-leave-active {
+   -moz-transition-duration: 0.1s;
+   -webkit-transition-duration: 0.1s;
+   -o-transition-duration: 0.1s;
+   transition-duration: 0.1s;
+   -moz-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+   -webkit-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+   -o-transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+   transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
+}
+
+.slide-down-enter-to, .slide-down-leave {
+   max-height: 100px;
+   overflow: hidden;
+}
+
+.slide-down-enter, .slide-down-leave-to {
+   overflow: hidden;
+   max-height: 0;
+}

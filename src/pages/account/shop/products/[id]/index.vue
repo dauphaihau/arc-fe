@@ -10,7 +10,7 @@ definePageMeta({ layout: 'shop', middleware: ['auth'] });
     </template>
     <template #content>
       <div class="mb-20">
-        <!--        <UpdateProductForm />-->
+        <UpdateProductForm />
       </div>
     </template>
   </LayoutShopWrapperContent>

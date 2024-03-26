@@ -150,7 +150,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
     @error="onError"
     @submit="onSubmit"
   >
-    <CreateProductCard>
+    <WrapperFormGroupCard>
       <template #title>
         Basic info
       </template>
@@ -195,9 +195,9 @@ const onSelectProd = (ids: IProduct['id'][]) => {
           </UFormGroup>
         </div>
       </template>
-    </CreateProductCard>
+    </WrapperFormGroupCard>
 
-    <CreateProductCard>
+    <WrapperFormGroupCard>
       <template #title>
         Details
       </template>
@@ -312,7 +312,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
           />
         </UFormGroup>
       </template>
-    </CreateProductCard>
+    </WrapperFormGroupCard>
 
     <button ref="btnSubmit" type="submit" class="hidden" />
   </UForm>

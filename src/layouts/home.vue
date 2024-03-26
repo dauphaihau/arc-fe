@@ -4,6 +4,10 @@ import { ROUTES } from '~/config/enums/routes';
 
 const route = useRoute();
 
+onMounted(() => {
+  window.scrollTo(0, 0);
+});
+
 const linksAccountSidebar = [
   {
     label: 'Account',

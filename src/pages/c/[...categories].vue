@@ -134,7 +134,7 @@ watch(() => route.fullPath, () => {
         <Loading :child-class="'!w-12 !h-12'" />
       </div>
       <div v-else class="">
-        <div v-if="data?.results" class="grid grid-cols-4 gap-x-3 gap-y-8 mb-6">
+        <div v-if="data?.results" class="grid grid-cols-4 gap-x-3 gap-y-8 mb-16">
           <div v-for="(product, i) of data.results" :key="i">
             <ProductCard :product="product" />
           </div>

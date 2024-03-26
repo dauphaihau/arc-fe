@@ -1,11 +1,20 @@
 export const PRODUCT_CONFIG = {
+  MIN_CHAR_TITLE: 2,
+  MAX_CHAR_TITLE: 10000,
+  MIN_CHAR_DESCRIPTION: 2,
   MAX_CHAR_DESCRIPTION: 10000,
+  MIN_IMAGES: 1,
   MAX_IMAGES: 10,
+  MIN_PRICE: 0.2,
   MAX_PRICE: 50000,
-  MAX_QUANTITY: 999,
+  MIN_STOCK: 0,
+  MAX_STOCK: 999,
   MAX_CHAR_VARIANT_GROUP_NAME: 14,
   MAX_CHAR_VARIANT_NAME: 20,
   MAX_CHAR_SKU: 100,
+  MAX_TAGS: 11,
+  MIN_CHAR_TAG: 2,
+  MAX_CHAR_TAG: 21,
 };
 
 export enum PRODUCT_STATES {
@@ -32,3 +41,23 @@ export enum PRODUCT_VARIANT_TYPES {
 
 export const PRODUCT_REGEX_SLUG = /^[a-z0-9]+(?:(?:-|_)+[a-z0-9]+)*$/;
 export const PRODUCT_REGEX_NOT_URL = /^(?!http.*$).*/;
+
+export const productWhoMadeOpts = [
+  {
+    id: PRODUCT_WHO_MADE.I_DID,
+    label: 'I did',
+  },
+  {
+    id: PRODUCT_WHO_MADE.COLLECTIVE,
+    label: 'A member of my shop',
+  },
+  {
+    id: PRODUCT_WHO_MADE.SOMEONE_ELSE,
+    label: 'Another company or person',
+  },
+];
+
+export const isDigitalOpts = [
+  { value: false, label: 'Physical', help: 'A tangible product that you will ship to buyers.' },
+  { value: true, label: 'Digital', help: 'A digital file that buyers will download.' },
+];

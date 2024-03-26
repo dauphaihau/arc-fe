@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { watchDebounced } from '@vueuse/core';
-import type { IUpdateProductCart, IProductCart } from '~/interfaces/cart';
+import type { IUpdateProductCart, IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
 
 const { data: { quantity, inventory } } = defineProps<{
-  data: IProductCart
+  data: IProductCartPopulated
 }>();
 
 const { $api } = useNuxtApp();

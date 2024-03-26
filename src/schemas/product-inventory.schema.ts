@@ -8,13 +8,13 @@ export const productInventorySchema = z.object({
   product: objectIdSchema,
   price: z
     .number()
-    .min(0.2, 'Price must at least 0.2$')
+    .min(PRODUCT_CONFIG.MIN_PRICE, `Price must at least ${PRODUCT_CONFIG.MIN_PRICE}$`)
     .max(PRODUCT_CONFIG.MAX_PRICE,
       `Price must be less than or equal to ${PRODUCT_CONFIG.MAX_PRICE}$`),
   stock: z
     .number()
-    .min(0)
-    .max(PRODUCT_CONFIG.MAX_QUANTITY),
+    .min(PRODUCT_CONFIG.MIN_STOCK)
+    .max(PRODUCT_CONFIG.MAX_STOCK),
   sku: z
     .string()
     .max(PRODUCT_CONFIG.MAX_CHAR_SKU)
