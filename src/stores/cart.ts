@@ -1,13 +1,13 @@
 import type { ILineItemOrder, ISummaryOrder } from '~/interfaces/order';
 import type { IAddress } from '~/interfaces/address';
-import type { IItemCartPopulated } from '~/interfaces/cart';
+import type { IItemCartPopulated, IStateProductCheckoutNow } from '~/interfaces/cart';
 
 export const useCartStore = defineStore('cart', () => {
   const summaryOrderPrev = ref<ISummaryOrder | null>(null);
   const summaryOrder = ref<ISummaryOrder | null>(null);
 
   const totalProductsCart = ref(0);
-  const productCheckoutNow = ref();
+  const productCheckoutNow = ref<IStateProductCheckoutNow>();
   const itemsCart = ref<IItemCartPopulated[]>([]);
 
   const stateCheckout = ref({

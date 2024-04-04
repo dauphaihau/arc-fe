@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
+import type { ComputedRef } from 'vue';
 import { updateProductSchema } from '~/schemas/product.schema';
 import {
   PRODUCT_VARIANT_TYPES, PRODUCT_CONFIG,
   productWhoMadeOpts, isDigitalOpts
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
-import type { UpdateProductBody, IProduct, IProductImage } from '~/interfaces/product';
+import type {
+  UpdateProductBody,
+  IProduct,
+  IProductImage, IProductSingleVariant, IProductCombineVariant
+} from '~/interfaces/product';
 import type { Override } from '~/interfaces/utils';
 import { toastCustom } from '~/config/toast';
 
@@ -15,9 +20,9 @@ type UpdateProductBodyOverride = Override<UpdateProductBody, {
 }>
 
 export type IOnChangeUpdateVariants = Partial<Pick<UpdateProductBody,
-    'variant_group_name' | 'variant_sub_group_name' | 'update_variants' | 'variant_inventories' |
-    'new_variants' | 'variant_type' | 'new_combine_variants'
->> | null
+    'update_variants' | 'variant_inventories' |
+    'new_single_variants' | 'variant_type' | 'new_combine_variants'
+>> & (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null
 
 export type IOnChangeUpdateImages = {
   fileImages: File[],
@@ -39,10 +44,6 @@ if (error.value || !data.value || !data.value.product) {
   });
 }
 
-const {
-  category, inventory, attributes, ...product
-} = data.value.product;
-
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
 const state = reactive<UpdateProductBodyOverride>({
@@ -51,15 +52,17 @@ const state = reactive<UpdateProductBodyOverride>({
   images: [],
 });
 
+const detailProduct = data.value.product;
+
 onMounted(() => {
-  const option = productWhoMadeOpts.find(opt => opt.id === product.who_made);
+  const option = productWhoMadeOpts.find(opt => opt.id === detailProduct.who_made);
   if (option) {
     selectedWhoMade.value = option;
   }
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE && inventory) {
-    state.price = inventory.price;
-    state.stock = inventory.stock;
-    state.sku = inventory.sku;
+  if (detailProduct.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+    state.price = detailProduct.inventory.price;
+    state.stock = detailProduct.inventory.stock;
+    state.sku = detailProduct.inventory.sku;
   }
 });
 
@@ -73,6 +76,7 @@ const countValidateInputs = ref(0);
 const idsImagesForDelete = ref<IProductImage['id'][]>([]);
 const disabledButtonSubmit = ref(true);
 const isVariantInputValid = ref(true);
+const countValidateVariantsInputs = ref(0);
 
 const onChangeVariants = (values: IOnChangeUpdateVariants) => {
   isVariantInputValid.value = Boolean(values);
@@ -161,7 +165,11 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
         }
         const presignedUrl = data.value.presignedUrl;
         if (!presignedUrl) {
-          toast.add({ title: 'Something wrong' });
+          toast.add({
+            ...toastCustom.error,
+            title: 'Oops',
+            description: 'Something wrong',
+          });
           return;
         }
         keys.push(data.value.key);
@@ -191,15 +199,14 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
   if (error.value) {
     toast.add({
       ...toastCustom.error,
-      title: 'Oops',
-      description: 'Something wrong',
+      title: 'Update product failed',
     });
-  } else {
+  }
+  else {
     router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
     toast.add({
       ...toastCustom.success,
-      title: 'Updated',
-      description: 'Update product success',
+      title: 'Update product success',
     });
   }
 }
@@ -227,9 +234,10 @@ watch(() => [state.stock, state.price], () => {
 });
 
 watchDebounced(
-  () => [state, fileImages.value, idsImagesForDelete.value],
+  () => [state, fileImages.value, idsImagesForDelete.value, countValidateVariantsInputs.value],
   () => {
     countValidateInputs.value++;
+
     const result = updateProductSchema
       .omit({
         variants: true,
@@ -240,8 +248,14 @@ watchDebounced(
         stock: isVariantProduct.value || undefined,
         sku: isVariantProduct.value || undefined,
       }).safeParse(state);
-    const isEmptyImages = idsImagesForDelete.value.length === product.images.length && fileImages.value.length === 0;
-    disabledButtonSubmit.value = countValidateInputs.value === 1 || !result.success || isEmptyImages;
+
+    const isEmptyImages = idsImagesForDelete.value.length === detailProduct.images.length &&
+        fileImages.value.length === 0;
+
+    disabledButtonSubmit.value = countValidateInputs.value === 1 ||
+        !result.success ||
+        isEmptyImages ||
+        countValidateVariantsInputs.value === 1;
   },
   { debounce: 500, maxWait: 1000, deep: true }
 );
@@ -265,7 +279,7 @@ watchDebounced(
       <template #content>
         <UpdateProductImagesInput
           class="mb-4"
-          :images="product.images"
+          :images="detailProduct.images"
           :loading="loadingSubmit"
           :count-validate="countValidate"
           @on-change="onChangeImages"
@@ -336,15 +350,15 @@ watchDebounced(
         </div>
 
         <UpdateCreateProductSearchCategoryInput
-          :category="category"
+          :category="detailProduct.category"
           :title="state.title"
           @on-change="(categoryId) => state.category = categoryId"
         />
 
         <UpdateCreateProductSelectAttributesInput
           :key="state.category"
-          :category-id="state.category || category.id"
-          :attributes-selected="attributes"
+          :category-id="state.category || detailProduct.category.id"
+          :attributes-selected="detailProduct.attributes"
           @on-change="(attrs) => state.attributes = attrs"
         />
 
@@ -377,6 +391,7 @@ watchDebounced(
             :product="data.product"
             :count-validate="countValidate"
             @on-change="onChangeVariants"
+            @is-variants-updated="(count) => countValidateVariantsInputs = count"
           />
 
           <div v-else class="max-w-[40%]">

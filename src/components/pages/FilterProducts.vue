@@ -46,7 +46,8 @@ watch(state, () => {
   Object.keys(state).forEach((key) => {
     if (state[key] !== 'all') {
       routeQuery[key] = state[key];
-    } else {
+    }
+    else {
       delete routeQuery[key];
     }
   });

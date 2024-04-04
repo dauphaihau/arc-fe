@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import type { IProduct, IProductInventory, IProductVariant } from './product';
+import type {
+  IProduct,
+  IProductInventory, IProductPopulated,
+  IProductVariant
+} from './product';
 import type { Override } from './utils';
 import { cartSchema, itemCartSchema, productCartSchema } from '~/schemas/cart.schema';
 import type { ICoupon } from '~/interfaces/coupon';
@@ -19,7 +23,7 @@ export type IAddProductCart = Pick<IProductCart, 'quantity'> & {
 export type IUpdateProductCart = Partial<Pick<IProductCart, 'quantity' | 'is_select_order'>> & {
   inventory: IProductInventory['id']
   variant?: IProductVariant['id']
-  additionInfoItems? : IAdditionInfoItem[]
+  additionInfoItems?: IAdditionInfoItem[]
 };
 
 export type IUpdateCouponsItem = {
@@ -65,3 +69,13 @@ export type IResponseGetCartForHeaders = {
     restProducts: number
   }
 }
+
+export type IStateProductCheckoutNow = {
+  product: IProductPopulated
+  variant?: string
+  quantity: number
+  inventory: string
+  url_image: string
+  variantName1?: string
+  variantName2?: string
+} & Pick<IProductInventory, 'price' | 'stock'>

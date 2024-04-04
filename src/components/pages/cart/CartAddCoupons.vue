@@ -61,9 +61,11 @@ const addCoupon = async () => {
     state.errorMsg = 'Coupon codes not found';
     return;
   }
+
   if (coupon_codes.includes(state.code)) {
     state.errorMsg = 'Duplicate code';
-  } else {
+  }
+  else {
     coupon_codes.push(state.code);
   }
 
@@ -86,7 +88,8 @@ const addCoupon = async () => {
             color: 'red',
           });
       }
-    } else if (tempAdditionInfoItem) {
+    }
+    else if (tempAdditionInfoItem) {
       cartStore.mapAdditionInfoItems.set(shopId, tempAdditionInfoItem);
       cartStore.summaryOrder = data.value?.summaryOrder || null;
       state.codes = tempAdditionInfoItem.coupon_codes || [];
@@ -120,7 +123,8 @@ const deleteCoupon = async (coupon: string) => {
       icon: 'i-heroicons-x-circle',
       color: 'red',
     });
-  } else {
+  }
+  else {
     cartStore.summaryOrder = data.value?.summaryOrder || null;
     state.codes = filtered || [];
   }

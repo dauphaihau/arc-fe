@@ -23,10 +23,10 @@ const cartStore = useCartStore();
           </div>
           <div class="price">
             <div>
-              {{ formatCurrency(data.subTotalPrice) }}
+              {{ convertCurrency(data.subTotalPrice) }}
             </div>
             <div class="text-right">
-              {{ formatCurrency(data.totalDiscount) }}
+              {{ convertCurrency(data.totalDiscount) }}
             </div>
           </div>
         </div>
@@ -38,7 +38,7 @@ const cartStore = useCartStore();
           </div>
           <div class="price">
             <div>
-              {{ formatCurrency(data.subTotalAppliedDiscountPrice) }}
+              {{ convertCurrency(data.subTotalAppliedDiscountPrice) }}
             </div>
             <div
               v-if="data.shippingFee === 0 && cartStore.summaryOrder?.totalProducts"
@@ -47,7 +47,7 @@ const cartStore = useCartStore();
               FREE
             </div>
             <div v-else class="text-right">
-              {{ formatCurrency(data.shippingFee) }}
+              {{ convertCurrency(data.shippingFee) }}
             </div>
           </div>
         </div>
@@ -57,7 +57,7 @@ const cartStore = useCartStore();
             Total ({{ data.totalProducts }} {{ data.totalProducts > 1 ? 'products' : 'product' }})
           </div>
           <div :class="['price', data.totalPrice > 0 && 'text-red-500']">
-            {{ formatCurrency(data.totalPrice) }}
+            {{ convertCurrency(data.totalPrice) }}
           </div>
         </div>
       </div>

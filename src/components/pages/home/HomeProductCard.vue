@@ -25,7 +25,7 @@ const router = useRouter();
     />
     <div class="space-y-0.5 absolute left-3 bottom-3 bg-white rounded-lg py-1 px-2.5">
       <p class="text-customGray-950 text-md font-medium">
-        {{ formatCurrency(product?.summary_inventory?.lowest_price) }}
+        {{ convertCurrency(product?.summary_inventory?.lowest_price) }}
       </p>
     </div>
     <slot name="content" />

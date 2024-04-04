@@ -1,22 +1,16 @@
 <script setup lang="ts">
 
 import type {
-  IProduct,
+  IProductCombineVariant,
   IProductInventory,
+  IProductPopulated,
   IProductVariant,
-  ResponseGetDetailProductByShop,
-  UpdateProductBody, VariantOptionsUpdate
+  UpdateProductBody,
+  VariantOptionsUpdate
 } from '~/interfaces/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product.schema';
 import type { IOnChangeUpdateVariants } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
-
-const props = defineProps<{
-  countValidate: number,
-  product: ResponseGetDetailProductByShop
-}>();
-
-const generateRandomId = () => new Date().getTime().toString();
 
 type VariantOption = { id: IProductVariant['id'], variant_name: string, errorMsg: string };
 
@@ -31,7 +25,8 @@ type State = {
   variantIdsDelete: IProductVariant['id'][]
   variantsCurrent: Map<IProductVariant['id'], IProductVariant['variant_name']>
 } & Record<'variants' | 'subVariants', VariantOption[]>
-    & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
+    // & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
+    & Partial<Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>
 
 type VariantTable = {
   id: number
@@ -45,11 +40,21 @@ type VariantTable = {
 } & Pick<IProductVariant, 'variant_name'> &
     Pick<IProductInventory, | 'stock' | 'sku'>
 
-const emit = defineEmits<{ (e: 'onChange', value: IOnChangeUpdateVariants | null): void }>();
+const generateRandomId = () => new Date().getTime().toString();
+
+const props = defineProps<{
+  countValidate: number,
+  product: IProductPopulated
+}>();
+
+const emit = defineEmits<{
+  (e: 'onChange', value: IOnChangeUpdateVariants | null): void,
+  (e: 'isVariantsUpdated', value: number): void
+}>();
+
+const countStateChange = ref(0);
 
 const state = reactive<State>({
-  variant_group_name: props.product.variant_group_name,
-  variant_sub_group_name: props.product?.variant_sub_group_name,
   isActiveSubVariant: false,
   variantOption: '',
   subVariantOption: '',
@@ -78,8 +83,10 @@ const defaultVariantTable: VariantTable = {
 const variantsTable = ref<VariantTable[]>([defaultVariantTable]);
 
 onMounted(() => {
-  const { variants, variant_type } = props.product;
-
+  if (props.product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+    return;
+  }
+  const { variant_type, variant_group_name, variants } = props.product;
   state.variants = variants.map((variant) => {
     state.variantsCurrent.set(variant.id, variant.variant_name);
     state.variantsCurrent.set(variant.variant_name, variant.id);
@@ -91,12 +98,13 @@ onMounted(() => {
   });
 
   if (variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
+    state.variant_group_name = variant_group_name;
     variantsTable.value = variants.map((variant, index) => ({
       id: index + 1,
       inventoryId: variant.inventory.id,
       variant_name: variant.variant_name || '',
-      price: variant.inventory?.price || undefined,
-      stock: variant.inventory?.stock || 0,
+      price: variant.inventory.price,
+      stock: variant.inventory.stock,
       sku: variant.inventory?.sku || '',
       isUpdated: false,
       errorPrice: '',
@@ -105,6 +113,8 @@ onMounted(() => {
   }
 
   if (variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+    state.variant_group_name = variant_group_name;
+    state.variant_sub_group_name = props.product.variant_sub_group_name;
     openSubVariant();
     state.subVariants = variants[0].variant_options.map((variantOpt) => {
       state.variantsCurrent.set(variantOpt.variant.id, variantOpt.variant.variant_name);
@@ -127,8 +137,8 @@ onMounted(() => {
           sub_variant_name: variantOpt.variant.variant_name || '',
           subVariantId: variantOpt.variant.id,
           inventoryId: variantOpt.inventory.id,
-          price: variantOpt.inventory?.price || undefined,
-          stock: variantOpt.inventory?.stock || 0,
+          price: variantOpt.inventory.price,
+          stock: variantOpt.inventory.stock,
           sku: variantOpt.inventory?.sku || '',
           errorPrice: '',
           errorStock: '',
@@ -332,7 +342,8 @@ function openSubVariant() {
         sub_variant_name: '',
       };
     });
-  } else {
+  }
+  else {
     variantsTable.value[0].sub_variant_name = '';
   }
 }
@@ -350,7 +361,8 @@ const closeSubVariant = () => {
         variant_name: variant.variant_name,
       };
     });
-  } else {
+  }
+  else {
     variantsTable.value[0].variant_name = '';
   }
 };
@@ -382,7 +394,8 @@ watch(() => props.countValidate, () => {
 
     if (!isHasVariantName) {
       variantNameMap.set(variant.variant_name, idx);
-    } else {
+    }
+    else {
       const indexInMap = variantNameMap.get(variant.variant_name);
       variant.errorMsg = errorMsg;
       isAnyDuplicateVariantName = true;
@@ -426,14 +439,22 @@ watch(() => props.countValidate, () => {
       parsedVariantsTable.success
   ) {
     emitData();
-  } else {
+  }
+  else {
     emit('onChange', null);
   }
 });
 
+watch(() => [state, variantsTable.value], () => {
+  countStateChange.value++;
+  if (countStateChange.value === 2) {
+    emit('isVariantsUpdated', countStateChange.value);
+  }
+}, { deep: true });
+
 function emitData() {
   const variant_inventories: UpdateProductBody['variant_inventories'] = [];
-  const new_variants: UpdateProductBody['new_variants'] = [];
+  const new_single_variants: UpdateProductBody['new_single_variants'] = [];
   const update_variants: UpdateProductBody['update_variants'] = [];
   let new_combine_variants: UpdateProductBody['new_combine_variants'] = [];
 
@@ -484,7 +505,7 @@ function emitData() {
       });
     }
     if (!state.isActiveSubVariant && !inventoryId) {
-      new_variants.push({
+      new_single_variants.push({
         variant_name,
         price,
         stock,
@@ -529,15 +550,36 @@ function emitData() {
     });
   }
 
-  emit('onChange', {
-    variant_group_name: state.variant_group_name,
-    variant_sub_group_name: state.variant_sub_group_name,
-    variant_type: state.isActiveSubVariant ? PRODUCT_VARIANT_TYPES.COMBINE : PRODUCT_VARIANT_TYPES.SINGLE,
-    update_variants,
-    variant_inventories,
-    new_variants,
-    new_combine_variants,
-  });
+  if (state.isActiveSubVariant && state.variant_group_name && state.variant_sub_group_name) {
+    emit('onChange', {
+      variant_type: PRODUCT_VARIANT_TYPES.COMBINE,
+      variant_group_name: state.variant_group_name,
+      variant_sub_group_name: state.variant_sub_group_name,
+      update_variants,
+      variant_inventories,
+      new_single_variants,
+      new_combine_variants,
+    });
+  }
+  else if (state.variant_group_name) {
+    emit('onChange', {
+      variant_type: PRODUCT_VARIANT_TYPES.SINGLE,
+      variant_group_name: state.variant_group_name,
+      update_variants,
+      variant_inventories,
+      new_single_variants,
+      new_combine_variants,
+    });
+  }
+  // emit('onChange', {
+  //   variant_type: state.isActiveSubVariant ? PRODUCT_VARIANT_TYPES.COMBINE : PRODUCT_VARIANT_TYPES.SINGLE,
+  //   variant_group_name: state.variant_group_name,
+  //   variant_sub_group_name: state.variant_sub_group_name,
+  //   update_variants,
+  //   variant_inventories,
+  //   new_single_variants,
+  //   new_combine_variants,
+  // });
 }
 
 watchDebounced(

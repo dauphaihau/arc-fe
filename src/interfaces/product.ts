@@ -2,12 +2,13 @@ import { z } from 'zod';
 import type { ICoupon } from './coupon';
 import type { ICategory } from './category';
 import {
+  combineVariantSchema,
   createProductSchema,
   productAttributeSchema,
-  productImageSchema,
+  productImageSchema, productPopulateSchema,
   productSchema,
   productStateUserCanModify, productVariantOptSchema,
-  productVariantSchema,
+  productVariantSchema, singleVariantSchema,
   updateProductSchema, variantOptionCreateSchema, variantOptionsUpdateSchema
 } from '~/schemas/product.schema';
 import type { RequestGetListParams } from '~/interfaces/common';
@@ -16,11 +17,14 @@ import type { Override } from '~/interfaces/utils';
 import type { IShop } from '~/interfaces/shop';
 
 export type IProduct = z.infer<typeof productSchema>;
+export type IProductSingleVariant = z.infer<typeof singleVariantSchema>;
+export type IProductCombineVariant = z.infer<typeof combineVariantSchema>;
+export type IProductPopulated = z.infer<typeof productPopulateSchema>;
 export type IProductInventory = z.infer<typeof productInventorySchema>;
 export type IProductImage = z.infer<typeof productImageSchema>;
 export type IProductVariant = z.infer<typeof productVariantSchema>;
-export type IProductOptVariant = z.infer<typeof productVariantOptSchema>;
 export type IProductAttribute = z.infer<typeof productAttributeSchema>;
+export type IProductOptVariant = z.infer<typeof productVariantOptSchema>;
 export type PRODUCT_STATES_USER_CAN_MODIFY = z.infer<typeof productStateUserCanModify>;
 
 export type CreateProductSchema = z.infer<typeof createProductSchema>;
@@ -31,18 +35,6 @@ export type VariantOptionsCreate = z.infer<typeof variantOptionCreateSchema>;
 
 export type UpdateProductBody = z.infer<typeof updateProductSchema>;
 export type VariantOptionsUpdate = z.infer<typeof variantOptionsUpdateSchema>;
-
-export type ResponseGetDetailProductByShop = Override<IProduct, {
-  state: PRODUCT_STATES_USER_CAN_MODIFY
-  category: ICategory
-  variants: Override<IProductVariant, {
-    inventory: Pick<IProductInventory, 'price' | 'stock' | 'sku' | 'id'> // populated
-    variant_options: Override<IProductOptVariant, {
-      variant: IProductVariant // populated
-      inventory: Pick<IProductInventory, 'price' | 'stock' | 'sku' | 'id'> // populated
-    }>[]
-  }>[]
-}> & Partial<Pick<IProductInventory, 'price' | 'stock' | 'sku'>>
 
 export type IProductVirtualFields = {
   summary_inventory: Record<'lowest_price' | 'highest_price' | 'stock', number>
@@ -68,13 +60,6 @@ export type ResponseGetProducts = Override<IProduct, {
     , number> & { discount_types: ICoupon['type'][] }
 }>;
 
-export type ResponseGetDetailProduct = Override<IProduct, {
-  shop: IShop,
-  variants: Override<IProductVariant, {
-    inventory: Pick<IProductInventory, 'price' | 'stock' | 'sku' | 'id'> // populated
-    variant_options: Override<IProductOptVariant, {
-      variant: IProductVariant // populated
-      inventory: Pick<IProductInventory, 'price' | 'stock' | 'sku' | 'id'> // populated
-    }>[]
-  }>[]
-}>;
+export type ResponseGetDetailProduct = Omit<IProductPopulated, 'category'> & {
+  category: ICategory['id']
+} & IProductPopulated;

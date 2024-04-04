@@ -2,9 +2,8 @@ import type { IShop } from '~/interfaces/shop';
 import type {
   CreateProductBody,
   GetProductsQueryParams,
-  IProduct,
+  IProduct, IProductPopulated,
   IProductVirtualFields,
-  ResponseGetDetailProductByShop,
   UpdateProductBody
 } from '~/interfaces/product';
 import type { GetListResponse } from '~/interfaces/common';
@@ -17,7 +16,7 @@ export class ShopModule {
   constructor() {
     useRouter().beforeEach(() => {
       const authStore = useAuthStore();
-      this.shopId = authStore.getUser?.shop?.id;
+      this.shopId = authStore.getShop?.id;
     });
   }
 
@@ -50,8 +49,7 @@ export class ShopModule {
   }
 
   async getDetailProduct(id: IProduct['id']) {
-    return await useCustomFetch.get<{product: ResponseGetDetailProductByShop}>(
-    // return await useCustomFetch.get<{product: ResponseGetDetailProductByShop}>(
+    return await useCustomFetch.get<{product: IProductPopulated}>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${id}`
     );
   }

@@ -4,7 +4,7 @@ import { useCartStore } from '~/stores/cart';
 import { ORDER_CONFIG } from '~/config/enums/order';
 import { ROUTES } from '~/config/enums/routes';
 
-definePageMeta({ layout: 'home' });
+definePageMeta({ layout: 'market' });
 
 const { $api } = useNuxtApp();
 const cartStore = useCartStore();
@@ -72,7 +72,8 @@ function onScroll() {
   if (contentHeight && scrollTop >= contentHeight - viewportHeight + wrapperContentTop) {
     contentSummaryOrderRef.value.style.transform = `translateY(-${(contentHeight - viewportHeight + wrapperContentTop)}px)`;
     contentSummaryOrderRef.value.style.position = 'fixed';
-  } else {
+  }
+  else {
     contentSummaryOrderRef.value.style.transform = '';
     contentSummaryOrderRef.value.style.position = '';
   }

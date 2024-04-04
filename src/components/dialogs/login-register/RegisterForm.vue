@@ -2,7 +2,8 @@
 import type { FormSubmitEvent } from '#ui/types';
 import { StatusCodes } from 'http-status-codes';
 import { userSchema } from '~/schemas/user.schema';
-import type { RegisterBody } from '~/interfaces/user';
+import type { IUser, RegisterBody } from '~/interfaces/user';
+import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 
 const authStore = useAuthStore();
 
@@ -28,7 +29,8 @@ async function onSubmit(event: FormSubmitEvent<RegisterBody>) {
   }
 
   state.loadingBtn = true;
-  const { error, pending } = await authStore.register(event.data);
+  const userPreferences = parseJSON<IUser['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
+  const { error, pending } = await authStore.register({ ...event.data, market_preferences: userPreferences });
   state.loadingBtn = pending.value;
 
   if (error.value && error.value.data) {
@@ -57,6 +59,7 @@ async function onSubmit(event: FormSubmitEvent<RegisterBody>) {
         padded: false
       }"
       title=""
+      :ui="{ description: 'mt-[2px]' }"
       :description="state.unknownErrorMsg"
       @close="state.unknownErrorMsg = ''"
     />

@@ -3,7 +3,7 @@
 import { useCartStore } from '~/stores/cart';
 import type { IItemCartPopulated } from '~/interfaces/cart';
 
-definePageMeta({ layout: 'home', middleware: ['auth'] });
+definePageMeta({ layout: 'market', middleware: ['auth'] });
 
 const cartStore = useCartStore();
 

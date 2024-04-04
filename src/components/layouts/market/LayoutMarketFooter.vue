@@ -121,7 +121,7 @@ const secondaryLinks = [
     link: '/',
   },
   {
-    title: 'Arc Privacy Policy',
+    title: 'Privacy Policy',
     link: '/',
   },
 ];
@@ -145,7 +145,7 @@ const secondaryLinks = [
               <ULink
                 :to="linkItem.link"
                 class="text-sm text-customGray-950
-                 hover:underline hover:opacity-50 transition-all duration-200"
+                 hover:underline hover:opacity-90 transition-all duration-200"
               >
                 {{ linkItem.title }}
               </ULink>
@@ -155,42 +155,8 @@ const secondaryLinks = [
       </div>
       <UDivider />
       <div class="flex items-center justify-between py-4">
-        <div class="flex gap-6 items-center">
-          <div class="flex items-center gap-5">
-            <div
-              class="flex items-center gap-3 text-xs hover:bg-customGray-200/50
-             transition-all duration-200 px-3 py-2 rounded-md cursor-pointer"
-            >
-              <div class="flex items-center gap-2 text-xs text-nowrap">
-                <UIcon name="i-heroicons-map-pin" />
-                United State
-              </div>
-              <UDivider
-                orientation="vertical"
-                size="xl"
-                class="h-5 w-2"
-                :ui="{
-                  border: { size : { vertical: 'border-s-[1.5px]'}}
-                }"
-              />
-              <div class="text-nowrap">
-                English (US)
-              </div>
-              <UDivider
-                orientation="vertical"
-                size="xl"
-                class="h-5 w-2"
-                :ui="{
-                  border: { size : { vertical: 'border-s-[1.5px]'}}
-                }"
-              />
-              <div class="text-nowrap">
-                $ (USD)
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center gap-3">
+        <UpdateUserPreferencesDialog />
+        <div class="flex items-center gap-4">
           <div class="text-xs pt-1">
             © {{ new Date().getFullYear() }} Arc Inc.
           </div>
@@ -198,7 +164,7 @@ const secondaryLinks = [
             <ULink
               :to="item.link"
               class="text-xs text-customGray-950
-              hover:opacity-50 transition-all duration-200"
+              hover:underline hover:opacity-90 transition-all duration-200"
             >
               {{ item.title }}
             </ULink>

@@ -4,8 +4,10 @@ import type { FormSubmitEvent } from '#ui/types';
 import type { IAddress, CreateBodyAddress } from '~/interfaces/address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
 import { addressSchema } from '~/schemas/address.schema';
+import { toastCustom } from '~/config/toast';
 
 const props = defineProps<{ dataEdit?: IAddress | null }>();
+
 const emit = defineEmits<{
   (e: 'onCreatedAddress', value: IAddress): void,
   (e: 'onUpdatedAddress', value: IAddress): void,
@@ -39,8 +41,12 @@ async function onSubmit(event: FormSubmitEvent<CreateBodyAddress>) {
   if (props.dataEdit) {
     const { error, data } = await $api.address.updateAddress(event.data);
     if (error.value || !data.value) {
-      toast.add({ title: 'Something Wrong' });
-    } else {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Update address failed',
+      });
+    }
+    else {
       emit('onUpdatedAddress', data.value.address);
       isOpenDialog.value = false;
     }
@@ -49,8 +55,12 @@ async function onSubmit(event: FormSubmitEvent<CreateBodyAddress>) {
 
   const { error, data } = await $api.address.createAddress(event.data);
   if (error.value || !data.value) {
-    toast.add({ title: 'Something Wrong' });
-  } else {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Create address failed',
+    });
+  }
+  else {
     emit('onCreatedAddress', data.value.address);
     isOpenDialog.value = false;
   }
@@ -58,16 +68,19 @@ async function onSubmit(event: FormSubmitEvent<CreateBodyAddress>) {
 
 watch(() => [stateSubmit.value.country, props.dataEdit], async () => {
   if (stateSubmit.value.country) {
-    stateSubmit.value.state = undefined;
-    stateSubmit.value.zip = undefined;
+    if (!props.dataEdit) {
+      stateSubmit.value.state = undefined;
+      stateSubmit.value.zip = undefined;
+    }
 
     stateLocal.loadingStateOptions = true;
     const {
       data, pending, error,
     } = await $api.address.getStatesByCountry(stateSubmit.value.country);
     stateLocal.loadingStateOptions = pending.value;
+
     if (!error.value && data.value) {
-      stateLocal.stateOptions = data.value.data.states.map(co => co.name);
+      stateLocal.stateOptions = data.value.data.states.map(st => st.name);
     }
   }
 });
@@ -76,10 +89,10 @@ watch(isOpenDialog, async () => {
   if (!isOpenDialog.value) {
     stateSubmit.value = {};
     emit('onCancelDialog');
-  } else if (!stateLocal.countriesOptions.length) {
+  }
+  else if (!stateLocal.countriesOptions.length) {
     stateLocal.loadingGetCountries = true;
     const { pending, data } = await $api.address.getCountries();
-
     stateLocal.loadingGetCountries = pending.value;
     if (data.value && data.value.data.length > 0) {
       stateLocal.countriesOptions = data.value.data.map(co => co.name);
@@ -104,7 +117,7 @@ watch(isOpenDialog, async () => {
       <div class="p-12 space-y-5">
         <div class="space-y-1.5">
           <h1 class="text-3xl font-bold">
-            {{ dataEdit ? 'Update': 'Add new' }}
+            {{ props.dataEdit ? 'Update': 'Add new' }}
             address
           </h1>
         </div>

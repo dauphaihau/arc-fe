@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-definePageMeta({ layout: 'home', middleware: ['auth'] });
+definePageMeta({ layout: 'market', middleware: ['auth'] });
 </script>
 
 <template>

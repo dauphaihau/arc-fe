@@ -3,7 +3,7 @@ import { useSessionStorage } from '@vueuse/core';
 import type { ICategorySessionStorage } from '~/interfaces/category';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
 
-definePageMeta({ layout: 'home' });
+definePageMeta({ layout: 'market' });
 
 const { $api } = useNuxtApp();
 const route = useRoute();

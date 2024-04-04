@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-definePageMeta({ layout: 'home' });
+definePageMeta({ layout: 'market' });
 
 const { $api } = useNuxtApp();
 const route = useRoute();

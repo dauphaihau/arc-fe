@@ -2,6 +2,7 @@
 import { watchDebounced } from '@vueuse/core';
 import type { IUpdateProductCart, IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
+import { toastCustom } from '~/config/toast';
 
 const { data: { quantity, inventory } } = defineProps<{
   data: IProductCartPopulated
@@ -44,8 +45,12 @@ watchDebounced(
 
     const { error, data } = await $api.cart.updateProduct(body);
     if (error.value) {
-      toast.add({ title: 'Something Wrong' });
-    } else {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Update product failed',
+      });
+    }
+    else {
       cartStore.summaryOrder = data.value?.summaryOrder || null;
     }
   },

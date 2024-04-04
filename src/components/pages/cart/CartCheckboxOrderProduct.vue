@@ -26,7 +26,8 @@ watch(() => selectedCheckbox.value, async () => {
       icon: 'i-heroicons-x-circle',
       color: 'red',
     });
-  } else {
+  }
+  else {
     cartStore.summaryOrder = data.value?.summaryOrder || null;
 
     cartStore.itemsCart.forEach((item) => {

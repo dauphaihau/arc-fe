@@ -6,12 +6,16 @@ import {
   productWhoMadeOpts, isDigitalOpts
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
-import type { CreateProductBody, IProductAttribute } from '~/interfaces/product';
+import type {
+  CreateProductBody,
+  IProductAttribute,
+  IProductCombineVariant,
+  IProductSingleVariant
+} from '~/interfaces/product';
 import { toastCustom } from '~/config/toast';
 
-export type IOnChangeCreateVariant = Pick<CreateProductBody,
-    'variant_group_name' | 'variant_sub_group_name' | 'variant_type' | 'new_combine_variants'
-> | null
+export type IOnChangeCreateVariant = Pick<CreateProductBody, 'variant_type' | 'new_variants'> &
+    (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null
 
 const { $api } = useNuxtApp();
 const router = useRouter();
@@ -34,7 +38,7 @@ const state = reactive<CreateProductBody>({
   who_made: computed(() => selectedWhoMade.value.id),
   is_digital: false,
   state: PRODUCT_STATES.ACTIVE,
-  variants: [],
+  new_variants: [],
   variant_type: PRODUCT_VARIANT_TYPES.NONE,
   price: undefined,
   stock: 1,
@@ -88,7 +92,7 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
   if (isDraftProduct.value) {
     data.state = PRODUCT_STATES.DRAFT;
   }
-  if (isVariantProduct.value && data.variants.length === 0) {
+  if (isVariantProduct.value && data?.new_variants?.length === 0) {
     return;
   }
   if (!fileImages.value || fileImages.value.length === 0) {
@@ -111,7 +115,11 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
     }
     const presignedUrl = data.value.presignedUrl;
     if (!presignedUrl) {
-      toast.add({ title: 'Something wrong' });
+      toast.add({
+        ...toastCustom.error,
+        title: 'Oops',
+        description: 'Something wrong',
+      });
       return;
     }
     keys.push(data.value.key);
@@ -135,15 +143,14 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
   if (error.value) {
     toast.add({
       ...toastCustom.error,
-      title: 'Oops',
-      description: 'Something wrong',
+      title: 'Create product failed',
     });
-  } else {
+  }
+  else {
     router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
     toast.add({
       ...toastCustom.success,
-      title: 'Saved',
-      description: 'Create product success',
+      title: 'Create product success',
     });
   }
 }

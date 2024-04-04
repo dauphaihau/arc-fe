@@ -7,7 +7,7 @@ export class UploadModule {
   constructor() {
     useRouter().beforeEach(() => {
       const authStore = useAuthStore();
-      this.shopId = authStore.getUser?.shop?.id;
+      this.shopId = authStore.getShop?.id;
     });
   }
 

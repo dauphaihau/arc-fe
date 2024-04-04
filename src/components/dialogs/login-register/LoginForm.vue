@@ -38,7 +38,8 @@ async function onSubmit(event: FormSubmitEvent<LoginBody>) {
     const { message } = error.value.data;
     invalidPasswords ? invalidPasswords.push(password) : state.invalidUsers.set(email, [password]);
     state.unknownErrorServerMsg = message || 'An unknown error occurred. Please try again';
-  } else {
+  }
+  else {
     await cartStore.getCartHeader();
   }
 }
@@ -56,6 +57,7 @@ async function onSubmit(event: FormSubmitEvent<LoginBody>) {
       }"
       title=""
       :description="state.unknownErrorServerMsg"
+      :ui="{ description: 'mt-[2px]' }"
       @close="state.unknownErrorServerMsg=''"
     />
 

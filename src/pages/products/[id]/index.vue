@@ -5,7 +5,7 @@ import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
 import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
 
-definePageMeta({ layout: 'home' });
+definePageMeta({ layout: 'market' });
 
 const { $api } = useNuxtApp();
 const route = useRoute();
@@ -45,20 +45,28 @@ const summaryInventory = computed(() => {
     stock: 0,
   };
   if (data.value) {
-    const { variant_type, variants } = data.value.product;
-    variants && variants.forEach((variant, indexVariant) => {
-      if (variant_type === PRODUCT_VARIANT_TYPES.SINGLE && variant?.inventory?.price) {
-        summary.stock += variant.inventory.stock;
+    const product = data.value.product;
+    const variant_type = product.variant_type;
 
+    if (variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+      summary.lowestPrice = product.inventory.price;
+      return summary;
+    }
+
+    if (variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
+      product.variants && product.variants.forEach((variant, indexVariant) => {
+        summary.stock += variant.inventory.stock;
         if (indexVariant === 0 || (variant.inventory.price < summary.lowestPrice)) {
           summary.lowestPrice = variant.inventory.price;
         }
         if (indexVariant === 0 || (variant.inventory.price > summary.highestPrice)) {
           summary.highestPrice = variant.inventory.price;
         }
-      }
+      });
+    }
 
-      if (variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+    if (variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+      product.variants && product.variants.forEach((variant) => {
         variant.variant_options.forEach((varOpt, indexVarOpt) => {
           summary.stock += varOpt.inventory.stock;
           if (indexVarOpt === 0 || (varOpt.inventory.price < summary.lowestPrice)) {
@@ -68,8 +76,8 @@ const summaryInventory = computed(() => {
             summary.highestPrice = varOpt.inventory.price;
           }
         });
-      }
-    });
+      });
+    }
   }
   return summary;
 });
@@ -93,18 +101,18 @@ const summaryInventory = computed(() => {
               v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
               class="font-bold text-xl"
             >
-              {{ formatCurrency(data.product.inventory?.price) }}
+              {{ convertCurrency(summaryInventory.lowestPrice) }}
             </div>
             <div
               v-else
               class="font-bold text-xl"
             >
               {{ priceVariantSelected ?
-                formatCurrency(priceVariantSelected) :
+                convertCurrency(priceVariantSelected) :
                 summaryInventory.lowestPrice === summaryInventory.highestPrice ?
-                  `${formatCurrency(summaryInventory.lowestPrice)}` :
-                  `${formatCurrency(summaryInventory.lowestPrice)} -
-                ${formatCurrency(summaryInventory.highestPrice)}`
+                  `${convertCurrency(summaryInventory.lowestPrice)}` :
+                  `${convertCurrency(summaryInventory.lowestPrice)} -
+                ${convertCurrency(summaryInventory.highestPrice)}`
               }}
             </div>
 

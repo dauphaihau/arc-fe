@@ -123,10 +123,26 @@ const cartStore = useCartStore();
 
 <style scoped>
 
-@import url("src/assets/css/animations.css");
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: max-height 0.3s ease-in-out;
+}
+
+.slide-down-enter-to,
+.slide-down-leave-from {
+  overflow: hidden;
+  max-height: 500px;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  overflow: hidden;
+  max-height: 0;
+}
 
 .item-profile {
   @apply font-medium flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100
+  hover:bg-gray-100 px-2 py-1 rounded-md
 }
 
 </style>

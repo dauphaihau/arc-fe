@@ -5,21 +5,21 @@ import type {
 
 export class OrderModule {
   async createOrderFromCart(body: CreateOrderFromCartBody) {
-    return await useCustomFetch.post<{checkoutSessionUrl: string}>(
+    return await useCustomFetch.post<{ checkoutSessionUrl: string }>(
       `${RESOURCES.USER}${RESOURCES.ORDERS}`,
       body
     );
   }
 
   async createOrderForBuyNow(body: CreateOrderForBuyNowBody) {
-    return await useCustomFetch.put<{checkoutSessionUrl: string}>(
+    return await useCustomFetch.put<{ checkoutSessionUrl: string }>(
       `${RESOURCES.USER}${RESOURCES.ORDERS}`,
       body
     );
   }
 
   async getSummaryOder(body: GetSummaryOderBody) {
-    return await useCustomFetch.delete<{summaryOrder: ISummaryOrder}>(
+    return await useCustomFetch.delete<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.ORDERS}`,
       null,
       body

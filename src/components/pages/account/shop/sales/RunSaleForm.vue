@@ -118,7 +118,8 @@ async function onSubmit(event: FormSubmitEvent<CreateCouponPayload>) {
   if (!error.value) {
     router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.COUPONS);
     toast.add({ title: 'Create coupon success' });
-  } else {
+  }
+  else {
     toast.add({ title: 'Create coupon failed' });
   }
 }

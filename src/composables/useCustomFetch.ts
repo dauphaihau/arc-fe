@@ -1,7 +1,8 @@
 import type { UseFetchOptions } from '#app';
 import { defu } from 'defu';
 import dayjs from 'dayjs';
-import { KEY_LS_REFRESH_TOKEN, KEY_LS_ACCESS_TOKEN } from '~/config/enums/token';
+import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import { RESOURCES } from '~/config/enums/resources';
 
 type UrlType = string | Request | Ref<string | Request> | (() => string | Request)
 
@@ -47,21 +48,24 @@ async function baseCustomFetch<T>(url: UrlType, options: UseFetchOptions<T> = {}
 
 const checkAccessAndRefreshToken = async () => {
   const authStore = useAuthStore();
-  if (!localStorage[KEY_LS_ACCESS_TOKEN] || !localStorage[KEY_LS_REFRESH_TOKEN]) {
+  const isRefreshTokenValid = dayjs(localStorage[LOCAL_STORAGE_KEYS.REFRESH_TOKEN_EXP]).isValid();
+  const isRefreshTokenExpired = dayjs().isAfter(dayjs(localStorage[LOCAL_STORAGE_KEYS.REFRESH_TOKEN_EXP]));
+  if (
+    !localStorage[LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP] ||
+    !localStorage[LOCAL_STORAGE_KEYS.REFRESH_TOKEN_EXP] ||
+    !isRefreshTokenValid ||
+    isRefreshTokenExpired
+  ) {
     authStore.clearAll();
     return;
   }
-  const refreshTokenExpired = dayjs().isAfter(dayjs(localStorage[KEY_LS_REFRESH_TOKEN]));
-  if (refreshTokenExpired) {
-    authStore.clearAll();
-    return;
-  }
-  const accessTokenExpired = dayjs().isAfter(dayjs(localStorage[KEY_LS_ACCESS_TOKEN]));
-  if (accessTokenExpired) {
-    const { status, error } = await baseCustomFetch('/auth/refresh-tokens', { method: 'post' });
+  const isAccessTokenExpired = dayjs().isAfter(dayjs(localStorage[LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP]));
+  if (isAccessTokenExpired) {
+    const { status, error } = await baseCustomFetch(`${RESOURCES.AUTH}/refresh-tokens`, { method: 'post' });
     if (status.value === 'success') {
-      authStore.afterUserAuthenticated();
-    } else {
+      authStore.setExpTokens();
+    }
+    else {
       authStore.clearAll();
       throw new Error(error.value?.message);
     }

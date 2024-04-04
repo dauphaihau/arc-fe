@@ -25,7 +25,7 @@ const router = useRouter();
       class="rounded w-full h-full"
       preload
     />
-    <div class="space-y-2">
+    <div class="space-y-1">
       <h1 class="text-xl font-semibold truncate">
         {{ product.title }}
       </h1>
@@ -33,19 +33,15 @@ const router = useRouter();
         <p class="text-customGray-950 text-base font-medium">
           {{
             product?.summary_inventory?.sale_price ?
-              formatCurrency(product?.summary_inventory?.sale_price) :
-              formatCurrency(product?.summary_inventory?.lowest_price)
+              convertCurrency(product?.summary_inventory?.sale_price) :
+              convertCurrency(product?.summary_inventory?.lowest_price)
           }}
-        <!--        {{-->
-        <!--          product.summary_inventory.highest_price > 0 &&-->
-        <!--            ' - ' + formatCurrency(product?.summary_inventory?.highest_price)-->
-        <!--        }}-->
         </p>
         <p
           v-if="product?.summary_inventory?.sale_price"
           class="text-customGray-950 text-sm font-medium line-through decoration-1"
         >
-          {{ formatCurrency(product?.summary_inventory.lowest_price) }}
+          {{ convertCurrency(product?.summary_inventory.lowest_price) }}
         </p>
         <p
           v-if="product?.summary_inventory?.sale_price"

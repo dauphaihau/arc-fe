@@ -4,6 +4,7 @@ import type { FormSubmitEvent } from '#ui/types';
 import { shopSchema } from '~/schemas/shop.schema';
 import type { IShop } from '~/interfaces/shop';
 import { ROUTES } from '~/config/enums/routes';
+import { toastCustom } from '~/config/toast';
 
 const { $api } = useNuxtApp();
 const toast = useToast();
@@ -24,10 +25,11 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
 
   if (!error.value) {
     toast.add({
+      ...toastCustom.success,
       title: 'Create shop success',
     });
     const authStore = useAuthStore();
-    if (authStore?.user) {
+    if (authStore?.user && data.value?.shop) {
       authStore.user.shop = data.value?.shop;
     }
     navigateTo(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.DASHBOARD}`);
@@ -52,7 +54,7 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
   <UCard
     :ui="{
       body: {
-        padding: 'md:px-14 md:py-16'
+        padding: 'md:px-14 md:py-12'
       },
     }"
     class="max-w-[500px] mx-auto mt-12"

@@ -7,7 +7,7 @@ import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
 const { $api } = useNuxtApp();
 
 const state = reactive({
-  pending: false,
+  loading: true,
   limit: 10,
   products: [] as ResponseGetProducts[],
 });
@@ -21,10 +21,11 @@ const categoryId = computed(() => {
 
 onMounted(async () => {
   if (categoryId.value) {
-    const { data, error } = await $api.product.getProductsLowestPrice({
+    const { data, error, pending } = await $api.product.getProductsLowestPrice({
       limit: state.limit,
       category: categoryId.value,
     });
+    state.loading = pending.value;
     if (!error.value && data.value?.results) {
       state.products = data.value?.results;
     }
@@ -35,13 +36,30 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="state.products && state.products.length > 0">
-    <h3 class="text-lg font-medium mb-3">
-      Recently viewed & more
-    </h3>
-    <div class="grid grid-cols-5 gap-4 mb-6">
-      <div v-for="(product, i) of state.products" :key="i">
-        <HomeProductCard :product="product" />
+  <div v-if="categoryId">
+    <div v-if="state.products && state.products.length > 0 && !state.loading">
+      <h3 class="text-lg font-medium mb-3">
+        Recently viewed & more
+      </h3>
+      <div
+        class="grid grid-cols-5 gap-4 mb-6"
+      >
+        <div v-for="(product, i) of state.products" :key="i">
+          <HomeProductCard :product="product" />
+        </div>
+      </div>
+    </div>
+
+    <div v-else-if="state.loading">
+      <h3 class="text-lg font-medium mb-3">
+        Recently viewed & more
+      </h3>
+      <div
+        class="grid grid-cols-5 gap-4 mb-6"
+      >
+        <div v-for="index in state.limit" :key="index">
+          <USkeleton class="h-[160px]" />
+        </div>
       </div>
     </div>
   </div>

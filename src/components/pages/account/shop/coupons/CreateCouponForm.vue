@@ -7,6 +7,7 @@ import { couponSchema } from '~/schemas/coupon.schema';
 import type { UndefinableFields } from '~/interfaces/utils';
 import type { IProduct } from '~/interfaces/product';
 import { ROUTES } from '~/config/enums/routes';
+import { toastCustom } from '~/config/toast';
 
 const { $api } = useNuxtApp();
 const router = useRouter();
@@ -115,11 +116,18 @@ async function onSubmit(event: FormSubmitEvent<CreateCouponPayload>) {
 
   const { error } = await $api.shop.createCoupon(event.data);
   loading.value = false;
-  if (!error.value) {
+  if (error.value) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Create coupon failed',
+    });
+  }
+  else {
     router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.COUPONS);
-    toast.add({ title: 'Create coupon success' });
-  } else {
-    toast.add({ title: 'Create coupon failed' });
+    toast.add({
+      ...toastCustom.success,
+      title: 'Create coupon success',
+    });
   }
 }
 
@@ -301,14 +309,12 @@ const onSelectProd = (ids: IProduct['id'][]) => {
         </UFormGroup>
 
         <UFormGroup
+          v-if="state.applies_to === COUPON_APPLIES_TO.SPECIFIC"
           name="applies_product_ids"
           class="mb-4"
           required
         >
-          <CreateCouponApplyCouponOnProduct
-            v-if="state.applies_to === COUPON_APPLIES_TO.SPECIFIC"
-            @on-select-prod="onSelectProd"
-          />
+          <CreateCouponApplyCouponOnProduct @on-select-prod="onSelectProd" />
         </UFormGroup>
       </template>
     </WrapperFormGroupCard>

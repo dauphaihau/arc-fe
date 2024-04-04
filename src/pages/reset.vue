@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ROUTES } from '~/config/enums/routes';
-definePageMeta({ layout: 'home' });
+
+definePageMeta({ layout: 'market' });
 
 const enum STEPS {
   SEND_EMAIL,
@@ -28,7 +29,8 @@ onMounted(async () => {
     const { error } = await authStore.verifyToken();
     if (error.value) {
       steps.value = STEPS.TOKEN_INVALID;
-    } else {
+    }
+    else {
       steps.value = STEPS.RESET_PASSWORD;
       navigateTo('/reset?v=1');
     }

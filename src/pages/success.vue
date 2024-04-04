@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 
-definePageMeta({ layout: 'home' });
+definePageMeta({ layout: 'market' });
 </script>
 
 <template>

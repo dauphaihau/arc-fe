@@ -53,8 +53,8 @@ const rows = computed(() => {
     id: product.id,
     title: product.title,
     image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
-    variants: product.variants,
-    inventory: product.inventory,
+    variants: product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ? product.variants : null,
+    inventory: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory : null,
     variant_type: product.variant_type,
     price: { class: 'text-center' },
     stock: { class: 'text-center' },
@@ -105,7 +105,8 @@ async function removeProduct(id: IProduct['id']) {
   const { error } = await $api.shop.deleteProduct(id);
   if (error.value) {
     toast.add({ title: 'Delete product success' });
-  } else {
+  }
+  else {
     toast.add({ title: 'Delete product success' });
     refresh();
   }

@@ -33,7 +33,8 @@ async function onSubmit(event: FormSubmitEvent<Record<'password' | 'passwordConf
   if (error.value && error.value.data) {
     const { message } = error.value.data;
     state.unknownErrorServerMsg = message || 'An unknown error occurred. Please try again';
-  } else {
+  }
+  else {
     emit('nextStep');
   }
 }

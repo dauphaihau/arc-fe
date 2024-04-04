@@ -1,7 +1,7 @@
 <script setup lang="ts">
 
 import type {
-  IProduct, IProductInventory, IProductVariant, VariantOptionsCreate
+  IProductCombineVariant, IProductInventory, IProductVariant, VariantOptionsCreate
 } from '~/interfaces/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product.schema';
@@ -21,8 +21,8 @@ type State = {
   errorSubVariantOption: string
   errorVariantGroupName: string
   errorVariantSubGroupName: string
-} & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
-& Record<'variants' | 'subVariants', VariantOption[]>
+} & Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>
+    & Record<'variants' | 'subVariants', VariantOption[]>
 
 type VariantTable = {
   id: number
@@ -247,7 +247,8 @@ const openSubVariant = () => {
     variantsTable.value = state.variants.map((variant) => {
       return { ...defaultVariantTable, variant_name: variant.variant_name, sub_variant_name: '' };
     });
-  } else {
+  }
+  else {
     variantsTable.value[0].sub_variant_name = '';
   }
 };
@@ -265,7 +266,8 @@ const closeSubVariant = () => {
         variant_name: variant.variant_name,
       };
     });
-  } else {
+  }
+  else {
     variantsTable.value[0].variant_name = '';
   }
 };
@@ -297,7 +299,8 @@ watch(() => props.countValidate, () => {
 
     if (!isHasVariantName) {
       variantNameMap.set(variant.variant_name, idx);
-    } else {
+    }
+    else {
       const indexInMap = variantNameMap.get(variant.variant_name);
       variant.errorMsg = errorMsg;
       isAnyDuplicateVariantName = true;
@@ -341,7 +344,8 @@ watch(() => props.countValidate, () => {
       parsedVariantsTable.success
   ) {
     emitData();
-  } else {
+  }
+  else {
     emit('onChange', null);
   }
 });
@@ -370,36 +374,36 @@ function emitData() {
       variant_options,
     }));
     emit('onChange', {
+      variant_type: PRODUCT_VARIANT_TYPES.COMBINE,
       variant_sub_group_name: state.variant_sub_group_name,
       variant_group_name: state.variant_group_name,
-      variant_type: PRODUCT_VARIANT_TYPES.COMBINE,
-      new_combine_variants: combineVariants,
+      new_variants: combineVariants,
     });
-    return;
   }
-
-  const singleVariants = Object.entries<VariantOptionsCreate[]>(
-    variantsTable.value.reduce((acc, variant) => {
-      const {
-        price, sku, stock, variant_name,
-      } = variant;
-      if (!acc[variant_name]) {
-        acc[variant_name] = {};
-      }
-      acc[variant_name] = {
-        price, sku, stock, variant_name,
-      };
-      return acc;
-    }, {})
-  ).map(([variant_name, resValuesVariant]) => ({
-    ...resValuesVariant,
-    variant_name,
-  }));
-  emit('onChange', {
-    variant_group_name: state.variant_group_name,
-    variant_type: PRODUCT_VARIANT_TYPES.SINGLE,
-    new_combine_variants: singleVariants,
-  });
+  else {
+    const singleVariants = Object.entries<VariantOptionsCreate[]>(
+      variantsTable.value.reduce((acc, variant) => {
+        const {
+          price, sku, stock, variant_name,
+        } = variant;
+        if (!acc[variant_name]) {
+          acc[variant_name] = {};
+        }
+        acc[variant_name] = {
+          price, sku, stock, variant_name,
+        };
+        return acc;
+      }, {})
+    ).map(([variant_name, resValuesVariant]) => ({
+      ...resValuesVariant,
+      variant_name,
+    }));
+    emit('onChange', {
+      variant_type: PRODUCT_VARIANT_TYPES.SINGLE,
+      variant_group_name: state.variant_group_name,
+      new_variants: singleVariants,
+    });
+  }
 }
 
 watchDebounced(

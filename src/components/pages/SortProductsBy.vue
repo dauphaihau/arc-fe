@@ -16,7 +16,8 @@ watch(selected, () => {
   const routeQuery = { ...route.query };
   if (selected.value.id) {
     routeQuery.sortBy = selected.value.id;
-  } else {
+  }
+  else {
     delete routeQuery.sortBy;
   }
   router.push({ query: routeQuery });

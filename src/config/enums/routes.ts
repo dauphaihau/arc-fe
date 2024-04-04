@@ -1,5 +1,6 @@
 export enum ROUTES {
   HOME = '/',
+  C = '/c',
   RESET = '/reset',
   ACCOUNT = '/account',
   ADDRESSES = '/addresses',

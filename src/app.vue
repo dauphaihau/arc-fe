@@ -1,3 +1,6 @@
+<script setup lang="ts">
+</script>
+
 <template>
   <NuxtLayout class="min-h-screen">
     <NuxtPage />
@@ -6,9 +9,6 @@
     <RegisterLoginDialog />
   </NuxtLayout>
 </template>
-
-<script setup lang="ts">
-</script>
 
 <style>
 </style>

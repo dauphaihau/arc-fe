@@ -8,13 +8,14 @@ import type { ResponseGetProducts } from '~/interfaces/product';
 const { $api } = useNuxtApp();
 
 type ISubCategories = {
-    categoryName: string,
+  categoryName: string,
 } & Partial<GetListResponse<ResponseGetProducts>>
 
 const state = reactive({
   pending: false,
   limit: 7,
   subCategories: [] as ISubCategories[],
+  loading: false,
 });
 
 function isFulfilled<T>(val: PromiseSettledResult<T>): val is PromiseFulfilledResult<T> {
@@ -23,9 +24,11 @@ function isFulfilled<T>(val: PromiseSettledResult<T>): val is PromiseFulfilledRe
 
 onMounted(async () => {
   const userActivities = parseJSON<IUserActivitiesSessionStorage>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES));
+    sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES)
+  );
 
   if (userActivities) {
+    state.loading = true;
     const results = await Promise.allSettled(
       userActivities.subCategories.map(async (cg) => {
         const { data } = await $api.product.getProductsLowestPrice({
@@ -39,6 +42,7 @@ onMounted(async () => {
       })
     );
     state.subCategories = results.filter(isFulfilled).map(sub => sub.value);
+    state.loading = false;
   }
 });
 
@@ -46,24 +50,75 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="state.subCategories && state.subCategories.length > 0" class="space-y-12">
-    <div v-for="(cg, i) of state.subCategories" :key="i">
-      <div v-if="cg.results && cg.results.length > 0">
+  <div>
+    <div
+      v-if="state.subCategories && state.subCategories.length > 0 && !state.loading"
+      class="space-y-12"
+    >
+      <div v-for="(cg, i) of state.subCategories" :key="i">
+        <div>
+          <div class="mb-6">
+            <h3 class="text-lg font-medium">
+              {{ cg.categoryName }}
+            </h3>
+            <p class="text-md text-customGray-900">
+              Based on your activity
+            </p>
+          </div>
+
+          <div
+            v-if="cg.results && cg.results.length > 0"
+            class="grid grid-cols-6 gap-6"
+          >
+            <HomeProductCard :product="cg.results[0]" class="col-span-2" />
+            <div class="col-span-4">
+              <div class="grid grid-cols-3 gap-6">
+                <div v-for="product of cg.results.slice(1)" :key="product.id">
+                  <HomeProductCard :product="product" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--  Skeletons -->
+    <div v-else-if="state.loading" class="space-y-12">
+      <div>
         <div class="mb-6">
-          <h3 class="text-lg font-medium">
-            {{ cg.categoryName }}
-          </h3>
-          <p class="text-md text-customGray-900">
-            Based on your activity
-          </p>
+          <USkeleton class="w-20 h-7 mb-3" />
+          <USkeleton class="w-32 h-7" />
         </div>
         <div class="grid grid-cols-6 gap-6">
-          <HomeProductCard :product="cg.results[0]" class="col-span-2" />
+          <USkeleton class="col-span-2 h-full" />
           <div class="col-span-4">
             <div class="grid grid-cols-3 gap-6">
-              <div v-for="product of cg.results.slice(1)" :key="product.id">
-                <HomeProductCard :product="product" />
-              </div>
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="mb-6">
+          <USkeleton class="w-20 h-7 mb-3" />
+          <USkeleton class="w-32 h-7" />
+        </div>
+        <div class="grid grid-cols-6 gap-6">
+          <USkeleton class="col-span-2 h-full" />
+          <div class="col-span-4">
+            <div class="grid grid-cols-3 gap-6">
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
+              <USkeleton class="h-[160px]" />
             </div>
           </div>
         </div>

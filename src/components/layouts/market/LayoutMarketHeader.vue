@@ -56,8 +56,16 @@ onMounted(async () => {
 </script>
 
 <template>
+  <!--  <div class="bg-customGray-100 h-11">-->
+  <!--    <div class=" max-w-market-layout mx-auto flex items-center justify-end text-custom-Gray-950 text-sm h-full font-medium">-->
+  <!--      <div>Join us</div>-->
+  <!--      <UDivider orientation="vertical" class="w-6 h-3 border-black" size="xs" :ui="{ border: { base: 'border-black' } }" />-->
+  <!--      <div>Login</div>-->
+  <!--    </div>-->
+  <!--  </div>-->
+
   <header
-    class="header "
+    class="header"
     :class="{ 'hidden-header': !state.showNavbar }"
     @mouseleave="onMouseleave"
   >
@@ -66,15 +74,13 @@ onMounted(async () => {
         Arc
       </NuxtLink>
 
-      <div>
-        <LayoutHomeHeaderCategories class="mx-3" />
-        <LayoutHomeCartMegaMenu :show="isShowCart" class="mt-8" />
-        <LayoutHomeSearchAllMegaMenu :show="isShowSearch" class="mt-8" />
+      <div class="mt-1">
+        <LayoutMarketHeaderCategories class="mx-3" />
+        <LayoutMarketCartMegaMenu :show="isShowCart" class="mt-8" />
+        <LayoutMarketSearchAllMegaMenu :show="isShowSearch" class="mt-8" />
       </div>
 
       <!--      <div class="flex items-center gap-4">-->
-      <!--    <HeaderLangDropdown/>-->
-
       <!--      <UButton-->
       <!--        color="gray"-->
       <!--        variant="ghost"-->
@@ -114,35 +120,24 @@ onMounted(async () => {
       <!--            <Icon name="uil:shop" />-->
       <!--          </UButton>-->
       <!--        </UTooltip>-->
-      <!--        <HeaderUserDropdown />-->
       <!--        </div>-->
 
       <!--        <RegisterLoginDialog v-else />-->
 
-      <!--      <UTooltip text="Cart">-->
-      <!--        <UButton-->
-      <!--          :to="ROUTES.CART"-->
-      <!--          color="gray"-->
-      <!--          variant="ghost"-->
-      <!--          class="icon-button"-->
-      <!--        >-->
-      <!--          <Icon name="uil:cart" />-->
-      <!--        </UButton>-->
-      <!--      </UTooltip>-->
-      <!--      </div>-->
-
-      <div class="flex items-center gap-4 h-fit">
-        <UTooltip text="Search">
-          <UButton
-            color="gray"
-            variant="ghost"
-            class="icon-button"
-            @click="isShowSearch = !isShowSearch"
-            @mouseover="isShowCart = false"
-          >
-            <Icon name="uil:search" />
-          </UButton>
-        </UTooltip>
+      <div class="flex items-center gap-4 h-fit relative">
+        <div class="absolute right-12 flex gap-4">
+          <UTooltip text="Search">
+            <UButton
+              color="gray"
+              variant="ghost"
+              class="icon-button"
+              @click="isShowSearch = !isShowSearch"
+              @mouseover="isShowCart = false"
+            >
+              <Icon name="uil:search" />
+            </UButton>
+          </UTooltip>
+        </div>
 
         <UTooltip text="Cart">
           <UChip
@@ -168,6 +163,8 @@ onMounted(async () => {
             </UButton>
           </UChip>
         </UTooltip>
+
+        <!--        <HeaderUserDropdown />-->
       </div>
     </nav>
   </header>

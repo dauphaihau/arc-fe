@@ -4,6 +4,7 @@ import { ROUTES } from '~/config/enums/routes';
 import type { IProductCartPopulated } from '~/interfaces/cart';
 import { useCartStore } from '~/stores/cart';
 import type { IShop } from '~/interfaces/shop';
+import { toastCustom } from '~/config/toast';
 
 const { data, shopId } = defineProps<{
   data: IProductCartPopulated,
@@ -25,8 +26,12 @@ const goToDetailProduct = () => {
 const removeProduct = async (id: IProductInventory['id']) => {
   const { error, data } = await $api.cart.deleteProduct(id);
   if (error.value) {
-    toast.add({ title: 'Something Wrong' });
-  } else {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Delete product cart failed',
+    });
+  }
+  else {
     emit('onDeleteProduct');
     await cartStore.getCartHeader();
     cartStore.summaryOrder = data.value?.summaryOrder || null;
@@ -87,7 +92,7 @@ const removeProduct = async (id: IProductInventory['id']) => {
       </div>
 
       <p class="text-customGray-950 text-xl font-medium">
-        {{ formatCurrency(data.inventory.price) }}
+        {{ convertCurrency(data.inventory.price) }}
       </p>
     </div>
   </div>

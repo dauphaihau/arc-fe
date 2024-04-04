@@ -1,18 +1,22 @@
 import dayjs from 'dayjs';
-import type { IUser, LoginBody, RegisterBody } from '~/interfaces/user';
-import { TOKEN_TYPES, KEY_LS_ACCESS_TOKEN, KEY_LS_REFRESH_TOKEN } from '~/config/enums/token';
+import type {
+  IUser, IUserPopulated, LoginBody, RegisterBody, UpdateUserBody
+} from '~/interfaces/user';
+import { TOKEN_TYPES } from '~/config/enums/token';
 import { ROUTES } from '~/config/enums/routes';
 import { RESOURCES } from '~/config/enums/resources';
+import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import type { IShop } from '~/interfaces/shop';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as IUser | null,
-    tokenResetPassword: '',
+    user: null as IUserPopulated | IUser | null | undefined,
     showLoginDialog: false,
+    tokenResetPassword: '',
   }),
   getters: {
     getUser: state => state.user,
-    getShop: state => state.user?.shop,
+    getShop: state => state.user?.shop as IShop,
     isLogged: state => !!state.user,
     isOwnedShop: state => !!state.user?.shop,
   },
@@ -20,7 +24,13 @@ export const useAuthStore = defineStore('auth', {
 
     async getCurrentUser() {
       const { data } = await useCustomFetch.get<{ user: IUser }>(`${RESOURCES.USER}/me`);
-      this.afterUserAuthenticated(data.value?.user);
+      this.user = data.value?.user;
+    },
+
+    async updateUser(body: UpdateUserBody) {
+      const response = await useCustomFetch.patch<{ user: IUser }>(RESOURCES.USER, body);
+      this.user = response.data.value?.user;
+      return response;
     },
 
     async register(body: RegisterBody) {
@@ -28,7 +38,8 @@ export const useAuthStore = defineStore('auth', {
         'register',
         () => useCustomOFetch.post(`${RESOURCES.AUTH}/register`, body)
       );
-      this.afterUserAuthenticated(response.data.value?.user);
+      this.user = response.data.value?.user;
+      this.setExpTokens();
       return response;
     },
 
@@ -37,7 +48,8 @@ export const useAuthStore = defineStore('auth', {
         'login',
         () => useCustomOFetch.post(`${RESOURCES.AUTH}/login`, payload)
       );
-      this.afterUserAuthenticated(response.data.value?.user);
+      this.user = response.data.value?.user;
+      this.setExpTokens();
       return response;
     },
 
@@ -74,8 +86,9 @@ export const useAuthStore = defineStore('auth', {
       );
       const user = response.data.value?.user;
       if (user) {
-        this.afterUserAuthenticated(user);
+        this.user = user;
         this.tokenResetPassword = '';
+        this.setExpTokens();
       }
       return response;
     },
@@ -88,20 +101,15 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-
     clearAll() {
-      localStorage.removeItem(KEY_LS_REFRESH_TOKEN);
-      localStorage.removeItem(KEY_LS_ACCESS_TOKEN);
-      this.user = null;
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.REFRESH_TOKEN_EXP);
+      localStorage.removeItem(LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP);
+      this.$reset();
     },
-    afterUserAuthenticated(user?: IUser) {
-      if (!user) {
-        return;
-      }
-      this.user = user;
+    setExpTokens() {
       const config = useRuntimeConfig();
-      localStorage[KEY_LS_ACCESS_TOKEN] = dayjs().add(Number(config.public.accessTokenExpirationMins), 'minutes');
-      localStorage[KEY_LS_REFRESH_TOKEN] = dayjs().add(Number(config.public.refreshTokenExpirationDays), 'minutes');
+      localStorage[LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP] = dayjs().add(Number(config.public.accessTokenExpirationMins), 'minutes');
+      localStorage[LOCAL_STORAGE_KEYS.REFRESH_TOKEN_EXP] = dayjs().add(Number(config.public.refreshTokenExpirationDays), 'minutes');
     },
   },
 });

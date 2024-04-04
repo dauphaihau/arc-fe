@@ -5,8 +5,8 @@ import type {
 import type { GetListResponse, RequestGetListParams } from '~/interfaces/common';
 
 export class AddressModule {
-  async createAddress(body: CreateBodyAddress) {
-    return await useAsyncData<{ address: IAddress }, ErrorServer>(
+  createAddress(body: CreateBodyAddress) {
+    return useAsyncData<{ address: IAddress }, ErrorServer>(
       'createAddress',
       () => useCustomOFetch.post(RESOURCES.USER + RESOURCES.ADDRESSES, body)
     );
@@ -34,14 +34,14 @@ export class AddressModule {
     );
   }
 
-  async getCountries() {
-    return await useFetch<ResponseGetCountries>('https://countriesnow.space/api/v0.1/countries/iso', {
+  getCountries() {
+    return useFetch<ResponseGetCountries>('https://countriesnow.space/api/v0.1/countries/iso', {
       method: 'get',
     });
   }
 
-  async getStatesByCountry(country: string) {
-    return await useFetch<ResponseGetStatesByCountry>('https://countriesnow.space/api/v0.1/countries/states', {
+  getStatesByCountry(country: string) {
+    return useFetch<ResponseGetStatesByCountry>('https://countriesnow.space/api/v0.1/countries/states', {
       method: 'post',
       body: {
         country,

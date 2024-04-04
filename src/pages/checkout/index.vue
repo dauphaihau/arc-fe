@@ -3,14 +3,15 @@
 import { useCartStore } from '~/stores/cart';
 import { ROUTES } from '~/config/enums/routes';
 import { ORDER_CONFIG, PAYMENT_TYPES } from '~/config/enums/order';
-import type { ISummaryOrder } from '~/interfaces/order';
+import type { CreateOrderForBuyNowBody, ISummaryOrder } from '~/interfaces/order';
 import type { ICoupon } from '~/interfaces/coupon';
-
-definePageMeta({ layout: 'home', middleware: ['auth', 'checkout'] });
-
-const { $api } = useNuxtApp();
-const cartStore = useCartStore();
-const toast = useToast();
+import type { IUser } from '~/interfaces/user';
+import { type IExchangeRate, LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import { toastCustom } from '~/config/toast';
+import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import { MARKET_CONFIG } from '~/config/enums/market';
+import type { IStateProductCheckoutNow } from '~/interfaces/cart';
+import type { IProductCombineVariant } from '~/interfaces/product';
 
 enum STEPS { ADDRESS_SHIPPING, PAYMENT, REVIEW_CONFIRMATION, ORDER }
 
@@ -19,16 +20,35 @@ interface IOnModifyCoupons {
   coupon_codes: ICoupon['code'][]
 }
 
-const state = reactive({
-  ...cartStore.productCheckoutNow,
-  coupon_codes: [],
-  dataGetSummaryOder: {},
+type IState = {
+  currentStep: STEPS
+  coupon_codes: string[],
+  dataGetSummaryOder: { summaryOrder: ISummaryOrder } | null,
+  note: string,
+  countRefreshConvertCurrency: number,
+} & Record<'loadingOrder' | 'showNoteInput' | 'isAddressEmpty', boolean>
+& IStateProductCheckoutNow
+& Partial<Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>
+
+definePageMeta({ layout: 'market', middleware: ['auth', 'checkout'] });
+
+const { $api } = useNuxtApp();
+const cartStore = useCartStore();
+const toast = useToast();
+const store = useStore();
+
+const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
+
+const state = reactive<IState>({
+  ...cartStore.productCheckoutNow as IStateProductCheckoutNow,
   currentStep: STEPS.ADDRESS_SHIPPING,
-  steps: ['Billing Address', 'Payment', 'Review & Confirmation'],
+  coupon_codes: [],
+  dataGetSummaryOder: null,
   loadingOrder: false,
   showNoteInput: false,
   note: '',
   isAddressEmpty: false,
+  countRefreshConvertCurrency: 0,
 });
 
 const getSummaryOder = async () => {
@@ -37,10 +57,20 @@ const getSummaryOder = async () => {
     quantity: state.quantity,
     coupon_codes: state.coupon_codes,
   });
-  state.dataGetSummaryOder = data.value;
+  if (data.value) {
+    state.dataGetSummaryOder = data.value;
+  }
 };
 
 onMounted(async () => {
+  const { variant_type } = state.product;
+  if (variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
+    state.variant_group_name = state.product.variant_group_name;
+  }
+  if (variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+    state.variant_group_name = state.product.variant_group_name;
+    state.variant_sub_group_name = state.product.variant_sub_group_name;
+  }
   await getSummaryOder();
 });
 
@@ -71,34 +101,83 @@ const onCreateOrder = async () => {
 
   const { payment_type, address } = cartStore.stateCheckout;
 
-  const { data, error } = await $api.order.createOrderForBuyNow({
+  const body: CreateOrderForBuyNowBody = {
     payment_type: payment_type as PAYMENT_TYPES,
     address: address.id,
     inventory: state.inventory,
     quantity: state.quantity,
     coupon_codes: state.coupon_codes,
     note: state.note,
-  });
+  };
+
+  const currencySelected = parseJSON<IUser['market_preferences']>(
+    localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
+  )?.currency;
+  if (!currencySelected) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Oops',
+      description: 'Something wrong',
+    });
+    return;
+  }
+  body.currency = currencySelected;
+  if (currencySelected !== MARKET_CONFIG.BASE_CURRENCY) {
+    // validate currency
+    const exchangeRate = parseJSON<IExchangeRate>(localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]);
+    const prevRate = exchangeRate?.rates[currencySelected];
+    await store.getExchangeRates();
+    if (!store.rates) {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Oops',
+        description: 'Something wrong',
+      });
+      return;
+    }
+    const newRate = store.rates[currencySelected];
+    if (prevRate !== newRate) {
+      toast.add({
+        ...toastCustom.info,
+        title: 'Currency have a update, please recheck',
+      });
+      state.loadingOrder = false;
+      state.countRefreshConvertCurrency++;
+      return;
+    }
+  }
+
+  const { data, error } = await $api.order.createOrderForBuyNow(body);
   if (error.value) {
     toast.add({
+      ...toastCustom.error,
       title: 'Order failed',
-      icon: 'i-heroicons-x-circle',
-      color: 'red',
     });
     return;
   }
 
-  if (payment_type === PAYMENT_TYPES.CARD && data.value?.checkoutSessionUrl) {
+  if (payment_type === PAYMENT_TYPES.CARD) {
+    if (!data.value?.checkoutSessionUrl) {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Oops',
+        description: 'Something wrong',
+      });
+      return;
+    }
     navigateTo(data.value.checkoutSessionUrl, {
       external: true,
     });
-  } else {
+  }
+  else {
     navigateTo(ROUTES.SUCCESS);
   }
 };
 
 const onModifyCoupons = (values: IOnModifyCoupons) => {
-  state.dataGetSummaryOder.summaryOrder = values.summaryOrder;
+  if (state.dataGetSummaryOder) {
+    state.dataGetSummaryOder.summaryOrder = values.summaryOrder;
+  }
   state.coupon_codes = values.coupon_codes;
 };
 
@@ -108,7 +187,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
   <div class="py-16">
     <CheckoutStepper
       class="mb-24 max-w-[30rem] mx-auto"
-      :steps="state.steps"
+      :steps="steps"
       :step="state.currentStep"
     />
     <div class="grid grid-cols-12 gap-16">
@@ -129,12 +208,13 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
 
           <!--          as Item cart-->
           <UCard
+            v-if="cartStore.productCheckoutNow"
             :ui="{ base: 'overflow-visible' }"
             class="mb-4"
           >
             <div class="flex flex-col">
               <h3 class="text-lg font-medium mb-3">
-                {{ state.shop?.shop_name }}
+                {{ state.product.shop?.shop_name }}
               </h3>
 
               <div class="flex gap-4 mb-8">
@@ -148,18 +228,21 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
                 <div class="flex justify-between w-full">
                   <div class="space-y-2">
                     <h1 class="text-xl font-semibold cursor-pointer">
-                      {{ state.title }}
+                      {{ state.product.title }}
                     </h1>
 
                     <div class="flex flex-col gap-1">
-                      <div class="text-zinc-500 text-lg">
-                        {{ state.firstVariantLabel }}: {{ state.variantName1 }}
-                      </div>
                       <div
-                        v-if="state.secondVariantLabel"
+                        v-if="state.variant_group_name"
                         class="text-zinc-500 text-lg"
                       >
-                        {{ state.secondVariantLabel }}: {{ state.variantName2 }}
+                        {{ state.variant_group_name }}: {{ state.variantName1 }}
+                      </div>
+                      <div
+                        v-if="state.variant_sub_group_name"
+                        class="text-zinc-500 text-lg"
+                      >
+                        {{ state.variant_sub_group_name }}: {{ state.variantName2 }}
                       </div>
                     </div>
 
@@ -188,8 +271,8 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
                     </div>
                   </div>
 
-                  <p class="text-customGray-950 text-xl font-medium">
-                    {{ formatCurrency(state.price) }}
+                  <p :key="state.countRefreshConvertCurrency" class="text-customGray-950 text-xl font-medium">
+                    {{ convertCurrency(state.price) }}
                   </p>
                 </div>
               </div>
@@ -199,7 +282,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
 
               <div class="flex flex-col gap-4 w-fit mt-6">
                 <ChekcoutAddCoupons
-                  :shop="state.shop?.id"
+                  :shop="state.product.shop?.id"
                   :state-parent="state"
                   @on-modify-coupons="onModifyCoupons"
                 />
@@ -211,7 +294,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
                     class="w-fit mb-3"
                     @click="state.showNoteInput = !state.showNoteInput"
                   >
-                    Add a note to {{ state.shop?.shop_name }}
+                    Add a note to {{ cartStore.productCheckoutNow?.product.shop.shop_name }}
                   </UButton>
 
                   <UTextarea
@@ -232,6 +315,7 @@ const onModifyCoupons = (values: IOnModifyCoupons) => {
       <div class="col-span-4">
         <CheckoutSummaryOrder
           v-if="state.dataGetSummaryOder?.summaryOrder"
+          :key="state.countRefreshConvertCurrency"
           :data="state.dataGetSummaryOder.summaryOrder"
         />
 

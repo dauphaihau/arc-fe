@@ -46,8 +46,8 @@ watch(() => route.path, () => {
 </script>
 
 <template>
-  <LayoutHomeHeader />
-  <div class="max-w-home-layout mx-auto pt-14 pb-32 pb-[500px]">
+  <LayoutMarketHeader />
+  <div class="max-w-home-layout mx-auto pt-14 pb-[500px]">
     <div
       v-if="isAccountRoute"
       class="flex gap-10 max-w-[900px] min-h-[50vh] mx-auto mt-24"
@@ -78,5 +78,5 @@ watch(() => route.path, () => {
       <slot />
     </div>
   </div>
-  <LayoutHomeFooter />
+  <LayoutMarketFooter />
 </template>

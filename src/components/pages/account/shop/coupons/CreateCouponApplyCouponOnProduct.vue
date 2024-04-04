@@ -5,7 +5,7 @@ import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 
 const { $api } = useNuxtApp();
 
-const emit = defineEmits<{(e: 'onSelectProd', value: IProduct['id'][]): void }>();
+const emit = defineEmits<{ (e: 'onSelectProd', value: IProduct['id'][]): void }>();
 
 const isOpen = ref(false);
 const selectedRows = ref<IProduct[]>([]);
@@ -49,12 +49,15 @@ const columnsPreviewTable = [
 ];
 
 const rowsDialog = computed(() => {
-  return data.value?.results.map(prod => ({
+  if (!data.value) {
+    return [];
+  }
+  return data.value.results.map(prod => ({
     id: prod.id,
     title: prod.title,
     summary_inventory: prod.summary_inventory,
     variant_type: prod.variant_type,
-    inventory: prod.inventory,
+    inventory: prod.variant_type === PRODUCT_VARIANT_TYPES.NONE ? prod.inventory : null,
   }));
 });
 
@@ -79,12 +82,7 @@ const removeProd = (id: IProduct['id']) => {
       Add product
     </UButton>
 
-    <UModal
-      v-model="isOpen"
-      :ui="{
-        margin: '!mb-72'
-      }"
-    >
+    <UModal v-model="isOpen">
       <div class="p-6 space-y-5">
         <h1 class="text-xl font-medium">
           Select Products

@@ -1,10 +1,10 @@
 import type { Notification } from '#ui/types';
 
-interface ToaseCustom {
+interface ToastCustom {
   [key: string]: Partial<Notification>
 }
 
-export const toastCustom: ToaseCustom = {
+export const toastCustom: ToastCustom = {
   error: {
     color: 'red',
     icon: 'i-carbon:warning-filled',

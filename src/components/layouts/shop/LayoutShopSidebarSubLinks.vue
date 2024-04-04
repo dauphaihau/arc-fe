@@ -74,6 +74,22 @@ const itemsLinkRoutes = Array.isArray(data.sub) && data.sub.map(item => item.rou
 <style scoped>
 
 @import url("src/assets/css/layout-shop.css");
-@import url("src/assets/css/animations.css");
+
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: max-height 0.3s ease-in-out;
+}
+
+.slide-down-enter-to,
+.slide-down-leave-from {
+  overflow: hidden;
+  max-height: 100px;
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  overflow: hidden;
+  max-height: 0;
+}
 
 </style>

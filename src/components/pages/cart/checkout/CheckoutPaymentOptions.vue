@@ -2,7 +2,7 @@
 
 import { PAYMENT_TYPES } from '~/config/enums/order';
 
-definePageMeta({ layout: 'home', middleware: ['auth'] });
+definePageMeta({ layout: 'market', middleware: ['auth'] });
 
 const cartStore = useCartStore();
 
