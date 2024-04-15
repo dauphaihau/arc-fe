@@ -12,7 +12,7 @@ const categories = ref<ICategory[]>([]);
 
 onMounted(async () => {
   const rootCategories = parseJSON<ICategory[]>(sessionStorage[SESSION_STORAGE_KEYS.ROOT_CATEGORIES]);
-  if (rootCategories) {
+  if (rootCategories && rootCategories.length > 0) {
     categories.value = rootCategories;
     return;
   }

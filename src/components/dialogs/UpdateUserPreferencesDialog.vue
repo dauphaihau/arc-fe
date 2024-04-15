@@ -137,6 +137,7 @@ onMounted(async () => {
     if (currencyOptSelected) {
       state.currency = currencyOptSelected;
     }
+    state.region = userPreferences.region;
   }
   else {
     // set currency base on ip
@@ -262,7 +263,6 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
             >
               <USelectMenu
                 v-model="state.region"
-                disabled
                 size="xl"
                 :options="regionOpts"
               />

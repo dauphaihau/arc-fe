@@ -56,7 +56,7 @@ onMounted(async () => {
       class="space-y-12"
     >
       <div v-for="(cg, i) of state.subCategories" :key="i">
-        <div>
+        <div v-if="cg.results && cg.results.length > 0">
           <div class="mb-6">
             <h3 class="text-lg font-medium">
               {{ cg.categoryName }}
@@ -66,10 +66,7 @@ onMounted(async () => {
             </p>
           </div>
 
-          <div
-            v-if="cg.results && cg.results.length > 0"
-            class="grid grid-cols-6 gap-6"
-          >
+          <div class="grid grid-cols-6 gap-6">
             <HomeProductCard :product="cg.results[0]" class="col-span-2" />
             <div class="col-span-4">
               <div class="grid grid-cols-3 gap-6">

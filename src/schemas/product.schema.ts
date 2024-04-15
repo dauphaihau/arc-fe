@@ -77,7 +77,6 @@ export const baseProductSchema = z.object({
   id: objectIdSchema,
   shop: objectIdSchema,
   category: objectIdSchema,
-  // inventory: objectIdSchema.optional(),
   variant_type: z
     .nativeEnum(PRODUCT_VARIANT_TYPES)
     .default(PRODUCT_VARIANT_TYPES.NONE),
@@ -127,19 +126,6 @@ export const baseProductSchema = z.object({
     .max(5, 'Rating must be equal or less than 5.0')
     .default(0)
     .optional(),
-  // variant_group_name: z
-  //   .string()
-  //   .min(1)
-  //   .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME)
-  //   .optional(),
-  // variant_sub_group_name: z
-  //   .string()
-  //   .min(1)
-  //   .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME)
-  //   .optional(),
-  // variants: z
-  //   .array(productVariantOptSchema.shape.id)
-  //   .default([]),
 });
 
 const baseProductPopulatedSchema = baseProductSchema.merge(z.object({
@@ -246,7 +232,6 @@ export const createProductSchema = baseProductSchema
         .min(PRODUCT_CONFIG.MIN_IMAGES)
         .max(PRODUCT_CONFIG.MAX_IMAGES),
       tags: baseProductSchema.shape.tags.optional(),
-      // tags: productSchema.shape.tags.optional(),
       new_variants: z.array(
         productVariantSchema
           .pick({ variant_name: true })
