@@ -13,7 +13,7 @@ export class UploadModule {
 
   async getPresignedUrl() {
     return await useCustomFetch.get<GetPresignedUrlData>(
-      `${RESOURCES.UPLOAD}?shop_id=${this.shopId}`
+      `${RESOURCES.UPLOAD}?shop=${this.shopId}`
     );
   }
 }
