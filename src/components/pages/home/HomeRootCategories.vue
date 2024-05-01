@@ -47,7 +47,7 @@ const redirectByCategory = (category: ICategory) => {
             :src="config.public.awsHostBucket + '/' + cg.relative_url_image"
             width="140"
             height="210"
-            class="rounded max-w-[140px] max-h-[210px] cursor-pointer"
+            class="rounded cursor-pointer"
           />
           <div
             class="capitalize text-[13px] font-semibold cursor-pointer text-center mt-2"
