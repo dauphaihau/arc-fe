@@ -83,7 +83,7 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
   image: {
-    provider: process.env.VERCEL_ENV ? 'vercel' : 'ipx',
+    provider: 'ipx',
     domains: [process.env.AWS_S3_HOST_BUCKET as string],
   },
 });
