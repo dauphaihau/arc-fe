@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { PAYMENT_TYPES } from '~/config/enums/order';
 
 definePageMeta({ layout: 'market', middleware: ['auth'] });
@@ -20,13 +19,12 @@ onMounted(() => {
 watch(() => payment_type.value, () => {
   cartStore.stateCheckout.payment_type = payment_type.value;
 });
-
 </script>
 
 <template>
   <UCard>
     <div class="flex flex-col gap-4">
-      <legend class="text-gray-700 dark:text-gray-200 mb-1 text-xl font-bold">
+      <legend class="mb-1 text-xl font-bold text-gray-700 dark:text-gray-200">
         Payment options
       </legend>
       <URadioGroup
@@ -37,11 +35,11 @@ watch(() => payment_type.value, () => {
         }"
       >
         <template #label="{ option }">
-          <div class="flex flex-col gap-1 w-full mb-6">
-            <div class="text-customGray-950 font-semibold leading-0">
+          <div class="mb-6 flex w-full flex-col gap-1">
+            <div class="leading-0 font-semibold text-customGray-950">
               {{ option.label }}
             </div>
-            <div class="text-gray-500 font-normal">
+            <div class="font-normal text-gray-500">
               {{ option.description }}
             </div>
           </div>

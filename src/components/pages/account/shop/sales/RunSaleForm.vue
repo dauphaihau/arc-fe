@@ -13,11 +13,11 @@ const router = useRouter();
 const toast = useToast();
 
 type InitState = UndefinableFields<CreateCouponPayload, 'amount_off'
-    | 'percent_off'
-    | 'min_order_value'
-    | 'min_products'
-    | 'max_uses_per_user'
-    | 'max_uses'>
+  | 'percent_off'
+  | 'min_order_value'
+  | 'min_products'
+  | 'max_uses_per_user'
+  | 'max_uses'>;
 
 const state = reactive<InitState>({
   title: '',
@@ -138,7 +138,6 @@ const onChangeDuration = (values: Pick<ICoupon, 'start_date' | 'end_date'>) => {
 const onSelectProd = (ids: IProduct['id'][]) => {
   state.applies_product_ids = ids;
 };
-
 </script>
 
 <template>
@@ -157,15 +156,15 @@ const onSelectProd = (ids: IProduct['id'][]) => {
       </template>
       <template #content>
         <div class="w-1/2">
-          <!--          <UFormGroup-->
-          <!--            label="Title"-->
-          <!--            name="title"-->
-          <!--            class="mb-4"-->
-          <!--            description="The Voucher name will not be displayed to the Buyer"-->
-          <!--            required-->
-          <!--          >-->
-          <!--            <UInput v-model="state.title" :disabled="loading" size="lg" />-->
-          <!--          </UFormGroup>-->
+          <!--          <UFormGroup -->
+          <!--            label="Title" -->
+          <!--            name="title" -->
+          <!--            class="mb-4" -->
+          <!--            description="The Voucher name will not be displayed to the Buyer" -->
+          <!--            required -->
+          <!--          > -->
+          <!--            <UInput v-model="state.title" :disabled="loading" size="lg" /> -->
+          <!--          </UFormGroup> -->
           <UFormGroup
             label="Sale name"
             name="code"
@@ -180,7 +179,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
               :disabled="loading"
               size="lg"
               :ui="{
-                base: 'uppercase'
+                base: 'uppercase',
               }"
             />
           </UFormGroup>
@@ -203,7 +202,11 @@ const onSelectProd = (ids: IProduct['id'][]) => {
         Details
       </template>
       <template #content>
-        <UFormGroup label="Type" name="type" class="mb-4">
+        <UFormGroup
+          label="Type"
+          name="type"
+          class="mb-4"
+        >
           <div class="flex gap-16">
             <URadio
               v-for="type of typeOptions"
@@ -219,9 +222,13 @@ const onSelectProd = (ids: IProduct['id'][]) => {
             name="amount_off"
             class="mb-4"
           >
-            <UInput v-model="state.amount_off" size="lg" type="number">
+            <UInput
+              v-model="state.amount_off"
+              size="lg"
+              type="number"
+            >
               <template #trailing>
-                <span class="text-gray-500 dark:text-gray-400 text-xs">USD</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">USD</span>
               </template>
             </UInput>
           </UFormGroup>
@@ -230,15 +237,23 @@ const onSelectProd = (ids: IProduct['id'][]) => {
             name="percent_off"
             class="mb-4"
           >
-            <UInput v-model="state.percent_off" size="lg" type="number">
+            <UInput
+              v-model="state.percent_off"
+              size="lg"
+              type="number"
+            >
               <template #trailing>
-                <span class="text-gray-500 dark:text-gray-400 text-xs">%</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">%</span>
               </template>
             </UInput>
           </UFormGroup>
         </div>
 
-        <UFormGroup label="Order minimum" name="min_order_type" class="mb-4">
+        <UFormGroup
+          label="Order minimum"
+          name="min_order_type"
+          class="mb-4"
+        >
           <div class="flex gap-16">
             <URadio
               v-for="opt of couponMinOrderOptions"
@@ -254,37 +269,44 @@ const onSelectProd = (ids: IProduct['id'][]) => {
             name="min_products"
             class="mb-4"
           >
-            <UInput v-model="state.min_products" size="lg" type="number" />
+            <UInput
+              v-model="state.min_products"
+              size="lg"
+              type="number"
+            />
           </UFormGroup>
           <UFormGroup
             v-if="state.min_order_type === COUPON_MIN_ORDER_TYPES.ORDER_TOTAL"
             name="min_order_value"
             class="mb-4"
           >
-            <UInput v-model="state.min_order_value" size="lg" type="number">
+            <UInput
+              v-model="state.min_order_value"
+              size="lg"
+              type="number"
+            >
               <template #trailing>
-                <span class="text-gray-500 dark:text-gray-400 text-xs">USD</span>
+                <span class="text-xs text-gray-500 dark:text-gray-400">USD</span>
               </template>
             </UInput>
           </UFormGroup>
         </div>
 
-        <!--        <UFormGroup-->
-        <!--          label="Maximum total usage"-->
-        <!--          name="max_uses"-->
-        <!--          class="mb-4 w-1/5"-->
-        <!--        >-->
-        <!--          <UInput v-model="state.max_uses" type="number" :disabled="loading" size="lg" />-->
-        <!--        </UFormGroup>-->
+        <!--        <UFormGroup -->
+        <!--          label="Maximum total usage" -->
+        <!--          name="max_uses" -->
+        <!--          class="mb-4 w-1/5" -->
+        <!--        > -->
+        <!--          <UInput v-model="state.max_uses" type="number" :disabled="loading" size="lg" /> -->
+        <!--        </UFormGroup> -->
 
-        <!--        <UFormGroup-->
-        <!--          label="Maximum Usage/Buyer"-->
-        <!--          name="max_uses_per_user"-->
-        <!--          class="mb-4 w-1/5"-->
-        <!--        >-->
-        <!--          <UInput v-model="state.max_uses_per_user" type="number" :disabled="loading" size="lg" />-->
-        <!--        </UFormGroup>-->
-
+        <!--        <UFormGroup -->
+        <!--          label="Maximum Usage/Buyer" -->
+        <!--          name="max_uses_per_user" -->
+        <!--          class="mb-4 w-1/5" -->
+        <!--        > -->
+        <!--          <UInput v-model="state.max_uses_per_user" type="number" :disabled="loading" size="lg" /> -->
+        <!--        </UFormGroup> -->
 
         <UFormGroup
           class="mb-4"
@@ -315,12 +337,16 @@ const onSelectProd = (ids: IProduct['id'][]) => {
       </template>
     </WrapperFormGroupCard>
 
-    <button ref="btnSubmit" type="submit" class="hidden" />
+    <button
+      ref="btnSubmit"
+      type="submit"
+      class="hidden"
+    />
   </UForm>
 
   <div
-    class="flex justify-end items-center gap-2
-       fixed bottom-0 bg-white w-full left-0 pr-8 py-2.5 border-t"
+    class="fixed bottom-0 left-0 flex
+       w-full items-center justify-end gap-2 border-t bg-white py-2.5 pr-8"
   >
     <UButton
       :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.SALES}`"

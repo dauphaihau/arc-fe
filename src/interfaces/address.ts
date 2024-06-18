@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { addressSchema } from '~/schemas/address.schema';
+import type { z } from 'zod';
+import type { addressSchema } from '~/schemas/address.schema';
 
 export type IAddress = z.infer<typeof addressSchema>;
 
@@ -7,7 +7,7 @@ export type CreateBodyAddress = Omit<IAddress, 'id'>;
 
 export type ResponseGetCountries = {
   data: { name: string }[]
-}
+};
 
 export type ResponseGetStatesByCountry = {
   data: {
@@ -15,4 +15,4 @@ export type ResponseGetStatesByCountry = {
       name: string
     }[]
   }
-}
+};

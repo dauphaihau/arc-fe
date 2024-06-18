@@ -1,11 +1,10 @@
 <script lang="ts" setup>
-
 import dayjs from 'dayjs';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
+import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { COUPON_APPLIES_TO, COUPON_TYPES } from '~/config/enums/coupon';
 
-// eslint-disable-next-line import/no-named-as-default-member
 dayjs.extend(localizedFormat);
 
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
@@ -52,22 +51,25 @@ const columns = [
 ];
 
 const rows = computed(() => {
-  return data.value?.results.map(prod => ({
-    id: prod.id,
-    title: prod.title,
-    code: prod.code,
-    type: prod.type,
-    max_uses: prod.max_uses,
-    applies_to: prod.applies_to,
-    percent_off: prod.percent_off,
-    amount_off: prod.amount_off,
-    start_date: dayjs(prod.start_date).format('hh:mm - L'),
-    end_date: dayjs(prod.end_date).format('hh:mm - L'),
-    actions: { class: 'text-right' },
-  }));
+  if (data.value?.results && data.value.results.length > 0) {
+    return data.value.results.map(prod => ({
+      id: prod.id,
+      title: prod.title,
+      code: prod.code,
+      type: prod.type,
+      max_uses: prod.max_uses,
+      applies_to: prod.applies_to,
+      percent_off: prod.percent_off,
+      amount_off: prod.amount_off,
+      start_date: dayjs(prod.start_date).format('hh:mm - L'),
+      end_date: dayjs(prod.end_date).format('hh:mm - L'),
+      actions: { class: 'text-right' },
+    }));
+  }
+  return [];
 });
 
-const itemsDropdown = (row: { id: string }) => [
+const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
   [
     {
       label: 'Edit',
@@ -77,32 +79,30 @@ const itemsDropdown = (row: { id: string }) => [
     },
     {
       label: 'Duplicate',
+      disabled: true,
       icon: 'i-heroicons-document-duplicate-20-solid',
     },
   ],
   [
     {
       label: 'Archive',
+      disabled: true,
       icon: 'i-heroicons-archive-box-20-solid',
     },
     {
       label: 'Preview',
       icon: 'i-heroicons-arrow-right-circle-20-solid',
-      click: () => {
-        navigateTo(`${ROUTES.PRODUCTS}/${row.id}`, {
-          open: { target: '_blank' },
-        });
-      },
+      disabled: true,
     },
   ],
   [
     {
       label: 'Delete',
+      disabled: true,
       icon: 'i-heroicons-trash-20-solid',
     },
   ],
 ];
-
 </script>
 
 <template>
@@ -130,7 +130,7 @@ const itemsDropdown = (row: { id: string }) => [
       >
         <template #title-code-data="{ row }">
           <div>
-            <div class="text-sm truncate max-w-80">
+            <div class="max-w-80 truncate text-sm">
               {{ row.title }}
             </div>
             <div class="text-xs">
@@ -146,13 +146,22 @@ const itemsDropdown = (row: { id: string }) => [
         </template>
 
         <template #discount-data="{ row }">
-          <div v-if="row.type === COUPON_TYPES.FREE_SHIP" class="text-center">
+          <div
+            v-if="row.type === COUPON_TYPES.FREE_SHIP"
+            class="text-center"
+          >
             Freeship
           </div>
-          <div v-if="row.type === COUPON_TYPES.PERCENTAGE" class="text-center">
+          <div
+            v-if="row.type === COUPON_TYPES.PERCENTAGE"
+            class="text-center"
+          >
             {{ row.percent_off }}%
           </div>
-          <div v-if="row.type === COUPON_TYPES.FIXED_AMOUNT" class="text-center">
+          <div
+            v-if="row.type === COUPON_TYPES.FIXED_AMOUNT"
+            class="text-center"
+          >
             {{ formatCurrency(row.amount_off) }}
           </div>
         </template>
@@ -177,10 +186,13 @@ const itemsDropdown = (row: { id: string }) => [
                 variant="ghost"
                 class="p-1.5"
               >
-                <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
+                <Icon
+                  name="i-material-symbols:ink-pen-rounded"
+                  class=" cursor-pointer"
+                />
               </UButton>
             </UTooltip>
-            <UDropdown :items="itemsDropdown(row)">
+            <UDropdown :items="itemsDropdownWithRow(row)">
               <UButton
                 color="gray"
                 variant="ghost"

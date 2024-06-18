@@ -17,4 +17,4 @@ export type IIpData = Record<
   currency: {
     code: string
   }
-} | undefined
+} | undefined;

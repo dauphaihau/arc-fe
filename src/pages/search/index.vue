@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 definePageMeta({ layout: 'market' });
 
 const { $api } = useNuxtApp();
@@ -43,12 +42,11 @@ if (error.value) {
 watch(() => route.query.s, () => {
   refresh();
 });
-
 </script>
 
 <template>
   <div class="pt-12">
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <div />
       <SortProductsBy />
     </div>
@@ -60,15 +58,24 @@ watch(() => route.query.s, () => {
       <div v-if="pending">
         loading...
       </div>
-      <div v-else class="pb-20">
+      <div
+        v-else
+        class="pb-20"
+      >
         <div v-if="data?.results">
-          <div class="grid grid-cols-5 gap-3 mb-6">
-            <div v-for="product of data.results" :key="product.id">
+          <div class="mb-6 grid grid-cols-5 gap-3">
+            <div
+              v-for="product of data.results"
+              :key="product.id"
+            >
               <ProductCard :product="product" />
             </div>
           </div>
         </div>
-        <div v-if="data?.totalResults" class="flex justify-center">
+        <div
+          v-if="data?.totalResults"
+          class="flex justify-center"
+        >
           <UPagination
             v-model="page"
             size="xl"

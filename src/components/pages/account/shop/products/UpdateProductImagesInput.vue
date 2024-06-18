@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { PRODUCT_CONFIG } from '~/config/enums/product';
 import type { IProduct, IProductImage } from '~/interfaces/product';
 import { toastCustom } from '~/config/toast';
@@ -7,10 +6,10 @@ import type { IOnChangeUpdateImages } from '~/components/pages/account/shop/prod
 
 const props = withDefaults(
   defineProps<{
-      countValidate: number,
-      loading: boolean,
-      images: IProduct['images'],
-    }>(),
+    countValidate: number
+    loading: boolean
+    images: IProduct['images']
+  }>(),
   {
     images: () => [],
   }
@@ -38,11 +37,11 @@ const onPickFile = () => {
 
 function onFilePicked(event: Event) {
   const target = event.target as HTMLInputElement;
-  const files = (target.files as FileList);
+  const files = target.files as FileList;
   const totalImagesCurrent = state.urlImages.length + state.imagesInDB.length;
   if (
     files.length > PRODUCT_CONFIG.MAX_IMAGES ||
-      files.length + totalImagesCurrent > PRODUCT_CONFIG.MAX_IMAGES
+    files.length + totalImagesCurrent > PRODUCT_CONFIG.MAX_IMAGES
   ) {
     toast.add({
       ...toastCustom.error,
@@ -77,7 +76,6 @@ watch(state, () => {
     idsImagesForDelete: state.idsImagesForDelete,
   });
 });
-
 </script>
 
 <template>
@@ -94,17 +92,20 @@ watch(state, () => {
         class="size-image"
       >
         <div
-          class="relative group"
+          class="group relative"
           @click="removeImageInDB(img.id, index)"
         >
           <NuxtImg
             :src="config.public.awsHostBucket + '/' + img?.relative_url"
             class="size-image"
           />
-          <div v-if="!props.loading" class="wrapper-close-icon">
+          <div
+            v-if="!props.loading"
+            class="wrapper-close-icon"
+          >
             <UIcon
               name="i-material-symbols:cancel-rounded"
-              class="text-white h-full w-full p-12"
+              class="size-full p-12 text-white"
             />
           </div>
           <UBadge
@@ -123,17 +124,20 @@ watch(state, () => {
         class="size-image"
       >
         <div
-          class="relative group"
+          class="group relative"
           @click="removeImage(index)"
         >
           <NuxtImg
             :src="url"
             class="size-image"
           />
-          <div v-if="!props.loading" class="wrapper-close-icon">
+          <div
+            v-if="!props.loading"
+            class="wrapper-close-icon"
+          >
             <UIcon
               name="i-material-symbols:cancel-rounded"
-              class="text-white h-full w-full p-12"
+              class="size-full p-12 text-white"
             />
           </div>
           <UBadge
@@ -148,10 +152,13 @@ watch(state, () => {
 
       <div
         class="wrapper-input-file"
-        :class="[ props.loading ? 'cursor-wait' : 'cursor-pointer']"
+        :class="[props.loading ? 'cursor-wait' : 'cursor-pointer']"
         @click="onPickFile"
       >
-        <Icon name="material-symbols:android-camera" class="w-full" />
+        <Icon
+          name="material-symbols:android-camera"
+          class="w-full"
+        />
         <p>Add a photo</p>
         <input
           id="formFile"
@@ -169,7 +176,6 @@ watch(state, () => {
 </template>
 
 <style scoped>
-
 .rounded-shape {
   @apply rounded-xl;
 }
@@ -195,5 +201,4 @@ watch(state, () => {
   grid place-content-center
   cursor-pointer;
 }
-
 </style>

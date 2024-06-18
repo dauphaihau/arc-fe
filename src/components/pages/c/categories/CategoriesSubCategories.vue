@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { useSessionStorage } from '@vueuse/core';
 import type { ICategorySessionStorage } from '~/interfaces/category';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
@@ -70,19 +69,21 @@ const redirectPage = (category: ICategorySessionStorage) => {
     navigateTo(to);
   }
 };
-
 </script>
 
 <template>
-  <div class="flex gap-3 mb-8">
+  <div class="mb-8 flex gap-3">
     <div v-if="pendingDataCategories">
       loading...
     </div>
     <div v-else>
       <div class="flex flex-col gap-2">
-        <div v-for="cg of dataCategories?.categories" :key="cg.id">
+        <div
+          v-for="cg of dataCategories?.categories"
+          :key="cg.id"
+        >
           <div
-            class="capitalize text-base font-medium cursor-pointer"
+            class="cursor-pointer text-base font-medium capitalize"
             @click="() => redirectPage(cg)"
           >
             {{ cg.name }}

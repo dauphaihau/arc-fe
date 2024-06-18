@@ -13,5 +13,5 @@ export enum ROUTES {
   ORDERS = '/orders',
   CHECKOUT = '/checkout',
   SUCCESS = '/success',
-  NEW = '/new',
+  NEW = '/new'
 }

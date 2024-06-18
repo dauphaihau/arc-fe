@@ -1,5 +1,5 @@
-import { z } from 'zod';
-import { userSchema } from '~/schemas/user.schema';
+import type { z } from 'zod';
+import type { userSchema } from '~/schemas/user.schema';
 import type { Override } from '~/interfaces/utils';
 import type { IShop } from '~/interfaces/shop';
 
@@ -7,7 +7,7 @@ export type IUser = z.infer<typeof userSchema>;
 
 export type IUserPopulated = Override<IUser, {
   shop?: IShop
-}>
+}>;
 
 export type LoginBody = Pick<IUser, 'email' | 'password'>;
 

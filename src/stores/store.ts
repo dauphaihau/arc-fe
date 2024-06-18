@@ -3,11 +3,14 @@ import type { IUser } from '~/interfaces/user';
 import type { IExchangeRate } from '~/config/enums/local-storage-keys';
 import { MARKET_CONFIG } from '~/config/enums/market';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import type { ICategory, ResponseGetCategories } from '~/interfaces/category';
+import { RESOURCES } from '~/config/enums/resources';
 
 export const useStore = defineStore('store', {
   state: () => ({
     user_preferences: null as IUser['market_preferences'] | null,
     rates: null as IExchangeRate['rates'] | null,
+    rootCategories: [] as ICategory[],
   }),
   getters: {},
   actions: {
@@ -25,5 +28,11 @@ export const useStore = defineStore('store', {
       }
     },
 
+    async getRootCategories() {
+      const { data, error } = await useCustomFetch.get<ResponseGetCategories>(RESOURCES.CATEGORIES);
+      if (!error.value && data.value) {
+        this.rootCategories = data.value.categories;
+      }
+    },
   },
 });

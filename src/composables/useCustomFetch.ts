@@ -1,49 +1,27 @@
-import type { UseFetchOptions } from '#app';
 import { defu } from 'defu';
 import dayjs from 'dayjs';
+import type { SearchParameters } from 'ofetch';
+import type { UseFetchOptions } from '#app';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 import { RESOURCES } from '~/config/enums/resources';
 
-type UrlType = string | Request | Ref<string | Request> | (() => string | Request)
-
-export type HttpOption<T> = UseFetchOptions<T>
-
-async function baseCustomFetch<T>(url: UrlType, options: UseFetchOptions<T> = {}) {
+async function baseCustomFetch<T>(
+  url: string,
+  options: UseFetchOptions<T> = {}
+) {
   const config = useRuntimeConfig();
 
-  const defaults: HttpOption<T> = {
-    baseURL: `${config.public.apiBaseURL}` + `/v${config.public.apiVersion}`,
+  const defaults: UseFetchOptions<T> = {
+    baseURL: `${config.public.apiBaseURL}/v${config.public.apiVersion}`,
     credentials: 'include',
     server: false,
-    // this overrides the default key generation, which includes a hash of
-    // url, method, headers, etc. - this should be used with care as the key
-    // is how Nuxt decides how responses should be deduplicated between
-    // frontend and backend
-    // key: url,
-
-    // onRequest(_ctx) {
-    // },
-    //
-    // onResponse(_ctx) {
-    //   // _ctx.response._data = new myBusinessResponse(_ctx.response._data)
-    // },
-
-    // onResponse({ request, response, options }) {
-    //   if (response._data.code !== 200) {
-    //     console.log(response._data.message);
-    //   }
-    //   return response._data;
-    // },
-
-    // onResponseError(_ctx) {
-    //   // throw new myBusinessError()
-    // },
   };
 
   // for nice deep defaults, please use unjs/defu
   const params = defu(options, defaults);
 
-  return await useFetch(url, params);
+  // return await useFetch(url, params);
+  return useFetch(url, params);
 }
 
 const checkAccessAndRefreshToken = async () => {
@@ -73,27 +51,32 @@ const checkAccessAndRefreshToken = async () => {
 };
 
 export const useCustomFetch = {
-  get: async <T>(url: UrlType, params?: any, option?: HttpOption<T>) => {
+  get: async <T>(url: string, params?: SearchParameters, option?: UseFetchOptions<T>) => {
     await checkAccessAndRefreshToken();
     return await baseCustomFetch<T>(url, { method: 'get', params, ...option });
   },
 
-  post: async <T>(url: UrlType, body?: any, option?: HttpOption<T>) => {
+  post: async <T>(url: string, body?: UseFetchOptions<T>['body'], option?: UseFetchOptions<T>) => {
     await checkAccessAndRefreshToken();
     return await baseCustomFetch<T>(url, { method: 'post', body, ...option });
   },
 
-  put: async <T>(url: UrlType, body?: any, option?: HttpOption<T>) => {
+  put: async <T>(url: string, body?: UseFetchOptions<T>['body'], option?: UseFetchOptions<T>) => {
     await checkAccessAndRefreshToken();
     return await baseCustomFetch<T>(url, { method: 'put', body, ...option });
   },
 
-  patch: async <T>(url: UrlType, body?: any, option?: HttpOption<T>) => {
+  patch: async <T>(url: string, body?: UseFetchOptions<T>['body'], option?: UseFetchOptions<T>) => {
     await checkAccessAndRefreshToken();
     return await baseCustomFetch<T>(url, { method: 'patch', body, ...option });
   },
 
-  delete: async <T>(url: UrlType, params?: any, body?: any, option?: HttpOption<T>) => {
+  delete: async <T>(
+    url: string,
+    params?: SearchParameters,
+    body?: Record<string, unknown>,
+    option?: UseFetchOptions<T>
+  ) => {
     await checkAccessAndRefreshToken();
     return await baseCustomFetch<T>(url, {
       method: 'delete', params, body, ...option,

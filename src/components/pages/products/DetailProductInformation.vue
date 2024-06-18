@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { ResponseGetDetailProduct } from '~/interfaces/product';
 
-const { product } = defineProps<{
-  product: ResponseGetDetailProduct
-}>();
+const { product } = defineProps<ResponseGetDetailProduct>();
 
 const items = [{
   label: 'Product details',
@@ -21,7 +19,6 @@ const items = [{
   icon: 'i-heroicons-building-storefront',
   content: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed neque elit, tristique placerat feugiat ac, facilisis vitae arcu. Proin eget egestas augue. Praesent ut sem nec arcu pellentesque aliquet. Duis dapibus diam vel metus tempus vulputate.',
 }];
-
 </script>
 
 <template>
@@ -32,8 +29,8 @@ const items = [{
     :items="items"
     :ui="{
       item: {
-        padding: 'pl-3'
-      }
+        padding: 'pl-3',
+      },
     }"
   />
 </template>

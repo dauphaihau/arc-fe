@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import type { ICategory } from '~/interfaces/category';
 import type { IProduct } from '~/interfaces/product';
 
@@ -7,7 +6,7 @@ const { $api } = useNuxtApp();
 
 const props = defineProps<{ title?: IProduct['title'], category?: ICategory | null }>();
 
-const emit = defineEmits<{(e: 'onChange', value: ICategory['id']): void }>();
+const emit = defineEmits<{ (e: 'onChange', value: ICategory['id']): void }>();
 
 const loading = ref(false);
 const selected = ref();
@@ -44,7 +43,6 @@ watchDebounced(
   },
   { debounce: 500, maxWait: 1000 }
 );
-
 </script>
 
 <template>
@@ -78,13 +76,16 @@ watchDebounced(
           </div>
 
           <div class="flex items-center gap-2">
-            <div v-for="(nameCategory, idx) in categoryData.categoriesRelated" :key="nameCategory">
+            <div
+              v-for="(nameCategory, idx) in categoryData.categoriesRelated"
+              :key="nameCategory"
+            >
               <div class="flex items-center gap-2 text-zinc-500">
                 <p>{{ nameCategory }}</p>
                 <UIcon
                   v-if="categoryData.categoriesRelated[idx + 1]"
                   name="i-material-symbols:play-arrow"
-                  class="h-3 w-3"
+                  class="size-3"
                 />
               </div>
             </div>
@@ -96,17 +97,17 @@ watchDebounced(
           <div class="">
             <q>{{ querySearch }}</q> not found
           </div>
-        <!--        <UDivider class="my-3" />-->
-        <!--        <div class="space-y-3">-->
-        <!--          <div class="flex gap-1 text-md">-->
-        <!--            <p class="flex items-center gap-2">-->
-        <!--              If you don’t see your item’s category, try being more specific.-->
-        <!--            </p>-->
-        <!--            <p class="underline cursor-pointer">-->
-        <!--              You can also add them manually.-->
-        <!--            </p>-->
-        <!--          </div>-->
-        <!--        </div>-->
+        <!--        <UDivider class="my-3" /> -->
+        <!--        <div class="space-y-3"> -->
+        <!--          <div class="flex gap-1 text-md"> -->
+        <!--            <p class="flex items-center gap-2"> -->
+        <!--              If you don’t see your item’s category, try being more specific. -->
+        <!--            </p> -->
+        <!--            <p class="underline cursor-pointer"> -->
+        <!--              You can also add them manually. -->
+        <!--            </p> -->
+        <!--          </div> -->
+        <!--        </div> -->
         </div>
       </template>
     </UInputMenu>

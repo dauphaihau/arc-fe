@@ -2,9 +2,9 @@
 import { ROUTES } from '~/config/enums/routes';
 
 interface IError {
-  statusCode: number;
-  statusMessage: string;
-  message: string;
+  statusCode: number
+  statusMessage: string
+  message: string
 }
 
 const { error } = defineProps<{
@@ -30,20 +30,23 @@ const handleError = () => {
 useHead({
   title: computed(() => (errorCode.value === 404 ? 'Page Not Found' : errorMessage.value)),
 });
-
 </script>
 
 <template>
-  <div class="max-w-[350px] mx-auto grid place-content-center h-screen text-center">
+  <div class="mx-auto grid h-screen max-w-[350px] place-content-center text-center">
     <div class="mb-8">
-      <h1 class="text-primary text-xl font-medium mb-3">
+      <h1 class="text-primary mb-3 text-xl font-medium">
         {{ errorCode }}
       </h1>
-      <p class="font-bold text-2xl">
+      <p class="text-2xl font-bold">
         {{ errorMessage }}
       </p>
     </div>
-    <UButton size="xl" block @click="handleError">
+    <UButton
+      size="xl"
+      block
+      @click="handleError"
+    >
       Back to home
     </UButton>
   </div>

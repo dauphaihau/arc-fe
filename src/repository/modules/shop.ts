@@ -6,7 +6,7 @@ import type {
   IProductVirtualFields,
   UpdateProductBody
 } from '~/interfaces/product';
-import type { GetListResponse } from '~/interfaces/common';
+import type { ErrorServer, GetListResponse } from '~/interfaces/common';
 import { RESOURCES } from '~/config/enums/resources';
 import type { GetCouponsParams, CreateCouponPayload, ICoupon } from '~/interfaces/coupon';
 
@@ -49,7 +49,8 @@ export class ShopModule {
   }
 
   async getDetailProduct(id: IProduct['id']) {
-    return await useCustomFetch.get<{product: IProductPopulated}>(
+    return await useCustomFetch.get<{ product: IProductPopulated }>(
+    // return await useCustomFetch.get<ResponseShopGetDetailProduct>(
       `${RESOURCES.SHOPS}/${this.shopId}${RESOURCES.PRODUCTS}/${id}`
     );
   }

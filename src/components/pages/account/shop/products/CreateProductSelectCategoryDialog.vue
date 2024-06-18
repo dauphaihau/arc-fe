@@ -1,11 +1,10 @@
 <script setup lang="ts">
-
 import type { ICategory } from '~/interfaces/category';
 
 const { $api } = useNuxtApp();
 
 const emit = defineEmits<
-  {(e: 'onChangeCategory', value: ICategory['id']): void }
+  { (e: 'onChangeCategory', value: ICategory['id']): void }
 >();
 
 const state = reactive({
@@ -64,6 +63,7 @@ const onSelectSubCategory = ({ parent, id: categoryId, name }: ICategory) => {
     return;
   }
   subCategories.value[parent as string].categories.forEach((subCategory) => {
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete subCategories.value[subCategory.id];
   });
   state.parent = categoryId;
@@ -75,7 +75,6 @@ const onSave = () => {
   state.isOpen = false;
   emit('onChangeCategory', state.parent as string);
 };
-
 </script>
 
 <template>
@@ -90,19 +89,27 @@ const onSave = () => {
       @click="state.isOpen = true"
     />
 
-    <div v-if="state.categoriesName.length > 0" class="mt-3">
-      <h3 class="text-sm font-semibold mb-2">
+    <div
+      v-if="state.categoriesName.length > 0"
+      class="mt-3"
+    >
+      <h3 class="mb-2 text-sm font-semibold">
         Shoppers will find this product in all of these categories:
       </h3>
       <div class="flex gap-3">
-        <div v-for="name of state.categoriesName" :key="name">
-          <UBadge color="gray" variant="solid">
+        <div
+          v-for="name of state.categoriesName"
+          :key="name"
+        >
+          <UBadge
+            color="gray"
+            variant="solid"
+          >
             {{ name }}
           </UBadge>
         </div>
       </div>
     </div>
-
 
     <UModal
       v-model="state.isOpen"
@@ -111,14 +118,14 @@ const onSave = () => {
         width: 'w-full sm:max-w-xl',
       }"
     >
-      <div class="p-8 space-y-5">
+      <div class="space-y-5 p-8">
         <div class="space-y-1.5">
           <h1 class="text-2xl font-bold">
             Select Category
           </h1>
         </div>
 
-        <div class="bg-zinc-200/50 p-3 rounded-lg">
+        <div class="rounded-lg bg-zinc-200/50 p-3">
           <div class="mb-5">
             <UInput
               icon="i-heroicons-magnifying-glass-20-solid"
@@ -131,17 +138,26 @@ const onSave = () => {
           </div>
         </div>
 
-        <div class="bg-zinc-200/50 p-3 rounded-lg">
+        <div class="rounded-lg bg-zinc-200/50 p-3">
           <div
             v-if="pending && state.rootCategories.length === 0"
-            class="p-5 grid place-content-center"
+            class="grid place-content-center p-5"
           >
-            <UIcon name="i-mingcute-loading-fill" class="animate-spin h-14 w-14" />
+            <UIcon
+              name="i-mingcute-loading-fill"
+              class="size-14 animate-spin"
+            />
           </div>
           <div v-else>
             <div class="flex gap-3 bg-white">
-              <div v-if="state.rootCategories" class="py-2">
-                <div v-for="cate of state.rootCategories" :key="cate.id">
+              <div
+                v-if="state.rootCategories"
+                class="py-2"
+              >
+                <div
+                  v-for="cate of state.rootCategories"
+                  :key="cate.id"
+                >
                   <div
                     class="item-category"
                     @click="() => onSelectRootCategory(cate)"
@@ -157,20 +173,29 @@ const onSave = () => {
                 </div>
               </div>
 
-              <UDivider orientation="vertical" class="w-2 h-72" />
+              <UDivider
+                orientation="vertical"
+                class="h-72 w-2"
+              />
 
               <div>
                 <div v-if="Object.values(subCategories).length > 0">
                   <div class="flex gap-3">
-                    <div v-for="(item, key) of subCategories" :key="key">
-                      <div v-for="cate of item.categories" :key="cate.name">
-                        <!--                        <div-->
-                        <!--                          class="cursor-pointer"-->
-                        <!--                          :class="subCategories[cate.id] && 'text-red-500'"-->
-                        <!--                          @click="() => onSelectSubCategory(cate)"-->
-                        <!--                        >-->
-                        <!--                          {{ cate.name }}-->
-                        <!--                        </div>-->
+                    <div
+                      v-for="(item, key) of subCategories"
+                      :key="key"
+                    >
+                      <div
+                        v-for="cate of item.categories"
+                        :key="cate.name"
+                      >
+                        <!--                        <div -->
+                        <!--                          class="cursor-pointer" -->
+                        <!--                          :class="subCategories[cate.id] && 'text-red-500'" -->
+                        <!--                          @click="() => onSelectSubCategory(cate)" -->
+                        <!--                        > -->
+                        <!--                          {{ cate.name }} -->
+                        <!--                        </div> -->
 
                         <div class="item-category">
                           <div
@@ -191,7 +216,7 @@ const onSave = () => {
           </div>
         </div>
 
-        <div class="flex justify-end items-center gap-2">
+        <div class="flex items-center justify-end gap-2">
           <UButton
             size="sm"
             color="gray"
@@ -213,9 +238,7 @@ const onSave = () => {
 </template>
 
 <style scoped>
-
 .item-category {
  @apply flex justify-between items-center hover:text-primary cursor-pointer gap-2 px-3 py-2;
 }
-
 </style>

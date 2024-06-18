@@ -1,16 +1,15 @@
 <script setup lang="ts">
-
 import type { ICategory } from '~/interfaces/category';
 import type { IProductAttribute } from '~/interfaces/product';
 
 const { $api } = useNuxtApp();
 
 const { categoryId, attributesSelected } = defineProps<{
-  categoryId: ICategory['id'],
+  categoryId: ICategory['id']
   attributesSelected?: IProductAttribute[] }
 >();
 
-const emit = defineEmits<{(e: 'onChange', value: IProductAttribute[]): void }>();
+const emit = defineEmits<{ (e: 'onChange', value: IProductAttribute[]): void }>();
 
 const { data } = await $api.category.getAttributesByCategory(categoryId);
 
@@ -46,7 +45,6 @@ watch(() => state, () => {
   });
   emit('onChange', attrsValid);
 }, { deep: true });
-
 </script>
 
 <template>
@@ -54,11 +52,14 @@ watch(() => state, () => {
     v-if="data?.attributes && data.attributes.length > 0"
     class="flex gap-4"
   >
-    <div v-for="attr of data.attributes" :key="attr.id">
+    <div
+      v-for="attr of data.attributes"
+      :key="attr.id"
+    >
       <UFormGroup
         :label="attr.name"
         name="type"
-        class="mb-4 relative group"
+        class="group relative mb-4"
       >
         <USelectMenu
           v-model="state[attr.id]"
@@ -68,11 +69,11 @@ watch(() => state, () => {
         />
         <div
           v-if="state[attr.id]"
-          class="group-hover:block hidden"
+          class="hidden group-hover:block"
         >
           <UIcon
             name="i-material-symbols:cancel-rounded"
-            class="text-zinc-400 h-4 w-4 absolute top-3 right-9 cursor-pointer"
+            class="absolute right-9 top-3 size-4 cursor-pointer text-zinc-400"
             @click="() => state[attr.id] = ''"
           />
         </div>

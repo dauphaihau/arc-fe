@@ -26,20 +26,19 @@ onMounted(() => {
     state.variant_sub_group_name = data.inventory.product.variant_sub_group_name;
   }
 });
-
 </script>
 
 <template>
   <div class="flex flex-col gap-1">
     <div
       v-if="state.variant_group_name"
-      class="text-zinc-500 text-lg"
+      class="text-lg text-zinc-500"
     >
       {{ state.variant_group_name }}: {{ state.v1 }}
     </div>
     <div
       v-if="state.variant_sub_group_name"
-      class="text-zinc-500 text-lg"
+      class="text-lg text-zinc-500"
     >
       {{ state.variant_sub_group_name }}: {{ state.v2 }}
     </div>

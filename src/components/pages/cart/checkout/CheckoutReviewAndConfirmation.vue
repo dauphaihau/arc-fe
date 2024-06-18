@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { useCartStore } from '~/stores/cart';
 import type { IItemCartPopulated } from '~/interfaces/cart';
 
@@ -18,7 +17,6 @@ const itemsProductsSelected = computed(() => {
   });
   return newItems;
 });
-
 </script>
 
 <template>

@@ -56,15 +56,17 @@ watchDebounced(
   },
   { debounce: 500, maxWait: 1000 }
 );
-
 </script>
 
 <template>
-  <UButtonGroup size="lg" orientation="horizontal">
+  <UButtonGroup
+    size="lg"
+    orientation="horizontal"
+  >
     <UButton
       icon="i-heroicons-minus"
       color="white"
-      class="rounded-l-[0.375rem] rounded-r-none"
+      class="rounded-l-md rounded-r-none"
       @click="decreaseQty"
     />
     <UInput
@@ -77,7 +79,7 @@ watchDebounced(
     <UButton
       icon="i-heroicons-plus"
       color="white"
-      class="rounded-r-[0.375rem] rounded-l-none"
+      class="rounded-l-none rounded-r-md"
       @click="() => stateInput++"
     />
   </UButtonGroup>

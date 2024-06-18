@@ -5,10 +5,11 @@ import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import type { IAddProductCart } from '~/interfaces/cart';
 import type { ResponseGetDetailProduct } from '~/interfaces/product';
 import { toastCustom } from '~/config/toast';
+import { RegisterLoginDialog } from '#components';
 
 interface IStateSubmit extends IAddProductCart {
-  variantOption: string,
-  variantSubOption: string,
+  variantOption: string
+  variantSubOption: string
 }
 
 const { $api } = useNuxtApp();
@@ -16,10 +17,9 @@ const toast = useToast();
 const cartStore = useCartStore();
 const authStore = useAuthStore();
 const config = useRuntimeConfig();
+const modal = useModal();
 
-const { product } = defineProps<{
-  product: ResponseGetDetailProduct
-}>();
+const { product } = defineProps<ResponseGetDetailProduct>();
 
 const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
 
@@ -100,7 +100,7 @@ const validate = (stateValidate: IStateSubmit): FormError[] => {
 
 async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
   if (!authStore.isLogged) {
-    authStore.showLoginDialog = true;
+    modal.open(RegisterLoginDialog);
     return;
   }
   formRef.value.clear();
@@ -189,7 +189,6 @@ const onBuyNow = () => {
   };
   navigateTo(ROUTES.CHECKOUT);
 };
-
 </script>
 
 <template>
@@ -201,10 +200,10 @@ const onBuyNow = () => {
     :validate="validate"
     @submit="onSubmit"
   >
-    <div class="w-[41%] flex flex-col gap-4 mb-6">
+    <div class="mb-6 flex w-[41%] flex-col gap-4">
       <UFormGroup
-        v-if="product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE ||
-          product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE"
+        v-if="product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE
+          || product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE"
         :label="product.variant_group_name"
         name="variantOption"
       >
@@ -230,14 +229,17 @@ const onBuyNow = () => {
       </UFormGroup>
 
       <div>
-        <label class="block font-medium text-gray-700 dark:text-gray-200 text-sm mb-1">
+        <label class="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-200">
           Quantity
         </label>
-        <UButtonGroup size="lg" orientation="horizontal">
+        <UButtonGroup
+          size="lg"
+          orientation="horizontal"
+        >
           <UButton
             icon="i-heroicons-minus"
             color="white"
-            class="rounded-l-[0.375rem] rounded-r-none"
+            class="rounded-l-md rounded-r-none"
             @click="decreaseQty"
           />
           <UInput
@@ -250,7 +252,7 @@ const onBuyNow = () => {
           <UButton
             icon="i-heroicons-plus"
             color="white"
-            class="rounded-r-[0.375rem] rounded-l-none"
+            class="rounded-l-none rounded-r-md"
             @click="() => stateSubmit.quantity++"
           />
         </UButtonGroup>

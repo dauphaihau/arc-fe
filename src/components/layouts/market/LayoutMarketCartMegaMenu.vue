@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-
 import { ROUTES } from '~/config/enums/routes';
+import { RegisterLoginDialog } from '#components';
+import { useLogout } from '~/services/auth';
 
 const { show } = defineProps<{ show: boolean }>();
 
@@ -8,14 +9,27 @@ const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
 const router = useRouter();
 const cartStore = useCartStore();
+const modal = useModal();
+const {
+  mutate: logout,
+  isPending: isPendingLogout,
+} = useLogout();
 
+const showRegisterLoginDialog = () => {
+  modal.open(RegisterLoginDialog);
+};
+
+const handleLogout = () => {
+  if (isPendingLogout.value) return;
+  logout();
+};
 </script>
 
 <template>
   <transition name="slide-down">
     <div v-if="show">
-      <div class="mx-auto pb-12 ml-5">
-        <div class="flex gap-3 justify-between mb-4">
+      <div class="mx-auto ml-5 pb-12">
+        <div class="mb-4 flex justify-between gap-3">
           <div class="text-2xl font-semibold">
             Cart
           </div>
@@ -33,10 +47,13 @@ const cartStore = useCartStore();
         <div class="mb-10">
           <div v-if="authStore.isLogged">
             <div v-if="cartStore.cartHeader.products.length > 0">
-              <div class="space-y-8 mb-6">
-                <div v-for="(prod, index) in cartStore.cartHeader.products" :key="index">
+              <div class="mb-6 space-y-8">
+                <div
+                  v-for="(prod, index) in cartStore.cartHeader.products"
+                  :key="index"
+                >
                   <div
-                    class="flex items-center gap-6 cursor-pointer"
+                    class="flex cursor-pointer items-center gap-6"
                     @click="() => router.push(`${ROUTES.PRODUCTS}/${prod.id}`)"
                   >
                     <NuxtImg
@@ -51,16 +68,25 @@ const cartStore = useCartStore();
                   </div>
                 </div>
               </div>
-              <div v-if="cartStore.cartHeader.restProducts > 0" class="text-customGray-950">
+              <div
+                v-if="cartStore.cartHeader.restProducts > 0"
+                class="text-customGray-950"
+              >
                 {{ cartStore.cartHeader.restProducts }} more product in your Cart
               </div>
             </div>
-            <div v-else class="text-customGray-950">
+            <div
+              v-else
+              class="text-customGray-950"
+            >
               Your cart is empty.
             </div>
           </div>
 
-          <div v-else class="flex items-center gap-1">
+          <div
+            v-else
+            class="flex items-center gap-1"
+          >
             <UButton
               size="sm"
               variant="link"
@@ -69,10 +95,10 @@ const cartStore = useCartStore();
               :ui="{
                 base: 'underline',
                 padding: {
-                  sm: 'p-0'
-                }
+                  sm: 'p-0',
+                },
               }"
-              @click="authStore.showLoginDialog = true"
+              @click="showRegisterLoginDialog"
             />
 
             <span class=" text-sm text-customGray-950">
@@ -82,7 +108,7 @@ const cartStore = useCartStore();
         </div>
 
         <div v-if="authStore.isLogged">
-          <div class="text-customGray-950 mb-2">
+          <div class="mb-2 text-customGray-950">
             My Profile
           </div>
           <div class="flex flex-col gap-2">
@@ -90,28 +116,40 @@ const cartStore = useCartStore();
               class="item-profile"
               @click="() => router.push(ROUTES.ORDERS)"
             >
-              <UIcon name="i-heroicons-cube" color="gray" />
+              <UIcon
+                name="i-heroicons-cube"
+                color="gray"
+              />
               Orders
             </div>
             <div
               class="item-profile"
               @click="() => router.push(ROUTES.ACCOUNT)"
             >
-              <UIcon name="i-heroicons-user" color="gray" />
+              <UIcon
+                name="i-heroicons-user"
+                color="gray"
+              />
               Account
             </div>
             <div
               class="item-profile"
               @click="() => router.push(ROUTES.ACCOUNT + ROUTES.SHOP)"
             >
-              <UIcon name="i-heroicons-building-storefront" color="gray" />
+              <UIcon
+                name="i-heroicons-building-storefront"
+                color="gray"
+              />
               Manage Shop
             </div>
             <div
               class="item-profile"
-              @click="authStore.logout()"
+              @click="handleLogout"
             >
-              <UIcon name="i-heroicons-arrow-left-start-on-rectangle" color="gray" />
+              <UIcon
+                name="i-heroicons-arrow-left-start-on-rectangle"
+                color="gray"
+              />
               Logout {{ user?.name }}
             </div>
           </div>
@@ -122,7 +160,6 @@ const cartStore = useCartStore();
 </template>
 
 <style scoped>
-
 .slide-down-enter-active,
 .slide-down-leave-active {
   transition: max-height 0.3s ease-in-out;
@@ -144,5 +181,4 @@ const cartStore = useCartStore();
   @apply font-medium flex items-center gap-2 cursor-pointer opacity-70 hover:opacity-100
   hover:bg-gray-100 px-2 py-1 rounded-md
 }
-
 </style>

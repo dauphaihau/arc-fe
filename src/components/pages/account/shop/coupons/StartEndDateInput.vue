@@ -1,9 +1,8 @@
 <script setup lang="ts">
-
 import dayjs from 'dayjs';
 import type { ICoupon } from '~/interfaces/coupon';
 
-const emit = defineEmits<{(e: 'onChangeDuration', value: Pick<ICoupon, 'start_date' | 'end_date'>): void }>();
+const emit = defineEmits<{ (e: 'onChangeDuration', value: Pick<ICoupon, 'start_date' | 'end_date'>): void }>();
 
 const selectedColor = 'indigo';
 
@@ -48,8 +47,6 @@ const disabledDates = ref([
 watch(state, () => {
   emit('onChangeDuration', state);
 });
-
-
 </script>
 
 <template>

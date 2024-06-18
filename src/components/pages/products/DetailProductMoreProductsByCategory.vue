@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import type { ICategory } from '~/interfaces/category';
 
 const { $api } = useNuxtApp();
@@ -17,16 +16,21 @@ const { data } = await $api.product.getProductsLowestPrice({
   limit: state.limit,
   category: categoryId,
 });
-
 </script>
 
 <template>
   <div>
-    <h3 class="text-3xl font-medium mb-4">
+    <h3 class="mb-4 text-3xl font-medium">
       You may also like
     </h3>
-    <div v-if="data?.results" class="grid grid-cols-6 gap-4 mb-6">
-      <div v-for="(product, i) of data.results" :key="i">
+    <div
+      v-if="data?.results"
+      class="mb-6 grid grid-cols-6 gap-4"
+    >
+      <div
+        v-for="(product, i) of data.results"
+        :key="i"
+      >
         <DetailProductCard :product="product" />
       </div>
     </div>

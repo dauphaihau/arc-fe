@@ -8,12 +8,11 @@ const { product } = defineProps<{
 
 const config = useRuntimeConfig();
 const router = useRouter();
-
 </script>
 
 <template>
   <div
-    class="flex flex-col gap-2 cursor-pointer"
+    class="flex cursor-pointer flex-col gap-2"
     @click="() => router.push(`${ROUTES.PRODUCTS}/${product.id}`)"
   >
     <NuxtImg
@@ -24,15 +23,15 @@ const router = useRouter();
       preload
     />
     <div class="space-y-0.5">
-      <h1 class="text-sm font-semibold truncate">
+      <h1 class="truncate text-sm font-semibold">
         {{ product.title }}
       </h1>
-      <p class="text-customGray-800 text-sm">
+      <p class="text-sm text-customGray-800">
         {{ product?.shop_name }}
       </p>
-      <p class="text-customGray-950 text-base font-medium">
+      <p class="text-base font-medium text-customGray-950">
         {{ formatCurrency(product?.summary_inventory?.lowest_price) }}
-        <!--        }}-->
+        <!--        }} -->
       </p>
     </div>
     <slot name="content" />

@@ -1,40 +1,41 @@
 <script setup lang="ts">
+import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 
 const {
   ACCOUNT, SHOP, PRODUCTS, COUPONS,
 } = ROUTES;
 
-const itemsHeaderDropdown = [
-  [{
-    label: 'Product',
-    icon: 'i-heroicons-cube',
-    shortcuts: ['P'],
-    click: () => {
-      navigateTo(`${ACCOUNT}${SHOP}${PRODUCTS}/new`);
+const itemsHeaderDropdown: DropdownItem[][] = [
+  [
+    {
+      label: 'Product',
+      icon: 'i-heroicons-cube',
+      shortcuts: ['P'],
+      click: () => {
+        navigateTo(`${ACCOUNT}${SHOP}${PRODUCTS}/new`);
+      },
     },
-  }, {
-    label: 'Coupon',
-    icon: 'i-heroicons-ticket',
-    shortcuts: ['C'],
-    // disabled: true,
-    click: () => {
-      navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new`);
+    {
+      label: 'Coupon',
+      icon: 'i-heroicons-ticket',
+      shortcuts: ['C'],
+      click: () => {
+        navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new`);
+      },
     },
-  }],
+  ],
 ];
-
 </script>
-
 
 <template>
   <header
-    class="flex justify-between items-center pl-6 pr-10 2xl:pr-4 py-3
-               fixed bg-white z-[1] w-shop-layout-content
-               backdrop-blur-xl 2xl:backdrop-blur-sm bg-white/50
+    class="w-shop-layout-content fixed z-[1] flex items-center justify-between
+               bg-white/50 py-3 pl-6 pr-10
+               backdrop-blur-xl 2xl:pr-4 2xl:backdrop-blur-sm
               "
   >
-    <div class="hover:bg-customGray-100 h-fit rounded-lg">
+    <div class="h-fit rounded-lg hover:bg-customGray-100">
       <UInput
         icon="i-heroicons-magnifying-glass-20-solid"
         placeholder="Search"
@@ -43,8 +44,8 @@ const itemsHeaderDropdown = [
         :ui="{
           placeholder: 'placeholder-customGray-800',
           icon: {
-            base: 'text-customGray-800'
-          }
+            base: 'text-customGray-800',
+          },
         }"
         size="md"
       />
@@ -57,7 +58,10 @@ const itemsHeaderDropdown = [
           variant="ghost"
           class="icon-button"
         >
-          <Icon name="i-heroicons-bell" class="heroicon-sw-2" />
+          <Icon
+            name="i-heroicons-bell"
+            class="heroicon-sw-2"
+          />
         </UButton>
       </UTooltip>
       <UTooltip text="Setting">
@@ -66,7 +70,10 @@ const itemsHeaderDropdown = [
           variant="ghost"
           class="icon-button"
         >
-          <Icon name="i-heroicons-cog-8-tooth" class="heroicon-sw-2" />
+          <Icon
+            name="i-heroicons-cog-8-tooth"
+            class="heroicon-sw-2"
+          />
         </UButton>
       </UTooltip>
       <UDropdown :items="itemsHeaderDropdown">
@@ -84,7 +91,6 @@ const itemsHeaderDropdown = [
     </div>
   </header>
 </template>
-
 
 <style scoped>
 

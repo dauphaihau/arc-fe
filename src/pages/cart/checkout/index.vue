@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { useCartStore } from '~/stores/cart';
 import { ROUTES } from '~/config/enums/routes';
 import { PAYMENT_TYPES } from '~/config/enums/order';
@@ -114,13 +113,12 @@ const onCreateOrder = async () => {
     cartStore.getCartHeader();
   }
 };
-
 </script>
 
 <template>
   <div class="py-16">
     <CheckoutStepper
-      class="mb-24 max-w-[30rem] mx-auto"
+      class="mx-auto mb-24 max-w-[30rem]"
       :steps="state.steps"
       :step="state.currentStep"
     />
@@ -154,7 +152,7 @@ const onCreateOrder = async () => {
           :disabled="state.isAddressEmpty"
           :loading="state.loadingOrder"
           :ui="{
-            rounded: 'shadow-border'
+            rounded: 'shadow-border',
           }"
           @click="onCreateOrder"
         >

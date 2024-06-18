@@ -1,11 +1,10 @@
 <script setup lang="ts">
-
 const authStore = useAuthStore();
-const { showLoginDialog } = storeToRefs(authStore);
-const route = useRoute();
 
-const isOpen = ref(showLoginDialog);
+const route = useRoute();
+const isOpen = ref(false);
 const isLoginForm = ref(true);
+const modal = useModal();
 
 defineShortcuts({
   escape: {
@@ -15,70 +14,52 @@ defineShortcuts({
   },
 });
 
-watch(isOpen, () => {
-  if (!isOpen.value) {
-    isLoginForm.value = true;
-  }
-});
-
 watch(() => route.path, () => {
-  isOpen.value = false;
+  modal.close();
 });
 
 authStore.$subscribe((_mutation, state) => {
   if (state.user) {
-    isOpen.value = false;
+    modal.close();
   }
 });
-
 </script>
 
 <template>
-  <div>
-    <!--    <UButton-->
-    <!--      v-if="!user"-->
-    <!--      color="gray"-->
-    <!--      variant="ghost"-->
-    <!--      @click="isOpen = true"-->
-    <!--    >-->
-    <!--      {{ $t('Log in') }}-->
-    <!--    </UButton>-->
-
-    <UModal
-      v-model="isOpen"
-      :ui="{
-        margin: '!mb-72'
-      }"
-    >
-      <div class="p-12 space-y-5">
-        <div class="space-y-1.5">
-          <h1 class="text-3xl font-bold">
-            {{ isLoginForm ? 'Log in' : 'Create your account' }}
-          </h1>
-          <p class="text-customGray-950 text-base">
-            {{
-              isLoginForm ?
-                'Enter your credentials to access your account.' : 'Registration is easy.'
-            }}
-          </p>
-        </div>
-
-        <LoginForm v-if="isLoginForm" />
-        <RegisterForm v-else />
-
-        <div class="flex items-center mt-3">
-          <p class="text-sm text-customGray-950">
-            {{ isLoginForm ? 'New to Arc?' : 'Already a Arc user?' }}
-          </p>
-          <UButton
-            variant="link"
-            class="pl-1"
-            @click="isLoginForm = !isLoginForm"
-          >
-            {{ isLoginForm ? 'Register' : 'Log in' }}
-          </UButton>
-        </div>
+  <UModal
+    v-model="isOpen"
+    :ui="{
+      margin: '!mb-72',
+    }"
+  >
+    <div class="space-y-5 p-12">
+      <div class="space-y-1.5">
+        <h1 class="text-3xl font-bold">
+          {{ isLoginForm ? 'Log in' : 'Create your account' }}
+        </h1>
+        <p class="text-base text-customGray-950">
+          {{
+            isLoginForm
+              ? 'Enter your credentials to access your account.' : 'Registration is easy.'
+          }}
+        </p>
       </div>
-    </UModal>
-  </div>
+
+      <LoginForm v-if="isLoginForm" />
+      <RegisterForm v-else />
+
+      <div class="mt-3 flex items-center">
+        <p class="text-sm text-customGray-950">
+          {{ isLoginForm ? 'New to Arc?' : 'Already a Arc user?' }}
+        </p>
+        <UButton
+          variant="link"
+          class="pl-1"
+          @click="isLoginForm = !isLoginForm"
+        >
+          {{ isLoginForm ? 'Register' : 'Log in' }}
+        </UButton>
+      </div>
+    </div>
+  </UModal>
 </template>

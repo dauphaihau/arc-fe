@@ -1,4 +1,4 @@
-import pkg from './package.json';
+import pkg from './package.json'
 
 export default defineNuxtConfig({
   app: {
@@ -21,6 +21,7 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: true },
   modules: [
+    '@nuxt/eslint',
     '@nuxt/devtools',
     '@pinia/nuxt',
     '@nuxt/ui',
@@ -30,7 +31,13 @@ export default defineNuxtConfig({
     '@formkit/auto-animate/nuxt',
     '@nuxt/image',
     '@samk-dev/nuxt-vcalendar',
+    '@hebilicious/vue-query-nuxt',
   ],
+  eslint: {
+    config: {
+      stylistic: true,
+    },
+  },
   typescript: {
     strict: true,
     typeCheck: true,
@@ -86,4 +93,4 @@ export default defineNuxtConfig({
     provider: 'ipx',
     domains: [process.env.AWS_S3_HOST_BUCKET as string],
   },
-});
+})

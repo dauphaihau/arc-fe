@@ -1,10 +1,13 @@
 <script setup lang="ts">
-
+import type { DropdownItem } from '#ui/types';
 import avatarDefault from '~/assets/images/avatar-default.jpg';
 import { ROUTES } from '~/config/enums/routes';
+import { useLogout } from '~/services/auth';
 
 const routes = useRoute();
 const authStore = useAuthStore();
+
+const { mutate: logout } = useLogout();
 
 const {
   ACCOUNT, SHOP, PRODUCTS, COUPONS, SALES,
@@ -14,11 +17,11 @@ type ILinkBase = {
   title: string
   route?: string
   disabled?: boolean
-}
+};
 
 export type ILink = {
   sub?: ILinkBase[]
-} & ILinkBase
+} & ILinkBase;
 
 const itemsLinkSidebar: ILink[] = [
   { title: 'Dashboard', route: `${ACCOUNT}${SHOP}/dashboard` },
@@ -54,16 +57,19 @@ const itemsLinkSidebar: ILink[] = [
 
 const isOpen = ref(false);
 
-const itemsShopDropdown = [
-  [{
-    label: 'Profile',
-    avatar: {
-      src: avatarDefault,
+const itemsShopDropdown: DropdownItem[][] = [
+  [
+    {
+      label: 'Profile',
+      avatar: {
+        src: avatarDefault,
+      },
+      click: () => {
+        navigateTo(ROUTES.ACCOUNT);
+      },
     },
-    click: () => {
-      navigateTo(ROUTES.ACCOUNT);
-    },
-  }], [
+  ],
+  [
     {
       label: 'Archive',
       icon: 'i-heroicons-archive-box-20-solid',
@@ -74,33 +80,37 @@ const itemsShopDropdown = [
       click: () => {
         navigateTo(ROUTES.HOME);
       },
-    }], [{
-    label: 'Logout',
-    icon: 'i-heroicons-arrow-left-start-on-rectangle',
-    click: () => {
-      authStore.logout();
     },
-  }],
+  ],
+  [
+    {
+      label: 'Logout',
+      icon: 'i-heroicons-arrow-left-start-on-rectangle',
+      click: logout,
+    },
+  ],
 ];
-
 </script>
 
 <template>
   <aside
-    class="w-shop-layout-sidebar fixed h-full z-[3]"
+    class="w-shop-layout-sidebar fixed z-[3] h-full"
     :class="[{ 'bg-layout-shop': !isOpen }]"
   >
     <UDropdown
       :items="itemsShopDropdown"
       :popper="{ placement: 'bottom-start', offsetDistance: 20, offsetSkid: -8 }"
-      class="mb-6 mx-4 mt-3 p-2 pr-3 rounded-md  hover:bg-customGray-200/50 duration-200"
+      class="mx-4 mb-6 mt-3 rounded-md p-2 pr-3  duration-200 hover:bg-customGray-200/50"
     >
       <div class="flex items-center gap-2">
         <UButton
           color="gray"
           class="p-2"
         >
-          <Icon name="uil:shop" class="h-4 w-4" />
+          <Icon
+            name="uil:shop"
+            class="size-4"
+          />
         </UButton>
         <div class="text-sm font-medium text-customGray-950">
           {{ authStore.getShop?.shop_name }}
@@ -108,9 +118,15 @@ const itemsShopDropdown = [
       </div>
     </UDropdown>
 
-    <div class="flex flex-col gap-1 relative">
-      <div v-for="(item, index) of itemsLinkSidebar" :key="index">
-        <LayoutShopSidebarSubLinks v-if="item?.sub || !item.route" :data="item" />
+    <div class="relative flex flex-col gap-1">
+      <div
+        v-for="(item, index) of itemsLinkSidebar"
+        :key="index"
+      >
+        <LayoutShopSidebarSubLinks
+          v-if="item?.sub || !item.route"
+          :data="item"
+        />
 
         <div
           v-else
@@ -118,19 +134,19 @@ const itemsShopDropdown = [
           :class="[item.disabled && 'opacity-50']"
         >
           <UDivider
-            :ui="{ border: { base: routes.path.indexOf(item.route) > -1 ? 'border-primary' : 'border-transparent'}}"
+            :ui="{ border: { base: routes.path.indexOf(item.route) > -1 ? 'border-primary' : 'border-transparent' } }"
             orientation="vertical"
-            class="w-[3px] h-auto"
+            class="h-auto w-[3px]"
             size="sm"
           />
 
           <NuxtLink
             :to="item?.disabled ? '' : item.route"
             prefetch
-            class="w-full link-default link-theme ml-2 mr-4"
+            class="link-default link-theme ml-2 mr-4 w-full"
             :class="[
               'pl-5',
-              routes.path.includes(item.route) ? 'link-active' : 'link-inactive'
+              routes.path.includes(item.route) ? 'link-active' : 'link-inactive',
             ]"
           >
             {{ item.title }}
@@ -142,7 +158,5 @@ const itemsShopDropdown = [
 </template>
 
 <style scoped>
-
 @import url("src/assets/css/layout-shop.css");
-
 </style>

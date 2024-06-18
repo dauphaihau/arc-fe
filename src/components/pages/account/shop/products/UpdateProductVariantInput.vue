@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import type {
   IProductCombineVariant,
   IProductInventory,
@@ -26,29 +25,30 @@ type State = {
   variantsCurrent: Map<IProductVariant['id'], IProductVariant['variant_name']>
 } & Record<'variants' | 'subVariants', VariantOption[]>
     // & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
-    & Partial<Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>
+& Partial<Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>;
 
 type VariantTable = {
   id: number
   inventoryId?: IProductInventory['id'] | null
   subVariantId?: IProductVariant['id'] | null
-  sub_variant_name?: string,
-  errorPrice: string,
-  errorStock: string,
-  isUpdated?: boolean,
+  sub_variant_name?: string
+  errorPrice: string
+  errorStock: string
+  isUpdated?: boolean
   price?: IProductInventory['price']
 } & Pick<IProductVariant, 'variant_name'> &
-    Pick<IProductInventory, | 'stock' | 'sku'>
+Pick<IProductInventory, | 'stock' | 'sku'>;
 
 const generateRandomId = () => new Date().getTime().toString();
 
 const props = defineProps<{
-  countValidate: number,
+  countValidate: number
   product: IProductPopulated
+  // product: ResponseShopGetDetailProduct['product']
 }>();
 
 const emit = defineEmits<{
-  (e: 'onChange', value: IOnChangeUpdateVariants | null): void,
+  (e: 'onChange', value: IOnChangeUpdateVariants | null): void
   (e: 'isVariantsUpdated', value: number): void
 }>();
 
@@ -157,7 +157,7 @@ function mixVariantsTable() {
       id++;
       const result = variantsTable.value.find(
         variant => variant.variant_name === stateVariant.variant_name &&
-              variant.sub_variant_name === stateSubVariant.variant_name
+        variant.sub_variant_name === stateSubVariant.variant_name
       );
       newVariantsTable.push({
         id,
@@ -434,9 +434,9 @@ watch(() => props.countValidate, () => {
 
   if (
     state.variants.length > 0 &&
-      (state.isActiveSubVariant ? state.subVariants.length > 0 : true) &&
-      !isAnyDuplicateVariantName &&
-      parsedVariantsTable.success
+    (state.isActiveSubVariant ? state.subVariants.length > 0 : true) &&
+    !isAnyDuplicateVariantName &&
+    parsedVariantsTable.success
   ) {
     emitData();
   }
@@ -531,7 +531,7 @@ function emitData() {
     state.subVariants.forEach((variant) => {
       if (
         state.variantsCurrent.has(variant.id) &&
-          state.variantsCurrent.get(variant.id) !== variant.variant_name
+        state.variantsCurrent.get(variant.id) !== variant.variant_name
       ) {
         update_variants.push({
           id: variant.id,
@@ -615,8 +615,6 @@ watchDebounced(
   },
   { debounce: 500, maxWait: 1000 }
 );
-
-
 </script>
 
 <template>
@@ -656,12 +654,15 @@ watchDebounced(
             </span>
           </template>
 
-          <UButtonGroup size="lg" orientation="horizontal">
+          <UButtonGroup
+            size="lg"
+            orientation="horizontal"
+          >
             <UInput
               v-model="state.variantOption"
               :maxlength="PRODUCT_CONFIG.MAX_CHAR_VARIANT_NAME"
             />
-            <!--              :disabled="!state.variantOption"-->
+            <!--              :disabled="!state.variantOption" -->
             {{ state.errorVariantOption }}
             <UButton
               :disabled="!state.variantOption || !!state.errorVariantOption"
@@ -675,8 +676,14 @@ watchDebounced(
         </UFormGroup>
 
         <div v-if="state.variants.length > 0">
-          <div v-for="option of state.variants" :key="option.id">
-            <UFormGroup :error="option?.errorMsg ?? ''" class="mb-4">
+          <div
+            v-for="option of state.variants"
+            :key="option.id"
+          >
+            <UFormGroup
+              :error="option?.errorMsg ?? ''"
+              class="mb-4"
+            >
               <UButtonGroup
                 v-if="option"
                 size="lg"
@@ -701,11 +708,15 @@ watchDebounced(
       </div>
 
       <div class="flex justify-center">
-        <UDivider color="gray" orientation="vertical" class="w-fit" />
+        <UDivider
+          color="gray"
+          orientation="vertical"
+          class="w-fit"
+        />
       </div>
 
       <!--   Group variant 2   -->
-      <div class="w-1/5 relative">
+      <div class="relative w-1/5">
         <UButton
           v-if="!state.isActiveSubVariant"
           class="mb-4"
@@ -718,7 +729,7 @@ watchDebounced(
         </UButton>
         <div v-else>
           <UButton
-            class="absolute -top-4 -right-20"
+            class="absolute -right-20 -top-4"
             variant="ghost"
             icon="i-heroicons-x-mark"
             color="gray"
@@ -756,7 +767,10 @@ watchDebounced(
                 {{ PRODUCT_CONFIG.MAX_CHAR_VARIANT_NAME }}
               </span>
             </template>
-            <UButtonGroup size="lg" orientation="horizontal">
+            <UButtonGroup
+              size="lg"
+              orientation="horizontal"
+            >
               <UInput v-model="state.subVariantOption" />
 
               <UButton
@@ -771,8 +785,14 @@ watchDebounced(
           </UFormGroup>
 
           <div v-if="state.subVariants.length > 0">
-            <div v-for="option of state.subVariants" :key="option.id">
-              <UFormGroup :error="option?.errorMsg ?? ''" class="mb-4">
+            <div
+              v-for="option of state.subVariants"
+              :key="option.id"
+            >
+              <UFormGroup
+                :error="option?.errorMsg ?? ''"
+                class="mb-4"
+              >
                 <UButtonGroup
                   v-if="option"
                   size="lg"
@@ -801,7 +821,7 @@ watchDebounced(
       :columns="columns"
       class="mt-5"
       :ui="{
-        th: { base : 'max-w-28 truncate'},
+        th: { base: 'max-w-28 truncate' },
       }"
     >
       <template #variant_name-data="{ row }">
@@ -817,7 +837,10 @@ watchDebounced(
       </template>
 
       <template #price-data="{ row }">
-        <UFormGroup class="mt-6" :error="row.errorPrice ?? ''">
+        <UFormGroup
+          class="mt-6"
+          :error="row.errorPrice ?? ''"
+        >
           <UInput
             v-model.number="row.price"
             size="lg"
@@ -827,7 +850,7 @@ watchDebounced(
             @keypress="keyPressIsNumber($event)"
           >
             <template #trailing>
-              <span class="text-gray-500 dark:text-gray-400 text-xs">USD</span>
+              <span class="text-xs text-gray-500 dark:text-gray-400">USD</span>
             </template>
           </UInput>
           <template #error="{ error }">
@@ -839,7 +862,10 @@ watchDebounced(
       </template>
 
       <template #stock-data="{ row }">
-        <UFormGroup class="mt-6" :error="row.errorStock ?? ''">
+        <UFormGroup
+          class="mt-6"
+          :error="row.errorStock ?? ''"
+        >
           <UInput
             v-model.number="row.stock"
             name="stock"
@@ -877,7 +903,6 @@ watchDebounced(
 </template>
 
 <style scoped>
-
 .hint-text-input {
   @apply text-gray-500 text-xs;
 }
@@ -885,5 +910,4 @@ watchDebounced(
 .error-message {
   @apply mt-2 text-red-500 dark:text-red-400 text-sm h-[18px];
 }
-
 </style>

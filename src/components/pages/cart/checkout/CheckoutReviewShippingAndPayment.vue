@@ -1,25 +1,23 @@
 <script lang="ts" setup>
-
 import { useCartStore } from '~/stores/cart';
 
 const cartStore = useCartStore();
-
 </script>
 
 <template>
   <UCard>
     <div class="flex flex-col gap-4">
-      <legend class="text-gray-700 dark:text-gray-200 mb-1 text-xl font-bold">
+      <legend class="mb-1 text-xl font-bold text-gray-700 dark:text-gray-200">
         Shipping & Payment
       </legend>
 
       <div class="grid grid-cols-4">
         <div>
-          <div class="font-semibold mb-1">
+          <div class="mb-1 font-semibold">
             Shipping address
           </div>
 
-          <div class="flex flex-col my-2">
+          <div class="my-2 flex flex-col">
             <div class="">
               {{ cartStore.stateCheckout.address.full_name }}
             </div>
@@ -44,10 +42,10 @@ const cartStore = useCartStore();
         </div>
 
         <div>
-          <div class="font-semibold mb-1">
+          <div class="mb-1 font-semibold">
             Payment method
           </div>
-          <div class="flex flex-col gap-4 my-2">
+          <div class="my-2 flex flex-col gap-4">
             <div class="capitalize">
               {{ cartStore.stateCheckout.payment_type }}
             </div>

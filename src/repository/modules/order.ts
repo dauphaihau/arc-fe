@@ -21,7 +21,7 @@ export class OrderModule {
   async getSummaryOder(body: GetSummaryOderBody) {
     return await useCustomFetch.delete<{ summaryOrder: ISummaryOrder }>(
       `${RESOURCES.USER}${RESOURCES.ORDERS}`,
-      null,
+      undefined,
       body
     );
   }

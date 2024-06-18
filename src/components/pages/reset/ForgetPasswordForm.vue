@@ -1,76 +1,76 @@
 <script setup lang="ts">
+import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
 import { userSchema } from '~/schemas/user.schema';
 import type { IUser } from '~/interfaces/user';
+import { useForgetPassword } from '~/services/auth';
+import { RESET_PASSWORD_VIEWS } from '~/config/enums/common';
+import { toastCustom } from '~/config/toast';
 
-const props = defineProps({
-  email: {
-    type: String,
-    default: '',
-  },
-});
-
-const emit = defineEmits<{(e: 'nextStep', value: string): void }>();
+const emit = defineEmits<{
+  changeView: [value: RESET_PASSWORD_VIEWS]
+}>();
 
 const authStore = useAuthStore();
+const toast = useToast();
 
 const formRef = ref();
 
-const state = reactive({
-  loadingBtn: false,
-  unknownErrorServerMsg: '',
-});
-
 const stateSubmit = reactive({
-  email: props.email,
+  email: authStore.emailRequestForgetPassword,
 });
 
-async function onSubmit(event: FormSubmitEvent<{ email: IUser['email'] }>) {
-  formRef.value.clear();
+const {
+  mutate: forgetPassword,
+  isPending: isPendingForgetPassword,
+} = useForgetPassword({
+  onResponse: ({ response }) => {
+    if (response.status === StatusCodes.OK) {
+      emit('changeView', RESET_PASSWORD_VIEWS.SEND_EMAIL_SUCCESS);
+    }
+    else {
+      toast.add({
+        ...toastCustom.error,
+        title: 'An unknown error occurred. Please try again',
+      });
+    }
+  },
+});
 
-  state.loadingBtn = true;
-  const { error, pending } = await authStore.forgetPassword(event.data.email);
-  state.loadingBtn = pending.value;
-
-  if (error.value && error.value.data) {
-    const { message } = error.value.data;
-    state.unknownErrorServerMsg = message || 'An unknown error occurred. Please try again';
-  }
-  else {
-    emit('nextStep', event.data.email);
-  }
+function onSubmit(event: FormSubmitEvent<Pick<IUser, 'email'>>) {
+  authStore.emailRequestForgetPassword = event.data.email;
+  forgetPassword(event.data.email);
 }
-
 </script>
 
 <template>
-  <div>
-    <UAlert
-      v-if="state.unknownErrorServerMsg"
-      color="rose"
-      variant="solid"
-      :close-button="{
-        icon: 'i-heroicons-x-mark-20-solid', color: 'white', variant: 'link', padded: false,
-      }"
-      title=""
-      :description="state.unknownErrorServerMsg"
+  <UForm
+    ref="formRef"
+    :validate-on="['submit']"
+    :schema="userSchema.pick({ email: true })"
+    :state="stateSubmit"
+    @submit="onSubmit"
+  >
+    <UFormGroup
+      label="Email"
+      name="email"
       class="mb-4"
-      @close="state.unknownErrorServerMsg = ''"
-    />
-    <UForm
-      ref="formRef"
-      :validate-on="['submit']"
-      :schema="userSchema.pick({ email: true })"
-      :state="stateSubmit"
-      @submit="onSubmit"
     >
-      <UFormGroup label="Email" name="email" class="mb-4">
-        <UInput v-model="stateSubmit.email" :disabled="state.loadingBtn" size="xl" />
-      </UFormGroup>
+      <UInput
+        v-model="stateSubmit.email"
+        :disabled="isPendingForgetPassword"
+        size="xl"
+      />
+    </UFormGroup>
 
-      <UButton :loading="state.loadingBtn" size="xl" block type="submit" class="mt-6">
-        Continue
-      </UButton>
-    </UForm>
-  </div>
+    <UButton
+      :loading="isPendingForgetPassword"
+      size="xl"
+      block
+      type="submit"
+      class="mt-6"
+    >
+      Continue
+    </UButton>
+  </UForm>
 </template>

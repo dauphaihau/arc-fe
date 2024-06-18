@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import type { IProduct } from '~/interfaces/product';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 
@@ -69,7 +68,6 @@ const applyProducts = () => {
 const removeProd = (id: IProduct['id']) => {
   selectedRows.value = selectedRows.value.filter(row => row.id !== id);
 };
-
 </script>
 
 <template>
@@ -83,7 +81,7 @@ const removeProd = (id: IProduct['id']) => {
     </UButton>
 
     <UModal v-model="isOpen">
-      <div class="p-6 space-y-5">
+      <div class="space-y-5 p-6">
         <h1 class="text-xl font-medium">
           Select Products
         </h1>
@@ -115,7 +113,7 @@ const removeProd = (id: IProduct['id']) => {
           </template>
         </UTable>
 
-        <div class="flex justify-end items-center gap-2">
+        <div class="flex items-center justify-end gap-2">
           <UButton
             size="sm"
             color="gray"
@@ -123,7 +121,10 @@ const removeProd = (id: IProduct['id']) => {
           >
             Cancel
           </UButton>
-          <UButton size="sm" @click="applyProducts">
+          <UButton
+            size="sm"
+            @click="applyProducts"
+          >
             Save
           </UButton>
         </div>
@@ -155,7 +156,6 @@ const removeProd = (id: IProduct['id']) => {
             </div>
           </div>
         </template>
-
 
         <template #actions-data="{ row }">
           <div class="text-center">

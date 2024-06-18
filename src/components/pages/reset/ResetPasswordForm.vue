@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import type { FormSubmitEvent } from '#ui/types';
 import { userSchema } from '~/schemas/user.schema';
+import { useResetPassword } from '~/services/auth';
+import { ROUTES } from '~/config/enums/routes';
 
-const emit = defineEmits(['nextStep']);
-
-const userStore = useAuthStore();
+const authStore = useAuthStore();
+const {
+  mutateAsync: resetPassword,
+  isPending: isPendingResetPassword,
+} = useResetPassword(authStore.tokenResetPassword);
 
 const formRef = ref();
+const resetPasswordSuccess = ref(false);
 
 const state = reactive({
-  loadingBtn: false,
   unknownErrorServerMsg: '',
 });
 
@@ -25,56 +29,101 @@ async function onSubmit(event: FormSubmitEvent<Record<'password' | 'passwordConf
     formRef.value.setErrors([{ path: 'passwordConfirm', message: 'This password does not match. Try again.' }]);
     return;
   }
-
-  state.loadingBtn = true;
-  const { error, pending } = await userStore.resetPassword(password);
-  state.loadingBtn = pending.value;
-
-  if (error.value && error.value.data) {
-    const { message } = error.value.data;
-    state.unknownErrorServerMsg = message || 'An unknown error occurred. Please try again';
+  const res = await resetPassword(password);
+  if (res.user) {
+    authStore.user = res.user;
+    authStore.tokenResetPassword = '';
+    authStore.setExpTokens();
+    resetPasswordSuccess.value = true;
   }
   else {
-    emit('nextStep');
+    state.unknownErrorServerMsg = 'An unknown error occurred. Please try again';
   }
 }
-
 </script>
 
 <template>
-  <div class="space-y-5">
-    <UAlert
-      v-if="state.unknownErrorServerMsg"
-      color="rose"
-      variant="solid"
-      :close-button="{
-        icon: 'i-heroicons-x-mark-20-solid',
-        color: 'white',
-        variant: 'link',
-        padded: false,
-      }"
-      title=""
-      :description="state.unknownErrorServerMsg"
-      @close="state.unknownErrorServerMsg=''"
-    />
+  <div>
+    <ResetPasswordCard v-if="!resetPasswordSuccess">
+      <template #title>
+        Reset your password
+      </template>
+      <template #content>
+        <div class="space-y-5">
+          <UAlert
+            v-if="state.unknownErrorServerMsg"
+            color="rose"
+            variant="solid"
+            :close-button="{
+              icon: 'i-heroicons-x-mark-20-solid',
+              color: 'white',
+              variant: 'link',
+              padded: false,
+            }"
+            title=""
+            :description="state.unknownErrorServerMsg"
+            @close="state.unknownErrorServerMsg=''"
+          />
 
-    <UForm
-      ref="formRef"
-      :validate-on="['submit']"
-      :schema="userSchema.pick({ password: true })"
-      :state="stateSubmit"
-      @submit="onSubmit"
-    >
-      <UFormGroup label="New password" name="password" class="mb-4">
-        <UInput v-model="stateSubmit.password" size="xl" type="password" />
-      </UFormGroup>
-      <UFormGroup label="Confirm your password" name="passwordConfirm" class="mb-8">
-        <UInput v-model="stateSubmit.passwordConfirm" size="xl" type="password" />
-      </UFormGroup>
+          <UForm
+            ref="formRef"
+            :validate-on="['submit']"
+            :schema="userSchema.pick({ password: true })"
+            :state="stateSubmit"
+            @submit="onSubmit"
+          >
+            <UFormGroup
+              label="New password"
+              name="password"
+              class="mb-4"
+            >
+              <UInput
+                v-model="stateSubmit.password"
+                :disabled="isPendingResetPassword"
+                size="xl"
+                type="password"
+              />
+            </UFormGroup>
+            <UFormGroup
+              label="Confirm your password"
+              name="passwordConfirm"
+              class="mb-8"
+            >
+              <UInput
+                v-model="stateSubmit.passwordConfirm"
+                :disabled="isPendingResetPassword"
+                size="xl"
+                type="password"
+              />
+            </UFormGroup>
 
-      <UButton :loading="state.loadingBtn" size="xl" block type="submit">
-        Save
-      </UButton>
-    </UForm>
+            <UButton
+              :loading="isPendingResetPassword"
+              size="xl"
+              block
+              type="submit"
+            >
+              Save
+            </UButton>
+          </UForm>
+        </div>
+      </template>
+    </ResetPasswordCard>
+
+    <ResetPasswordCard v-else>
+      <template #title>
+        You've successfully changed your password
+      </template>
+      <template #content>
+        <NuxtLink :to="ROUTES.HOME">
+          <UButton
+            size="xl"
+            block
+          >
+            Continue to shopping
+          </UButton>
+        </NuxtLink>
+      </template>
+    </ResetPasswordCard>
   </div>
 </template>

@@ -52,18 +52,28 @@ const redirectPage = (category: ICategorySessionStorage) => {
     navigateTo(to);
   }
 };
-
-
 </script>
 
 <template>
   <div>
     <div v-if="state.loading">
       <div class="flex gap-16">
-        <USkeleton class="h-28 w-28" :ui="{ rounded: 'rounded-full' }" />
-        <USkeleton class="h-28 w-28" :ui="{ rounded: 'rounded-full' }" />
-        <USkeleton class="h-28 w-28" :ui="{ rounded: 'rounded-full' }" />
-        <USkeleton class="h-28 w-28" :ui="{ rounded: 'rounded-full' }" />
+        <USkeleton
+          class="size-28"
+          :ui="{ rounded: 'rounded-full' }"
+        />
+        <USkeleton
+          class="size-28"
+          :ui="{ rounded: 'rounded-full' }"
+        />
+        <USkeleton
+          class="size-28"
+          :ui="{ rounded: 'rounded-full' }"
+        />
+        <USkeleton
+          class="size-28"
+          :ui="{ rounded: 'rounded-full' }"
+        />
       </div>
     </div>
     <div v-else>
@@ -77,18 +87,21 @@ const redirectPage = (category: ICategorySessionStorage) => {
           </p>
         </div>
         <div class="flex gap-16">
-          <div v-for="cg of state.categories" :key="cg.id">
+          <div
+            v-for="cg of state.categories"
+            :key="cg.id"
+          >
             <div @click="() => redirectPage(cg)">
               <div v-if="cg?.relative_url_image">
                 <NuxtImg
                   :src="config.public.awsHostBucket + '/' + cg.relative_url_image"
                   width="100"
                   height="100"
-                  class="rounded-full cursor-pointer"
+                  class="cursor-pointer rounded-full"
                 />
               </div>
               <div
-                class="capitalize text-[13px] font-semibold cursor-pointer text-center mt-2"
+                class="mt-2 cursor-pointer text-center text-[13px] font-semibold capitalize"
               >
                 {{ cg.name }}
               </div>

@@ -1,37 +1,48 @@
 <script setup lang="ts">
-
 import { useStorage } from '@vueuse/core';
-import type { FormSubmitEvent } from '#ui/types';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import { StatusCodes } from 'http-status-codes';
+import type { FormSubmitEvent } from '#ui/types';
 import {
   type IExchangeRate,
   type IIpData,
   LOCAL_STORAGE_KEYS
 } from '~/config/enums/local-storage-keys';
+import type { MARKET_REGIONS } from '~/config/enums/market';
 import {
   MARKET_CONFIG,
   MARKET_CURRENCIES,
-  MARKET_LANGUAGES, MARKET_REGION_EMOJIS,
-  MARKET_REGIONS
+  MARKET_LANGUAGES, MARKET_REGION_EMOJIS
 } from '~/config/enums/market';
 import type { IUser, UpdateUserBody } from '~/interfaces/user';
 import { toastCustom } from '~/config/toast';
+import { useUpdateUser } from '~/services/user';
 
-// eslint-disable-next-line import/no-named-as-default-member
 dayjs.extend(utc);
 
 type State = {
-  region: MARKET_REGIONS,
+  region: MARKET_REGIONS
   language: { id: MARKET_LANGUAGES, label: string }
   ipData: IIpData
   currency: { id: MARKET_CURRENCIES, label: string }
-}
+};
 
 const { $api } = useNuxtApp();
 const authStore = useAuthStore();
 const store = useStore();
 const toast = useToast();
+const {
+  mutateAsync: updateUser,
+  isError: isErrorUpdateUser,
+  isPending: isPendingUpdateUser,
+} = useUpdateUser({
+  onResponse: ({ response }) => {
+    if (response.status === StatusCodes.OK) {
+      authStore.user = response._data.user;
+    }
+  },
+});
 
 const isOpen = ref(false);
 
@@ -130,7 +141,7 @@ onMounted(async () => {
   }
 
   const userPreferences = authStore.getUser?.market_preferences ||
-      parseJSON<IUser['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
+    parseJSON<IUser['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
 
   if (userPreferences) {
     const currencyOptSelected = currencyOpts.find(opt => opt.id === userPreferences.currency);
@@ -188,32 +199,35 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
   };
 
   if (authStore.isLogged) {
-    const { error } = await authStore.updateUser({ market_preferences: update });
-    if (error.value) {
+    await updateUser({
+      market_preferences: update,
+    }).catch(() => {
       toast.add({
         ...toastCustom.error,
         title: 'Update user preferences failed',
       });
-      return;
-    }
+    });
+    if (isErrorUpdateUser.value) return;
   }
 
   localStorage.removeItem(LOCAL_STORAGE_KEYS.USER_PREFERENCES);
   useStorage<IUser['market_preferences']>(LOCAL_STORAGE_KEYS.USER_PREFERENCES, update);
   window.location.reload();
 };
-
 </script>
 
 <template>
   <div>
-    <div class="flex gap-6 items-center" @click="isOpen = true">
+    <div
+      class="flex items-center gap-6"
+      @click="isOpen = true"
+    >
       <div class="flex items-center gap-5">
         <div
-          class="flex items-center gap-3 text-xs hover:bg-customGray-200/50
-             transition-all duration-200 px-3 py-2 rounded-md cursor-pointer"
+          class="flex cursor-pointer items-center gap-3 rounded-md
+             px-3 py-2 text-xs transition-all duration-200 hover:bg-customGray-200/50"
         >
-          <div class="flex items-center gap-3 text-xs text-nowrap font-medium">
+          <div class="flex items-center gap-3 text-nowrap text-xs font-medium">
             <span>{{ MARKET_REGION_EMOJIS[state.region] }}</span>
             <span>{{ state.region }}</span>
           </div>
@@ -222,7 +236,10 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
             class="h-5 w-2"
           />
           <div class="flex items-center gap-2 text-nowrap font-medium">
-            <UIcon name="i-heroicons-language" class="h-4" />
+            <UIcon
+              name="i-heroicons-language"
+              class="h-4"
+            />
             {{ state.language.label }}
           </div>
           <UDivider
@@ -240,21 +257,24 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
     <UModal
       v-model="isOpen"
       :ui="{
-        margin: '!mb-72'
+        margin: '!mb-72',
       }"
     >
-      <div class="p-8 space-y-6">
+      <div class="space-y-6 p-8">
         <div class="space-y-2">
           <h1 class="text-3xl font-bold">
             Update your settings
           </h1>
-          <p class="text-customGray-950 text-base">
+          <p class="text-base text-customGray-950">
             Set where you live, what language you speak and the currency you use.
           </p>
         </div>
 
-        <UForm :state="state" @submit="onSubmit">
-          <div class="space-y-5 mb-8">
+        <UForm
+          :state="state"
+          @submit="onSubmit"
+        >
+          <div class="mb-8 space-y-5">
             <UFormGroup
               label="Region"
               name="region"
@@ -263,6 +283,7 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
             >
               <USelectMenu
                 v-model="state.region"
+                :disabled="isPendingUpdateUser"
                 size="xl"
                 :options="regionOpts"
               />
@@ -291,24 +312,30 @@ const onSubmit = async (event: FormSubmitEvent<State>) => {
               <USelectMenu
                 v-model="state.currency"
                 size="xl"
+                :disabled="isPendingUpdateUser"
                 :options="currencyOpts"
                 :ui-menu="{
                   select: '!normal-case',
-                  option: { base: '!normal-case' }
+                  option: { base: '!normal-case' },
                 }"
               />
             </UFormGroup>
           </div>
 
-          <div class="flex gap-3 justify-end">
+          <div class="flex justify-end gap-3">
             <UButton
+              :disabled="isPendingUpdateUser"
               size="lg"
               color="gray"
               @click="isOpen = false"
             >
               Cancel
             </UButton>
-            <UButton size="lg" type="submit">
+            <UButton
+              :loading="isPendingUpdateUser"
+              size="lg"
+              type="submit"
+            >
               Save
             </UButton>
           </div>

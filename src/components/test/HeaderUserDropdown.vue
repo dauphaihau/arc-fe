@@ -1,10 +1,8 @@
 <script setup lang="ts">
-
 import { ROUTES } from '~/config/enums/routes';
 
 const authStore = useAuthStore();
 const { user } = storeToRefs(authStore);
-
 </script>
 
 <template>
@@ -15,39 +13,52 @@ const { user } = storeToRefs(authStore);
           color="gray"
           variant="ghost"
         >
-          <Icon name="uil:user" color="black" />
+          <Icon
+            name="uil:user"
+            color="black"
+          />
         </UButton>
       </UTooltip>
-      <template #panel="{close}">
-        <div class="p-2 flex flex-col" @click="close">
-          <UButton color="gray" variant="ghost" :to="ROUTES.ACCOUNT">
+      <template #panel="{ close }">
+        <div
+          class="flex flex-col p-2"
+          @click="close"
+        >
+          <UButton
+            color="gray"
+            variant="ghost"
+            :to="ROUTES.ACCOUNT"
+          >
             <div class="flex items-center gap-3">
               <img
                 src="~/assets/images/avatar-default.jpg"
-                class="w-5 h-5 rounded-full"
+                class="size-5 rounded-full"
                 alt="avatar"
               >
               <div class="text-left">
                 <div>
                   {{ user?.name }}
                 </div>
-                <div class="text-zinc-500/70 text-xs">
+                <div class="text-xs text-zinc-500/70">
                   View your profile
                 </div>
               </div>
             </div>
           </UButton>
-          <UButton
-            id="logout"
-            color="gray"
-            variant="ghost"
-            @click="authStore.logout()"
-          >
-            <div class="flex gap-3">
-              <Icon name="oi:account-logout" color="black" />
-              Logout
-            </div>
-          </UButton>
+          <!--          <UButton -->
+          <!--            id="logout" -->
+          <!--            color="gray" -->
+          <!--            variant="ghost" -->
+          <!--            @click="authStore.logout()" -->
+          <!--          > -->
+          <!--            <div class="flex gap-3"> -->
+          <!--              <Icon -->
+          <!--                name="oi:account-logout" -->
+          <!--                color="black" -->
+          <!--              /> -->
+          <!--              Logout -->
+          <!--            </div> -->
+          <!--          </UButton> -->
         </div>
       </template>
     </UPopover>

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { toRaw } from 'vue';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
 import type { GetListResponse, IUserActivitiesSessionStorage } from '~/interfaces/common';
@@ -8,8 +7,8 @@ import type { ResponseGetProducts } from '~/interfaces/product';
 const { $api } = useNuxtApp();
 
 type ISubCategories = {
-  categoryName: string,
-} & Partial<GetListResponse<ResponseGetProducts>>
+  categoryName: string
+} & Partial<GetListResponse<ResponseGetProducts>>;
 
 const state = reactive({
   pending: false,
@@ -45,8 +44,6 @@ onMounted(async () => {
     state.loading = false;
   }
 });
-
-
 </script>
 
 <template>
@@ -55,7 +52,10 @@ onMounted(async () => {
       v-if="state.subCategories && state.subCategories.length > 0 && !state.loading"
       class="space-y-12"
     >
-      <div v-for="(cg, i) of state.subCategories" :key="i">
+      <div
+        v-for="(cg, i) of state.subCategories"
+        :key="i"
+      >
         <div v-if="cg.results && cg.results.length > 0">
           <div class="mb-6">
             <h3 class="text-lg font-medium">
@@ -67,10 +67,16 @@ onMounted(async () => {
           </div>
 
           <div class="grid grid-cols-6 gap-6">
-            <HomeProductCard :product="cg.results[0]" class="col-span-2" />
+            <HomeProductCard
+              :product="cg.results[0]"
+              class="col-span-2"
+            />
             <div class="col-span-4">
               <div class="grid grid-cols-3 gap-6">
-                <div v-for="product of cg.results.slice(1)" :key="product.id">
+                <div
+                  v-for="product of cg.results.slice(1)"
+                  :key="product.id"
+                >
                   <HomeProductCard :product="product" />
                 </div>
               </div>
@@ -81,11 +87,14 @@ onMounted(async () => {
     </div>
 
     <!--  Skeletons -->
-    <div v-else-if="state.loading" class="space-y-12">
+    <div
+      v-else-if="state.loading"
+      class="space-y-12"
+    >
       <div>
         <div class="mb-6">
-          <USkeleton class="w-20 h-7 mb-3" />
-          <USkeleton class="w-32 h-7" />
+          <USkeleton class="mb-3 h-7 w-20" />
+          <USkeleton class="h-7 w-32" />
         </div>
         <div class="grid grid-cols-6 gap-6">
           <USkeleton class="col-span-2 h-full" />
@@ -103,8 +112,8 @@ onMounted(async () => {
       </div>
       <div>
         <div class="mb-6">
-          <USkeleton class="w-20 h-7 mb-3" />
-          <USkeleton class="w-32 h-7" />
+          <USkeleton class="mb-3 h-7 w-20" />
+          <USkeleton class="h-7 w-32" />
         </div>
         <div class="grid grid-cols-6 gap-6">
           <USkeleton class="col-span-2 h-full" />

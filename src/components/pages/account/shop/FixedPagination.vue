@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-
 const { page, pageCount, total = 0 } = defineProps<{
   page: number
   pageCount: number
   total: number | undefined
 }>();
 
-const emit = defineEmits<{(e: 'onChangePage', value: number): void }>();
+const emit = defineEmits<{ (e: 'onChangePage', value: number): void }>();
 
 const isBottomPage = ref(false);
 const pageRef = ref(page);
@@ -27,28 +26,33 @@ function onScroll() {
 watch(pageRef, () => {
   emit('onChangePage', pageRef.value);
 });
-
 </script>
 
 <template>
   <div
-    class="bg-white w-full flex justify-end pb-2"
+    class="flex w-full justify-end bg-white pb-2"
     :class="{ 'fixed-pagination w-shop-layout-content': !isBottomPage || total <= pageCount }"
   >
-    <div class="border-t border-gray-200 w-full flex justify-between items-center pt-2">
-      <div v-if="total > pageCount" class="text-customGray-850 text-base">
+    <div class="flex w-full items-center justify-between border-t border-gray-200 pt-2">
+      <div
+        v-if="total > pageCount"
+        class="text-base text-customGray-850"
+      >
         Viewing
-        <span class="text-customGray-950 font-medium">
+        <span class="font-medium text-customGray-950">
           {{ pageCount * (page - 1) + 1 }} - {{ pageCount * page }}
         </span>
         of
-        <span class="text-customGray-950 font-medium">
+        <span class="font-medium text-customGray-950">
           {{ total }}
         </span>
         results
       </div>
-      <div v-else class="text-customGray-850 text-md">
-        <span class="text-customGray-950 font-medium">
+      <div
+        v-else
+        class="text-md text-customGray-850"
+      >
+        <span class="font-medium text-customGray-950">
           {{ total }}
         </span> results
       </div>
@@ -63,11 +67,8 @@ watch(pageRef, () => {
   </div>
 </template>
 
-
 <style scoped>
-
 .fixed-pagination {
  @apply flex fixed z-[2] bottom-0 pr-20 2xl:pr-12;
 }
-
 </style>

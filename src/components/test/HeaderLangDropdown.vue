@@ -1,13 +1,14 @@
 <script setup lang="ts">
-
 const { locale } = useI18n();
 const switchLocalePath = useSwitchLocalePath();
-
 </script>
 
 <template>
   <div>
-    <UPopover mode="hover" :popper="{ offsetDistance: 0 }">
+    <UPopover
+      mode="hover"
+      :popper="{ offsetDistance: 0 }"
+    >
       <UButton
         color="gray"
         variant="ghost"
@@ -17,8 +18,11 @@ const switchLocalePath = useSwitchLocalePath();
       </UButton>
 
       <template #panel="{ close }">
-        <div class="p-2 flex flex-col gap-3">
-          <NuxtLink :to="switchLocalePath('en')" @click="close">
+        <div class="flex flex-col gap-3 p-2">
+          <NuxtLink
+            :to="switchLocalePath('en')"
+            @click="close"
+          >
             <UButton
               color="gray"
               variant="ghost"
@@ -27,7 +31,10 @@ const switchLocalePath = useSwitchLocalePath();
               English - EN
             </UButton>
           </NuxtLink>
-          <NuxtLink :to="switchLocalePath('fr')" @click="close">
+          <NuxtLink
+            :to="switchLocalePath('fr')"
+            @click="close"
+          >
             <UButton
               color="gray"
               variant="ghost"
@@ -36,7 +43,10 @@ const switchLocalePath = useSwitchLocalePath();
               Français - FR
             </UButton>
           </NuxtLink>
-          <NuxtLink :to="switchLocalePath('la')" @click="close">
+          <NuxtLink
+            :to="switchLocalePath('la')"
+            @click="close"
+          >
             <UButton
               color="gray"
               variant="ghost"

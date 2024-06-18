@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { PRODUCT_CONFIG } from '~/config/enums/product';
 import { toastCustom } from '~/config/toast';
 
@@ -12,7 +11,7 @@ const state = reactive({
   urlImages: [] as string[],
 });
 
-const emit = defineEmits<{(e: 'onChange', value: File[]): void }>();
+const emit = defineEmits<{ (e: 'onChange', value: File[]): void }>();
 
 const onPickFile = () => {
   fileInputRef?.value?.click();
@@ -20,11 +19,11 @@ const onPickFile = () => {
 
 function onFilePicked(event: Event) {
   const target = event.target as HTMLInputElement;
-  const files = (target.files as FileList);
+  const files = target.files as FileList;
 
   if (
     files.length > PRODUCT_CONFIG.MAX_IMAGES ||
-      files.length + state.urlImages.length > PRODUCT_CONFIG.MAX_IMAGES
+    files.length + state.urlImages.length > PRODUCT_CONFIG.MAX_IMAGES
   ) {
     toast.add({
       ...toastCustom.error,
@@ -52,8 +51,6 @@ const removeImage = (index: number) => {
 watch(state, () => {
   emit('onChange', state.fileImages);
 });
-
-
 </script>
 
 <template>
@@ -64,9 +61,13 @@ watch(state, () => {
     required
   >
     <div class="flex flex-wrap gap-3">
-      <div v-for="(url, index) in state.urlImages" :key="url" class="size-image">
+      <div
+        v-for="(url, index) in state.urlImages"
+        :key="url"
+        class="size-image"
+      >
         <div
-          class="relative group"
+          class="group relative"
           @click="removeImage(index)"
         >
           <NuxtImg
@@ -76,7 +77,7 @@ watch(state, () => {
           <div class="wrapper-close-icon">
             <UIcon
               name="i-material-symbols:cancel-rounded"
-              class="text-white h-full w-full p-12"
+              class="size-full p-12 text-white"
             />
           </div>
           <UBadge
@@ -93,7 +94,10 @@ watch(state, () => {
         class="wrapper-input-file"
         @click="onPickFile"
       >
-        <Icon name="material-symbols:android-camera" class="w-full" />
+        <Icon
+          name="material-symbols:android-camera"
+          class="w-full"
+        />
         <p>Add a photo</p>
         <input
           id="formFile"
@@ -111,7 +115,6 @@ watch(state, () => {
 </template>
 
 <style scoped>
-
 .rounded-shape {
   @apply rounded-xl;
 }
@@ -136,5 +139,4 @@ watch(state, () => {
   grid place-content-center
   cursor-pointer;
 }
-
 </style>

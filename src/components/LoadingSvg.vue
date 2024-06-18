@@ -1,12 +1,10 @@
 <script setup lang="ts">
-
 const { childClass } = defineProps<{ childClass?: string }>();
-
 </script>
 
 <template>
   <svg
-    :class="['animate-spin h-5 w-5 text-gray-500', childClass]"
+    :class="['size-5 animate-spin text-gray-500', childClass]"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
     viewBox="0 0 24 24"
@@ -27,7 +25,6 @@ const { childClass } = defineProps<{ childClass?: string }>();
     />
   </svg>
 </template>
-
 
 <style scoped>
 

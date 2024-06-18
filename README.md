@@ -6,21 +6,23 @@ A ecommerce marketplace web application  where people come together to make, sel
 ## Tech stack
 
 #### Frontend:
-1. Nuxt.js (Vue.js)
-2. Pinia.js (State management)
-3. Tailwind (Styling)
-4. Typescript (Statically Checked Types)
-5. zod (Validate form)
+- [Nuxt.js](https://nuxt.com/) - Vue Framework
+- [Vue Query](https://tanstack.com/query/latest/docs/framework/vue/overview) - Managing and caching asynchronous data
+- [Pinia](https://pinia.vuejs.org/) - State management library for Vue
+- [Typescript](https://www.typescriptlang.org/) - Static Type Checking
+- [Tailwind](https://tailwindcss.com/) - utility-first CSS framework
+- [Zod](https://zod.dev/) - TypeScript-first schema declaration and validation
+- [Vitest](https://vitest.dev/) - Testing Framework
 
 #### Backend:
-1. Express.js (Node.js)
-2. MongoDB (NoSQL)
-3. JSON Web Tokens (Authenticate)
-4. Typescript (Statically checked types)
-5. Stripe (Payment)
-6. Redis (Distributed lock)
-7. AWS S3 (Store assets)
-8. zod (Validate request)
+- [Express.js](https://expressjs.com/) - Node.js
+- [MongoDB](https://www.mongodb.com/) - NoSQL
+- [JSON Web Tokens](https://jwt.io/) - Authenticate
+- [Stripe](https://stripe.com/) - Payment
+- [Redis](https://redis.io/) - Distributed lock
+- [AWS S3](https://aws.amazon.com/pm/serv-s3/) - Store assets
+- [Typescript](https://www.typescriptlang.org/)
+- [Zod](https://zod.dev/)
 
 ## Features
 - Log in, register, log out, reset password
@@ -31,3 +33,4 @@ A ecommerce marketplace web application  where people come together to make, sel
 - Checkout now or checkout with multiple products in cart
 - CRUD Account's address
 - Pay via cash/card
+- Change currency

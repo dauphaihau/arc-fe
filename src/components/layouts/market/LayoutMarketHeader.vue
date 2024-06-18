@@ -52,17 +52,16 @@ onMounted(async () => {
   viewportMeta.content = 'width=device-width, initial-scale=1';
   document.head.appendChild(viewportMeta);
 });
-
 </script>
 
 <template>
-  <!--  <div class="bg-customGray-100 h-11">-->
-  <!--    <div class=" max-w-market-layout mx-auto flex items-center justify-end text-custom-Gray-950 text-sm h-full font-medium">-->
-  <!--      <div>Join us</div>-->
-  <!--      <UDivider orientation="vertical" class="w-6 h-3 border-black" size="xs" :ui="{ border: { base: 'border-black' } }" />-->
-  <!--      <div>Login</div>-->
-  <!--    </div>-->
-  <!--  </div>-->
+  <!--  <div class="bg-customGray-100 h-11"> -->
+  <!--    <div class=" max-w-market-layout mx-auto flex items-center justify-end text-custom-Gray-950 text-sm h-full font-medium"> -->
+  <!--      <div>Join us</div> -->
+  <!--      <UDivider orientation="vertical" class="w-6 h-3 border-black" size="xs" :ui="{ border: { base: 'border-black' } }" /> -->
+  <!--      <div>Login</div> -->
+  <!--    </div> -->
+  <!--  </div> -->
 
   <header
     class="header"
@@ -70,61 +69,71 @@ onMounted(async () => {
     @mouseleave="onMouseleave"
   >
     <nav class="max-w-home-layout mx-auto flex justify-between py-3">
-      <NuxtLink id="brand" :to="ROUTES.HOME" class="font-bold text-xl h-fit p-1">
+      <NuxtLink
+        id="brand"
+        :to="ROUTES.HOME"
+        class="h-fit p-1 text-xl font-bold"
+      >
         Arc
       </NuxtLink>
 
       <div class="mt-1">
         <LayoutMarketHeaderCategories class="mx-3" />
-        <LayoutMarketCartMegaMenu :show="isShowCart" class="mt-8" />
-        <LayoutMarketSearchAllMegaMenu :show="isShowSearch" class="mt-8" />
+        <LayoutMarketCartMegaMenu
+          :show="isShowCart"
+          class="mt-8"
+        />
+        <LayoutMarketSearchAllMegaMenu
+          :show="isShowSearch"
+          class="mt-8"
+        />
       </div>
 
-      <!--      <div class="flex items-center gap-4">-->
-      <!--      <UButton-->
-      <!--        color="gray"-->
-      <!--        variant="ghost"-->
-      <!--        class="icon-button"-->
-      <!--        @click="toggleDark()"-->
-      <!--      >-->
-      <!--        <Icon v-if="!isDark" name="uil:sun" />-->
-      <!--        <Icon v-else name="uil:moon" />-->
-      <!--      </UButton>-->
+      <!--      <div class="flex items-center gap-4"> -->
+      <!--      <UButton -->
+      <!--        color="gray" -->
+      <!--        variant="ghost" -->
+      <!--        class="icon-button" -->
+      <!--        @click="toggleDark()" -->
+      <!--      > -->
+      <!--        <Icon v-if="!isDark" name="uil:sun" /> -->
+      <!--        <Icon v-else name="uil:moon" /> -->
+      <!--      </UButton> -->
 
-      <!--        <div v-if="authStore.isLogged" class="flex items-center gap-4">-->
-      <!--        <UTooltip text="Favorites">-->
-      <!--          <UButton-->
-      <!--            color="gray"-->
-      <!--            variant="ghost"-->
-      <!--            class="icon-button"-->
-      <!--          >-->
-      <!--            <Icon name="uil:heart" />-->
-      <!--          </UButton>-->
-      <!--        </UTooltip>-->
-      <!--        <UTooltip text="Notifications">-->
-      <!--          <UButton-->
-      <!--            color="gray"-->
-      <!--            variant="ghost"-->
-      <!--            class="icon-button"-->
-      <!--          >-->
-      <!--            <Icon name="uil:bell" />-->
-      <!--          </UButton>-->
-      <!--        </UTooltip>-->
-      <!--        <UTooltip text="Shop Manager">-->
-      <!--          <UButton-->
-      <!--            :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}`"-->
-      <!--            color="gray"-->
-      <!--            variant="ghost"-->
-      <!--            class="icon-button"-->
-      <!--          >-->
-      <!--            <Icon name="uil:shop" />-->
-      <!--          </UButton>-->
-      <!--        </UTooltip>-->
-      <!--        </div>-->
+      <!--        <div v-if="authStore.isLogged" class="flex items-center gap-4"> -->
+      <!--        <UTooltip text="Favorites"> -->
+      <!--          <UButton -->
+      <!--            color="gray" -->
+      <!--            variant="ghost" -->
+      <!--            class="icon-button" -->
+      <!--          > -->
+      <!--            <Icon name="uil:heart" /> -->
+      <!--          </UButton> -->
+      <!--        </UTooltip> -->
+      <!--        <UTooltip text="Notifications"> -->
+      <!--          <UButton -->
+      <!--            color="gray" -->
+      <!--            variant="ghost" -->
+      <!--            class="icon-button" -->
+      <!--          > -->
+      <!--            <Icon name="uil:bell" /> -->
+      <!--          </UButton> -->
+      <!--        </UTooltip> -->
+      <!--        <UTooltip text="Shop Manager"> -->
+      <!--          <UButton -->
+      <!--            :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}`" -->
+      <!--            color="gray" -->
+      <!--            variant="ghost" -->
+      <!--            class="icon-button" -->
+      <!--          > -->
+      <!--            <Icon name="uil:shop" /> -->
+      <!--          </UButton> -->
+      <!--        </UTooltip> -->
+      <!--        </div> -->
 
-      <!--        <RegisterLoginDialog v-else />-->
+      <!--        <RegisterLoginDialog v-else /> -->
 
-      <div class="flex items-center gap-4 h-fit relative">
+      <div class="relative flex h-fit items-center gap-4">
         <div class="absolute right-12 flex gap-4">
           <UTooltip text="Search">
             <UButton
@@ -148,8 +157,8 @@ onMounted(async () => {
             position="bottom-right"
             :ui="{
               position: {
-                'bottom-right': 'translate-y-[-5px] translate-x-[-5px]'
-              }
+                'bottom-right': 'translate-y-[-5px] translate-x-[-5px]',
+              },
             }"
             @click="isShowCart = !isShowCart"
             @mouseover="isShowSearch = false"
@@ -164,7 +173,7 @@ onMounted(async () => {
           </UChip>
         </UTooltip>
 
-        <!--        <HeaderUserDropdown />-->
+        <!--        <HeaderUserDropdown /> -->
       </div>
     </nav>
   </header>
@@ -177,12 +186,14 @@ onMounted(async () => {
     leave-ative-class="opacity-100"
     leave-to-class="opacity-0"
   >
-    <div v-if="isShowCart || isShowSearch" class="overlay" />
+    <div
+      v-if="isShowCart || isShowSearch"
+      class="overlay"
+    />
   </transition>
 </template>
 
 <style scoped>
-
 .icon-button {
   padding: 8px;
 }
@@ -201,5 +212,4 @@ onMounted(async () => {
 .header.hidden-header {
   transform: translate3d(0, -100%, 0);
 }
-
 </style>

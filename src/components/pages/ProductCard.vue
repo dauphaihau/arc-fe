@@ -9,48 +9,46 @@ const { product } = defineProps<{
 
 const config = useRuntimeConfig();
 const router = useRouter();
-
-
 </script>
 
 <template>
   <div
-    class="flex flex-col gap-2 cursor-pointer"
+    class="flex cursor-pointer flex-col gap-2"
     @click="() => router.push(`${ROUTES.PRODUCTS}/${product.id}`)"
   >
     <NuxtImg
       :src="config.public.awsHostBucket + '/' + product.image_relative_url"
       width="200"
       height="200"
-      class="rounded w-full h-full"
+      class="size-full rounded"
       preload
     />
     <div class="space-y-1">
-      <h1 class="text-xl font-semibold truncate">
+      <h1 class="truncate text-xl font-semibold">
         {{ product.title }}
       </h1>
-      <div class="flex flex-wrap gap-2 items-center">
-        <p class="text-customGray-950 text-base font-medium">
+      <div class="flex flex-wrap items-center gap-2">
+        <p class="text-base font-medium text-customGray-950">
           {{
-            product?.summary_inventory?.sale_price ?
-              convertCurrency(product?.summary_inventory?.sale_price) :
-              convertCurrency(product?.summary_inventory?.lowest_price)
+            product?.summary_inventory?.sale_price
+              ? convertCurrency(product?.summary_inventory?.sale_price)
+              : convertCurrency(product?.summary_inventory?.lowest_price)
           }}
         </p>
         <p
           v-if="product?.summary_inventory?.sale_price"
-          class="text-customGray-950 text-sm font-medium line-through decoration-1"
+          class="text-sm font-medium text-customGray-950 line-through decoration-1"
         >
           {{ convertCurrency(product?.summary_inventory.lowest_price) }}
         </p>
         <p
           v-if="product?.summary_inventory?.sale_price"
-          class="text-green-500 text-sm"
+          class="text-sm text-green-500"
         >
           ({{ product?.summary_inventory.percent_off }}% off)
         </p>
       </div>
-      <p class="text-customGray-800 text-sm">
+      <p class="text-sm text-customGray-800">
         {{ product?.shop_name }}
       </p>
       <UBadge

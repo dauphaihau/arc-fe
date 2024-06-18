@@ -3,7 +3,7 @@ definePageMeta({ layout: 'market' });
 </script>
 
 <template>
-  <div class="py-12 space-y-20">
+  <div class="space-y-20 py-12">
     <HomeProductsRecentlyViewed />
     <HomeProductsBySubCategory />
     <HomeRecommendedSubCategories />

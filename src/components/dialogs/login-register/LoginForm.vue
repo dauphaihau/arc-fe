@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
 import { userSchema } from '~/schemas/user.schema';
-import type { LoginBody } from '~/interfaces/user';
+import type { IUser, LoginBody } from '~/interfaces/user';
 import { ROUTES } from '~/config/enums/routes';
+import { useLogin } from '~/services/auth';
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
@@ -10,40 +12,50 @@ const cartStore = useCartStore();
 const formRef = ref();
 
 const state = reactive({
-  invalidUsers: new Map<string, string[]>(),
-  loadingBtn: false,
+  invalidUsers: new Map<IUser['email'], IUser['password'][]>(),
   unknownErrorServerMsg: '',
 });
 
-const stateSubmit = reactive({
+const stateSubmit: Partial<LoginBody> = reactive({
   email: undefined,
   password: undefined,
 });
 
-async function onSubmit(event: FormSubmitEvent<LoginBody>) {
-  formRef.value.clear();
-  const { email, password } = event.data;
+const {
+  mutate: login,
+  isPending: isPendingLogin,
+} = useLogin({
+  onResponse: ({ response }) => {
+    if (response.status === StatusCodes.UNAUTHORIZED) {
+      const { email, password } = stateSubmit;
+      if (email && password) {
+        const user = state.invalidUsers.get(email);
+        user ? user.push(password) : state.invalidUsers.set(email, [password]);
+      }
+      state.unknownErrorServerMsg = 'Incorrect email or password';
+      return;
+    }
 
-  const invalidPasswords = state.invalidUsers.get(email);
-  if (invalidPasswords && invalidPasswords.includes(password)) {
+    if (response.status === StatusCodes.OK) {
+      authStore.user = response._data.user;
+      authStore.setExpTokens();
+      cartStore.getCartHeader();
+      return;
+    }
+
+    state.unknownErrorServerMsg = 'An unknown error occurred. Please try again';
+  },
+});
+
+function onSubmit(event: FormSubmitEvent<LoginBody>) {
+  const { email, password } = event.data;
+  const user = state.invalidUsers.get(email);
+  if (user && user.includes(password)) {
     state.unknownErrorServerMsg = 'Incorrect email or password';
     return;
   }
-
-  state.loadingBtn = true;
-  const { error, pending } = await authStore.login(event.data);
-  state.loadingBtn = pending.value;
-
-  if (error.value && error.value.data) {
-    const { message } = error.value.data;
-    invalidPasswords ? invalidPasswords.push(password) : state.invalidUsers.set(email, [password]);
-    state.unknownErrorServerMsg = message || 'An unknown error occurred. Please try again';
-  }
-  else {
-    await cartStore.getCartHeader();
-  }
+  login(event.data);
 }
-
 </script>
 
 <template>
@@ -65,25 +77,48 @@ async function onSubmit(event: FormSubmitEvent<LoginBody>) {
       <UForm
         ref="formRef"
         :validate-on="['submit']"
-        :schema="userSchema.pick({email: true, password: true})"
+        :schema="userSchema.pick({ email: true, password: true })"
         :state="stateSubmit"
         @submit="onSubmit"
       >
-        <UFormGroup label="Email" name="email" class="mb-4">
-          <UInput v-model="stateSubmit.email" size="xl" />
+        <UFormGroup
+          label="Email"
+          name="email"
+          class="mb-4"
+        >
+          <UInput
+            v-model="stateSubmit.email"
+            size="xl"
+          />
         </UFormGroup>
 
-        <UFormGroup label="Password" name="password" class="mb-2">
-          <UInput v-model="stateSubmit.password" size="xl" type="password" />
+        <UFormGroup
+          label="Password"
+          name="password"
+          class="mb-2"
+        >
+          <UInput
+            v-model="stateSubmit.password"
+            size="xl"
+            type="password"
+          />
         </UFormGroup>
 
         <NuxtLink :to="ROUTES.RESET">
-          <UButton variant="link" class="mb-4 pl-0">
+          <UButton
+            variant="link"
+            class="mb-4 pl-0"
+          >
             Forget Password?
           </UButton>
         </NuxtLink>
 
-        <UButton :loading="state.loadingBtn" size="xl" block type="submit">
+        <UButton
+          :loading="isPendingLogin"
+          size="xl"
+          block
+          type="submit"
+        >
           Log in
         </UButton>
       </UForm>

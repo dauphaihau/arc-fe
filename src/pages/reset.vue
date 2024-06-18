@@ -1,53 +1,45 @@
 <script lang="ts" setup>
+import { StatusCodes } from 'http-status-codes';
 import { ROUTES } from '~/config/enums/routes';
+import { useVerifyToken } from '~/services/auth';
+import { RESET_PASSWORD_VIEWS } from '~/config/enums/common';
 
 definePageMeta({ layout: 'market' });
 
-const enum STEPS {
-  SEND_EMAIL,
-  SEND_EMAIL_SUCCESS,
-  RESEND_EMAIL_SUCCESS,
-  TOKEN_INVALID, RESET_PASSWORD,
-  RESET_PASSWORD_SUCCESS
-}
-
 const route = useRoute();
 const authStore = useAuthStore();
-const steps = ref(route.query?.t ? '' : STEPS.SEND_EMAIL);
-const email = ref('');
+const token = route.query?.t as string;
 
-const nextStep = (step: STEPS, data?: string) => {
-  email.value = data ?? '';
-  steps.value = step;
+useVerifyToken(token, {
+  onResponse({ response }) {
+    if (response.status === StatusCodes.OK) {
+      authStore.tokenResetPassword = token;
+      navigateTo('/reset?v=1');
+      currentView.value = RESET_PASSWORD_VIEWS.RESET_PASSWORD;
+    }
+    else {
+      currentView.value = RESET_PASSWORD_VIEWS.TOKEN_INVALID;
+    }
+  },
+});
+
+const currentView = ref(token ? '' : RESET_PASSWORD_VIEWS.SEND_EMAIL);
+
+const changeView = (step: RESET_PASSWORD_VIEWS) => {
+  currentView.value = step;
 };
 
-onMounted(async () => {
+onMounted(() => {
   if (route.query?.v) {
     navigateTo(ROUTES.RESET);
   }
-  if (route.query?.t) {
-    const { error } = await authStore.verifyToken();
-    if (error.value) {
-      steps.value = STEPS.TOKEN_INVALID;
-    }
-    else {
-      steps.value = STEPS.RESET_PASSWORD;
-      navigateTo('/reset?v=1');
-    }
-  }
 });
-
-async function resendEmail() {
-  await authStore.forgetPassword(email.value);
-  steps.value = STEPS.RESEND_EMAIL_SUCCESS;
-}
-
 </script>
 
 <template>
-  <div class="max-w-lg mx-auto mt-12">
-    <!--    Send email-->
-    <ResetPasswordCard v-if="steps === STEPS.SEND_EMAIL">
+  <div class="mx-auto mt-12 max-w-lg">
+    <!--    Send email -->
+    <ResetPasswordCard v-if="currentView === RESET_PASSWORD_VIEWS.SEND_EMAIL">
       <template #title>
         Reset your password
       </template>
@@ -56,97 +48,42 @@ async function resendEmail() {
         your account and we'll send you a link to reset your password.
       </template>
       <template #content>
-        <ForgetPasswordForm
-          :email="email"
-          @next-step="(email) => nextStep(STEPS.SEND_EMAIL_SUCCESS, email)"
-        />
+        <ForgetPasswordForm @change-view="changeView" />
       </template>
     </ResetPasswordCard>
 
     <!--  Send email success -->
-    <ResetPasswordCard v-if="steps === STEPS.SEND_EMAIL_SUCCESS">
+    <ResetPasswordCard v-if="currentView === RESET_PASSWORD_VIEWS.SEND_EMAIL_SUCCESS">
       <template #title>
         Check your email
       </template>
       <template #content>
-        <p class="font-light">
-          Thanks! If
-          <span class="font-medium">{{ email }}</span>
-          matches an email we have on file,
-          then we've sent you an email
-          containing further instructions for resetting your password.
-        </p>
-        <p class="font-light">
-          If you haven't received an email in 5 minutes, check your spam,
-          <UButton variant="link" class="p-0 font-base" @click="resendEmail">
-            resend
-          </UButton>, or
-          <UButton variant="link" class="p-0 font-base" @click="steps = STEPS.SEND_EMAIL">
-            try a different email
-          </UButton>
-          .
-        </p>
-      </template>
-    </ResetPasswordCard>
-
-    <!--  Resend email success -->
-    <ResetPasswordCard v-if="steps === STEPS.RESEND_EMAIL_SUCCESS">
-      <template #title>
-        Check your email
-      </template>
-      <template #content>
-        <p class="font-light">
-          We've resent password reset instructions to
-          <span class="font-medium">{{ email }}</span>
-          if it is an email on file.
-        </p>
-        <p class="font-light text-base">
-          Please check again. If you still haven't received an email
-          <UButton variant="link" class="p-0 text-base" @click="steps = STEPS.SEND_EMAIL">
-            try a different email
-          </UButton>
-          .
-        </p>
+        <SendEmailSuccess @change-view="changeView" />
       </template>
     </ResetPasswordCard>
 
     <!--  Token invalid -->
-    <ResetPasswordCard v-if="steps === STEPS.TOKEN_INVALID">
+    <ResetPasswordCard v-if="currentView === RESET_PASSWORD_VIEWS.TOKEN_INVALID">
       <template #content>
-        <div class="flex flex-col justify-center items-center">
-          <Icon name="ph:warning-duotone" color="black" class="mb-3 h-7 w-7" />
+        <div class="flex flex-col items-center justify-center">
+          <Icon
+            name="ph:warning-duotone"
+            color="black"
+            class="mb-3 size-7"
+          />
           <div>
             This password reset link has expired.
           </div>
-          <UButton variant="link" @click="steps = STEPS.SEND_EMAIL">
+          <UButton
+            variant="link"
+            @click="currentView = RESET_PASSWORD_VIEWS.SEND_EMAIL"
+          >
             Try resetting your password again.
           </UButton>
         </div>
       </template>
     </ResetPasswordCard>
 
-    <!--  Reset password -->
-    <ResetPasswordCard v-if="steps === STEPS.RESET_PASSWORD">
-      <template #title>
-        Reset your password
-      </template>
-      <template #content>
-        <ResetPasswordForm @next-step="nextStep(STEPS.RESET_PASSWORD_SUCCESS)" />
-      </template>
-    </ResetPasswordCard>
-
-    <!--  Reset password success -->
-    <ResetPasswordCard v-if="steps === STEPS.RESET_PASSWORD_SUCCESS">
-      <template #title>
-        You've successfully changed your password
-      </template>
-      <template #content>
-        <NuxtLink :to="ROUTES.HOME">
-          <UButton size="xl" block>
-            Continue to shopping
-          </UButton>
-        </NuxtLink>
-      </template>
-    </ResetPasswordCard>
+    <ResetPasswordForm v-if="currentView === RESET_PASSWORD_VIEWS.RESET_PASSWORD" />
   </div>
 </template>

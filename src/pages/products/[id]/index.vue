@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { useSessionStorage } from '@vueuse/core';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
@@ -81,37 +80,45 @@ const summaryInventory = computed(() => {
   }
   return summary;
 });
-
 </script>
 
 <template>
   <div class="mt-24">
-    <div v-if="pending" class="w-full grid place-content-center h-[80vh]">
-      <Loading :child-class="'!w-12 !h-12'" />
+    <div
+      v-if="pending"
+      class="grid h-[80vh] w-full place-content-center"
+    >
+      <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
-    <div v-else class="space-y-20">
+    <div
+      v-else
+      class="space-y-20"
+    >
       <div v-if="data?.product">
-        <div class="grid grid-cols-7 mb-20">
-          <DetailProductImages :images="data.product.images" class="col-span-4" />
-          <div class="space-y-6 col-span-2">
-            <!--            <div class="text-red-800 text-md font-semibold">-->
-            <!--              Only 6 left and in 7 baskets-->
-            <!--            </div>-->
+        <div class="mb-20 grid grid-cols-7">
+          <DetailProductImages
+            :images="data.product.images"
+            class="col-span-4"
+          />
+          <div class="col-span-2 space-y-6">
+            <!--            <div class="text-red-800 text-md font-semibold"> -->
+            <!--              Only 6 left and in 7 baskets -->
+            <!--            </div> -->
             <div
               v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
-              class="font-bold text-xl"
+              class="text-xl font-bold"
             >
               {{ convertCurrency(summaryInventory.lowestPrice) }}
             </div>
             <div
               v-else
-              class="font-bold text-xl"
+              class="text-xl font-bold"
             >
-              {{ priceVariantSelected ?
-                convertCurrency(priceVariantSelected) :
-                summaryInventory.lowestPrice === summaryInventory.highestPrice ?
-                  `${convertCurrency(summaryInventory.lowestPrice)}` :
-                  `${convertCurrency(summaryInventory.lowestPrice)} -
+              {{ priceVariantSelected
+                ? convertCurrency(priceVariantSelected)
+                : summaryInventory.lowestPrice === summaryInventory.highestPrice
+                  ? `${convertCurrency(summaryInventory.lowestPrice)}`
+                  : `${convertCurrency(summaryInventory.lowestPrice)} -
                 ${convertCurrency(summaryInventory.highestPrice)}`
               }}
             </div>
@@ -127,7 +134,10 @@ const summaryInventory = computed(() => {
             />
           </div>
         </div>
-        <DetailProductMoreProductsByShop :shop-id="data.product.shop.id" class="mb-16" />
+        <DetailProductMoreProductsByShop
+          :shop-id="data.product.shop.id"
+          class="mb-16"
+        />
         <DetailProductMoreProductsByCategory :category-id="data.product.category" />
       </div>
     </div>

@@ -4,12 +4,15 @@ const slots = useSlots();
 
 <template>
   <div>
-    <div class="flex justify-between mb-6">
+    <div class="mb-6 flex justify-between">
       <div>
         <h1 class="text-2xl font-semibold text-customGray-950">
           <slot name="title" />
         </h1>
-        <p v-if="slots.description" class="text-customGray-800 text-sm">
+        <p
+          v-if="slots.description"
+          class="text-sm text-customGray-800"
+        >
           <slot name="description" />
         </p>
       </div>
@@ -20,7 +23,6 @@ const slots = useSlots();
     </div>
   </div>
 </template>
-
 
 <style scoped>
 

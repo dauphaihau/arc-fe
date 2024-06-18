@@ -8,12 +8,12 @@ export class CategoryModule {
   async getCategories(params?: GetCategoriesParams | Ref<GetCategoriesParams>) {
     return await useCustomFetch.get<ResponseGetCategories>(
       RESOURCES.CATEGORIES,
-      params || null
+      params || undefined
     );
   }
 
   async getSearchCategories(name: string) {
-    return await useCustomFetch.delete<{categories: ICategorySearch[] }>(
+    return await useCustomFetch.delete<{ categories: ICategorySearch[] }>(
       RESOURCES.CATEGORIES,
       {
         name,

@@ -4,7 +4,7 @@ import type { IAddress } from '~/interfaces/address';
 const { $api } = useNuxtApp();
 const cartStore = useCartStore();
 
-const emit = defineEmits<{(e: 'onAddressEmpty', value: boolean): void }>();
+const emit = defineEmits<{ (e: 'onAddressEmpty', value: boolean): void }>();
 
 const {
   pending: pendingGetAddresses,
@@ -14,7 +14,7 @@ const {
   sortBy: '-is_primary',
 });
 
-const addressIdSelected = ref();
+// const addressIdSelected = ref()
 const dataAddressRef = ref(dataAddress.value?.results || []);
 
 const addressOptions = computed(() => {
@@ -23,14 +23,17 @@ const addressOptions = computed(() => {
     return [];
   }
   emit('onAddressEmpty', false);
-  const result = dataAddressRef.value.map(address => ({
+  return dataAddressRef.value.map(address => ({
     ...address,
     value: address.id,
   }));
-  addressIdSelected.value = result[0].value;
-  cartStore.stateCheckout.address = result[0];
-  return result;
 });
+
+const addressIdSelected = ref(addressOptions.value[0].value);
+
+watch(addressOptions, () => {
+  cartStore.stateCheckout.address = addressOptions.value[0];
+}, { immediate: true });
 
 watch(() => addressIdSelected.value, () => {
   if (dataAddress.value) {
@@ -46,24 +49,29 @@ watch(() => addressIdSelected.value, () => {
 function onCreatedAddress(newAddress: IAddress) {
   dataAddressRef.value.push(newAddress);
 }
-
 </script>
 
 <template>
   <UCard>
     <div>
-      <div class="flex justify-between items-center mb-2">
-        <legend class="text-gray-700 mb-1 text-base font-bold">
+      <div class="mb-2 flex items-center justify-between">
+        <legend class="mb-1 text-base font-bold text-gray-700">
           Shipping Address
         </legend>
 
         <CreateUpdateAddressDialog @on-created-address="onCreatedAddress" />
       </div>
 
-      <div v-if="!pendingGetAddresses" class="mt-8 gap-x-56 gap-y-16">
-        <URadioGroup v-model="addressIdSelected" :options="addressOptions">
+      <div
+        v-if="!pendingGetAddresses"
+        class="mt-8 gap-x-56 gap-y-16"
+      >
+        <URadioGroup
+          v-model="addressIdSelected"
+          :options="addressOptions"
+        >
           <template #label="{ option }">
-            <div class="flex flex-col gap-1 w-full text-customGray-950 mb-6">
+            <div class="mb-6 flex w-full flex-col gap-1 text-customGray-950">
               <div class="">
                 {{ option.full_name }} |
                 <span class="font-normal">{{ option.phone }}</span>

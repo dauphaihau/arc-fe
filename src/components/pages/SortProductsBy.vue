@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const router = useRouter();
 const route = useRoute();
 
@@ -22,11 +21,10 @@ watch(selected, () => {
   }
   router.push({ query: routeQuery });
 });
-
 </script>
 
 <template>
-  <div class="flex gap-2 items-center">
+  <div class="flex items-center gap-2">
     <div>Sort By:</div>
     <USelectMenu
       v-model="selected"

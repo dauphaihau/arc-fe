@@ -2,7 +2,7 @@ import { RESOURCES } from '~/config/enums/resources';
 import type {
   CreateBodyAddress, IAddress, ResponseGetStatesByCountry, ResponseGetCountries
 } from '~/interfaces/address';
-import type { GetListResponse, RequestGetListParams } from '~/interfaces/common';
+import type { ErrorServer, GetListResponse, RequestGetListParams } from '~/interfaces/common';
 
 export class AddressModule {
   createAddress(body: CreateBodyAddress) {
@@ -15,7 +15,7 @@ export class AddressModule {
   async getAddresses(queryParams?: RequestGetListParams) {
     return await useCustomFetch.get<GetListResponse<IAddress>>(
       RESOURCES.USER + RESOURCES.ADDRESSES,
-      queryParams || null
+      queryParams || undefined
     );
   }
 

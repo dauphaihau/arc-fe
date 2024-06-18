@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import type { FormSubmitEvent } from '#ui/types';
 import type { IAddress, CreateBodyAddress } from '~/interfaces/address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
@@ -9,9 +8,9 @@ import { toastCustom } from '~/config/toast';
 const props = defineProps<{ dataEdit?: IAddress | null }>();
 
 const emit = defineEmits<{
-  (e: 'onCreatedAddress', value: IAddress): void,
-  (e: 'onUpdatedAddress', value: IAddress): void,
-  (e: 'onCancelDialog'): void,
+  onCreatedAddress: [value: IAddress]
+  onUpdatedAddress: [value: IAddress]
+  onCancelDialog: []
 }>();
 
 const { $api } = useNuxtApp();
@@ -99,22 +98,25 @@ watch(isOpenDialog, async () => {
     }
   }
 });
-
 </script>
 
 <template>
   <div>
-    <UButton color="primary" variant="solid" @click="isOpenDialog = true">
+    <UButton
+      color="primary"
+      variant="solid"
+      @click="isOpenDialog = true"
+    >
       Add a new address
     </UButton>
 
     <UModal
       v-model="isOpenDialog"
       :ui="{
-        inner: '-top-10'
+        inner: '-top-10',
       }"
     >
-      <div class="p-12 space-y-5">
+      <div class="space-y-5 p-12">
         <div class="space-y-1.5">
           <h1 class="text-3xl font-bold">
             {{ props.dataEdit ? 'Update': 'Add new' }}
@@ -127,38 +129,62 @@ watch(isOpenDialog, async () => {
             ref="formRef"
             :validate-on="['submit']"
             :state="stateSubmit"
-            :schema="addressSchema.omit({ id: true, user: true})"
+            :schema="addressSchema.omit({ id: true, user: true })"
             @submit="onSubmit"
           >
-            <UFormGroup required label="Full Name" name="full_name" class="mb-4">
+            <UFormGroup
+              required
+              label="Full Name"
+              name="full_name"
+              class="mb-4"
+            >
               <UInput
                 v-model="stateSubmit.full_name"
                 :maxlength="ADDRESS_CONFIG.MAX_CHAR_FULL_NAME"
                 size="xl"
               />
             </UFormGroup>
-            <UFormGroup required label="Street Address" name="address1" class="mb-4">
+            <UFormGroup
+              required
+              label="Street Address"
+              name="address1"
+              class="mb-4"
+            >
               <UInput
                 v-model="stateSubmit.address1"
                 :maxlength="ADDRESS_CONFIG.MAX_CHAR_ADDRESS"
                 size="xl"
               />
             </UFormGroup>
-            <UFormGroup label="Apt / Suite / Other" name="address2" class="mb-4">
+            <UFormGroup
+              label="Apt / Suite / Other"
+              name="address2"
+              class="mb-4"
+            >
               <UInput
                 v-model="stateSubmit.address2"
                 :maxlength="ADDRESS_CONFIG.MAX_CHAR_ADDRESS"
                 size="xl"
               />
             </UFormGroup>
-            <UFormGroup required label="City" name="city" class="mb-4">
+            <UFormGroup
+              required
+              label="City"
+              name="city"
+              class="mb-4"
+            >
               <UInput
                 v-model="stateSubmit.city"
                 :maxlength="ADDRESS_CONFIG.MAX_CHAR_CITY"
                 size="xl"
               />
             </UFormGroup>
-            <UFormGroup required label="Country" name="country" class="mb-4">
+            <UFormGroup
+              required
+              label="Country"
+              name="country"
+              class="mb-4"
+            >
               <USelectMenu
                 v-model="stateSubmit.country"
                 :loading="stateLocal.loadingGetCountries"
@@ -167,8 +193,13 @@ watch(isOpenDialog, async () => {
               />
             </UFormGroup>
 
-            <div class="flex gap-3 mb-4">
-              <UFormGroup required label="State/Province" name="state" class="w-1/2">
+            <div class="mb-4 flex gap-3">
+              <UFormGroup
+                required
+                label="State/Province"
+                name="state"
+                class="w-1/2"
+              >
                 <USelectMenu
                   v-model="stateSubmit.state"
                   :loading="stateLocal.loadingStateOptions"
@@ -178,7 +209,12 @@ watch(isOpenDialog, async () => {
                   trailing
                 />
               </UFormGroup>
-              <UFormGroup required label="Zip/Postal code" name="zip" class="w-1/2">
+              <UFormGroup
+                required
+                label="Zip/Postal code"
+                name="zip"
+                class="w-1/2"
+              >
                 <UInput
                   v-model="stateSubmit.zip"
                   :maxlength="ADDRESS_CONFIG.MAX_CHAR_ZIP"
@@ -187,7 +223,12 @@ watch(isOpenDialog, async () => {
                 />
               </UFormGroup>
             </div>
-            <UFormGroup required label="Phone" name="phone" class="mb-4">
+            <UFormGroup
+              required
+              label="Phone"
+              name="phone"
+              class="mb-4"
+            >
               <UInput
                 v-model="stateSubmit.phone"
                 size="xl"
@@ -202,7 +243,7 @@ watch(isOpenDialog, async () => {
               label="Set as default"
               name="is_primary"
             />
-            <div class="mt-6 flex gap-3 justify-end">
+            <div class="mt-6 flex justify-end gap-3">
               <UButton
                 size="xl"
                 color="gray"
@@ -210,7 +251,10 @@ watch(isOpenDialog, async () => {
               >
                 Cancel
               </UButton>
-              <UButton size="xl" type="submit">
+              <UButton
+                size="xl"
+                type="submit"
+              >
                 Save
               </UButton>
             </div>

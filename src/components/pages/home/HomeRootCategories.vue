@@ -6,11 +6,7 @@ import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
 import { ROUTES } from '~/config/enums/routes';
 
 const config = useRuntimeConfig();
-
-const categories = computed(() => {
-  const rootCategories = parseJSON<ICategory[]>(sessionStorage[SESSION_STORAGE_KEYS.ROOT_CATEGORIES]);
-  return rootCategories || [];
-});
+const store = useStore();
 
 const redirectByCategory = (category: ICategory) => {
   const to = `${ROUTES.C}/${category.name.replaceAll(' ', '-').toLowerCase()}`;
@@ -31,26 +27,28 @@ const redirectByCategory = (category: ICategory) => {
   );
   navigateTo(to);
 };
-
 </script>
 
 <template>
-  <div v-if="categories.length > 0">
-    <h3 class="text-3xl font-normal mb-6 text-center">
+  <div v-if="store.rootCategories.length > 0">
+    <h3 class="mb-6 text-center text-3xl font-normal">
       Shop by category
     </h3>
     <div class="flex justify-center gap-8">
-      <div v-for="(cg, index) of categories" :key="index">
+      <div
+        v-for="(cg, index) of store.rootCategories"
+        :key="index"
+      >
         <div @click="() => redirectByCategory(cg)">
           <NuxtImg
             v-if="cg?.relative_url_image"
             :src="config.public.awsHostBucket + '/' + cg.relative_url_image"
             width="140"
             height="210"
-            class="rounded cursor-pointer"
+            class="cursor-pointer rounded"
           />
           <div
-            class="capitalize text-[13px] font-semibold cursor-pointer text-center mt-2"
+            class="mt-2 cursor-pointer text-center text-[13px] font-semibold capitalize"
           >
             {{ cg.name }}
           </div>

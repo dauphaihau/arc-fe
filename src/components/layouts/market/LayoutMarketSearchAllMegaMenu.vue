@@ -49,13 +49,12 @@ function highlightText(text: string) {
   const re = new RegExp(state.search, 'gi');
   return text.replace(re, match => `<span class="font-bold">${match}</span>`);
 }
-
 </script>
 
 <template>
   <transition name="slide-down">
     <div v-if="props.show">
-      <div class="mx-auto pb-12 ml-1.5">
+      <div class="mx-auto ml-1.5 pb-12">
         <UInput
           v-model="state.search"
           icon="i-heroicons-magnifying-glass-20-solid"
@@ -68,24 +67,33 @@ function highlightText(text: string) {
           :ui="{
             size: {
               xl: 'text-2xl',
-            }
+            },
           }"
           @keypress.enter="redirectSearch"
         />
 
         <transition name="slide-down">
-          <div v-if="state.products.length > 0" class="mt-8">
-            <div class="text-gray-500 text-[12px] mb-2  ml-4">
+          <div
+            v-if="state.products.length > 0"
+            class="mt-8"
+          >
+            <div class="mb-2 ml-4 text-[12px]  text-gray-500">
               Suggested Searches
             </div>
 
-            <div class="flex flex-col gap-1 ml-2">
-              <div v-for="prod of state.products" :key="prod.id">
+            <div class="ml-2 flex flex-col gap-1">
+              <div
+                v-for="prod of state.products"
+                :key="prod.id"
+              >
                 <div
                   class="product"
                   @click="redirectSearch"
                 >
-                  <Icon name="uil:search" class="w-3" />
+                  <Icon
+                    name="uil:search"
+                    class="w-3"
+                  />
                   <!-- eslint-disable-next-line vue/no-v-html -->
                   <div v-html="highlightText(prod.title)" />
                 </div>
@@ -99,7 +107,6 @@ function highlightText(text: string) {
 </template>
 
 <style scoped>
-
 .slide-down-enter-active,
 .slide-down-leave-active {
   transition: max-height 0.3s ease-in-out;
@@ -121,5 +128,4 @@ function highlightText(text: string) {
   @apply flex items-center gap-1 text-gray-500 font-normal text-[12px]
   hover:bg-gray-100 px-2 rounded cursor-pointer
 }
-
 </style>

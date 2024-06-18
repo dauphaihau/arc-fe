@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import type { ComputedRef } from 'vue';
+import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import { updateProductSchema } from '~/schemas/product.schema';
 import {
   PRODUCT_VARIANT_TYPES, PRODUCT_CONFIG,
@@ -17,26 +17,29 @@ import { toastCustom } from '~/config/toast';
 
 type UpdateProductBodyOverride = Override<UpdateProductBody, {
   who_made: ComputedRef<UpdateProductBody['who_made']>
-}>
+}>;
 
 export type IOnChangeUpdateVariants = Partial<Pick<UpdateProductBody,
-    'update_variants' | 'variant_inventories' |
-    'new_single_variants' | 'variant_type' | 'new_combine_variants'
->> & (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null
+  'update_variants' | 'variant_inventories' |
+  'new_single_variants' | 'variant_type' | 'new_combine_variants'
+>> & (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null;
 
 export type IOnChangeUpdateImages = {
-  fileImages: File[],
+  fileImages: File[]
   idsImagesForDelete: IProductImage['id'][]
-}
+};
 
 const { $api } = useNuxtApp();
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 
-const { data, error } = await $api.shop.getDetailProduct(route.params.id as IProduct['id']);
+const {
+  data: dataDetailProduct,
+  error: errorGetDetailProduct,
+} = await $api.shop.getDetailProduct(route.params.id as IProduct['id']);
 
-if (error.value || !data.value || !data.value.product) {
+if (errorGetDetailProduct.value || !dataDetailProduct.value || !dataDetailProduct.value.product) {
   throw createError({
     statusCode: 404,
     statusMessage: 'Page Not Found',
@@ -46,13 +49,25 @@ if (error.value || !data.value || !data.value.product) {
 
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
+const product = computed(() => {
+  if (dataDetailProduct.value) {
+    if (dataDetailProduct.value.product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+      return omitFieldsObject(dataDetailProduct.value.product, ['category', 'attributes', 'inventory']);
+    }
+    else {
+      return omitFieldsObject(dataDetailProduct.value.product, ['category', 'attributes', 'variants']);
+    }
+  }
+  return {};
+});
+
 const state = reactive<UpdateProductBodyOverride>({
-  ...omitKeysObject(data.value.product, ['category', 'inventory', 'attributes', 'variants']),
+  ...product.value,
   who_made: computed(() => selectedWhoMade.value.id),
   images: [],
 });
 
-const detailProduct = data.value.product;
+const detailProduct = dataDetailProduct.value.product;
 
 onMounted(() => {
   const option = productWhoMadeOpts.find(opt => opt.id === detailProduct.who_made);
@@ -104,7 +119,7 @@ const onChangeVariantType = () => {
   state.variant_type = isVariantProduct.value ? PRODUCT_VARIANT_TYPES.SINGLE : PRODUCT_VARIANT_TYPES.NONE;
 };
 
-const validate = (state: UpdateProductBody): FormError[] => {
+const validate = (values: UpdateProductBody): FormError[] => {
   let errors: FormError[] = [];
   countValidate.value++;
 
@@ -119,7 +134,7 @@ const validate = (state: UpdateProductBody): FormError[] => {
       variant_sub_group_name: true,
     })
     .optional()
-    .safeParse(state);
+    .safeParse(values);
 
   if (!result.success) {
     errors = result.error.issues.map((detail) => {
@@ -142,7 +157,12 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
   const exceptKeys = ['id', 'variant_type', 'attributes', 'tags'];
 
   Object.keys(eventDataTemp).forEach((key) => {
-    if (data.value && eventDataTemp[key] === data.value.product[key] && !exceptKeys.includes(key)) {
+    if (
+      dataDetailProduct.value &&
+      eventDataTemp[key] === dataDetailProduct.value.product[key] &&
+      !exceptKeys.includes(key)
+    ) {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete eventDataTemp[key];
     }
   });
@@ -250,16 +270,15 @@ watchDebounced(
       }).safeParse(state);
 
     const isEmptyImages = idsImagesForDelete.value.length === detailProduct.images.length &&
-        fileImages.value.length === 0;
+      fileImages.value.length === 0;
 
     disabledButtonSubmit.value = countValidateInputs.value === 1 ||
-        !result.success ||
-        isEmptyImages ||
-        countValidateVariantsInputs.value === 1;
+    !result.success ||
+    isEmptyImages ||
+    countValidateVariantsInputs.value === 1;
   },
   { debounce: 500, maxWait: 1000, deep: true }
 );
-
 </script>
 
 <template>
@@ -291,13 +310,17 @@ watchDebounced(
           description="Include keywords that buyers would use to search for your product."
           required
         >
-          <UInput v-model="state.title" :disabled="loadingSubmit" size="lg" />
+          <UInput
+            v-model="state.title"
+            :disabled="loadingSubmit"
+            size="lg"
+          />
         </UFormGroup>
         <UFormGroup
           label="Description"
           name="description"
-          :help="state.description &&
-            `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
+          :help="state.description
+            && `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
           "
           required
         >
@@ -323,7 +346,11 @@ watchDebounced(
         to expect.
       </template>
       <template #content>
-        <UFormGroup label="Type" name="is_digital" class="mb-4">
+        <UFormGroup
+          label="Type"
+          name="is_digital"
+          class="mb-4"
+        >
           <div class="flex gap-16">
             <URadio
               v-for="options of isDigitalOpts"
@@ -387,15 +414,23 @@ watchDebounced(
           </UButton>
 
           <UpdateProductVariantInput
-            v-if="isVariantProduct && data"
-            :product="data.product"
+            v-if="isVariantProduct && dataDetailProduct"
+            :product="dataDetailProduct.product"
             :count-validate="countValidate"
             @on-change="onChangeVariants"
             @is-variants-updated="(count) => countValidateVariantsInputs = count"
           />
 
-          <div v-else class="max-w-[40%]">
-            <UFormGroup class="mb-4" label="Price" name="price" required>
+          <div
+            v-else
+            class="max-w-[40%]"
+          >
+            <UFormGroup
+              class="mb-4"
+              label="Price"
+              name="price"
+              required
+            >
               <UInput
                 v-model.number="state.price"
                 :disabled="loadingSubmit"
@@ -405,11 +440,16 @@ watchDebounced(
                 @keypress="keyPressIsNumber($event)"
               >
                 <template #trailing>
-                  <span class="text-gray-500 text-xs">USD</span>
+                  <span class="text-xs text-gray-500">USD</span>
                 </template>
               </UInput>
             </UFormGroup>
-            <UFormGroup class="mb-4" label="Stock" name="stock" required>
+            <UFormGroup
+              class="mb-4"
+              label="Stock"
+              name="stock"
+              required
+            >
               <UInput
                 v-model.number="state.stock"
                 :disabled="loadingSubmit"
@@ -437,7 +477,11 @@ watchDebounced(
       </template>
     </WrapperFormGroupCard>
 
-    <button ref="btnSubmit" type="submit" class="hidden" />
+    <button
+      ref="btnSubmit"
+      type="submit"
+      class="hidden"
+    />
   </UForm>
 
   <div class="fixed-actions-form">

@@ -5,8 +5,8 @@ import { ORDER_CONFIG } from '~/config/enums/order';
 const emit = defineEmits<{ (e: 'onProductsEmpty'): void }>();
 
 const { data } = defineProps<{
-  data: IItemCartPopulated,
-  disabledDelete?: boolean,
+  data: IItemCartPopulated
+  disabledDelete?: boolean
 }>();
 
 const cartStore = useCartStore();
@@ -56,8 +56,6 @@ watch(() => state.showNoteInput, () => {
     state.note = '';
   }
 });
-
-
 </script>
 
 <template>
@@ -67,12 +65,15 @@ watch(() => state.showNoteInput, () => {
     class="mb-4"
   >
     <div class="flex flex-col">
-      <h3 class="text-lg font-medium mb-3">
+      <h3 class="mb-3 text-lg font-medium">
         {{ data.shop?.shop_name }}
       </h3>
 
       <div>
-        <div v-for="(product, index) of products" :key="product.id">
+        <div
+          v-for="(product, index) of products"
+          :key="product.id"
+        >
           <CartProduct
             :data="product"
             :shop-id="data.shop?.id"
@@ -83,7 +84,7 @@ watch(() => state.showNoteInput, () => {
 
       <UDivider />
 
-      <div class="flex flex-col gap-4 w-fit mt-6">
+      <div class="mt-6 flex w-fit flex-col gap-4">
         <CartAddCoupons :shop-id="data.shop?.id" />
         <div>
           <UButton

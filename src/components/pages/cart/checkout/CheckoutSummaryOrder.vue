@@ -6,13 +6,12 @@ const { data } = defineProps<{
 }>();
 
 const cartStore = useCartStore();
-
 </script>
 
 <template>
   <UCard>
     <div class="space-y-7">
-      <legend class="text-gray-700 dark:text-gray-200 mb-1 text-xl font-bold">
+      <legend class="mb-1 text-xl font-bold text-gray-700 dark:text-gray-200">
         Order Summary
       </legend>
       <div class="flex flex-col">
@@ -42,11 +41,14 @@ const cartStore = useCartStore();
             </div>
             <div
               v-if="data.shippingFee === 0 && cartStore.summaryOrder?.totalProducts"
-              class="text-right text-green-600 font-normal"
+              class="text-right font-normal text-green-600"
             >
               FREE
             </div>
-            <div v-else class="text-right">
+            <div
+              v-else
+              class="text-right"
+            >
               {{ convertCurrency(data.shippingFee) }}
             </div>
           </div>
@@ -66,7 +68,6 @@ const cartStore = useCartStore();
 </template>
 
 <style scoped>
-
 .title {
   @apply text-lg font-normal text-customGray-900
 }
@@ -74,5 +75,4 @@ const cartStore = useCartStore();
 .price {
   @apply text-lg font-medium
 }
-
 </style>

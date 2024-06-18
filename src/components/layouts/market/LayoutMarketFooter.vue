@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 const primaryLinks = [
   {
     title: 'Shop',
@@ -125,27 +124,32 @@ const secondaryLinks = [
     link: '/',
   },
 ];
-
 </script>
 
 <template>
   <footer class="footer">
     <div class="max-w-home-layout mx-auto">
       <div class="grid grid-cols-5 gap-32 py-8">
-        <div class="text-custom-Gray-950 font-semibold text-xl">
+        <div class="text-custom-Gray-950 text-xl font-semibold">
           Arc
         </div>
-        <div v-for="(item, idx) of primaryLinks" :key="idx">
-          <div class="text-sm text-custom-Gray-950 font-semibold mb-3">
+        <div
+          v-for="(item, idx) of primaryLinks"
+          :key="idx"
+        >
+          <div class="text-custom-Gray-950 mb-3 text-sm font-semibold">
             {{ item.title }}
           </div>
 
           <div class="space-y-3">
-            <div v-for="(linkItem, idxLink) of item.links" :key="idxLink">
+            <div
+              v-for="(linkItem, idxLink) of item.links"
+              :key="idxLink"
+            >
               <ULink
                 :to="linkItem.link"
                 class="text-sm text-customGray-950
-                 hover:underline hover:opacity-90 transition-all duration-200"
+                 transition-all duration-200 hover:underline hover:opacity-90"
               >
                 {{ linkItem.title }}
               </ULink>
@@ -157,14 +161,17 @@ const secondaryLinks = [
       <div class="flex items-center justify-between py-4">
         <UpdateUserPreferencesDialog />
         <div class="flex items-center gap-4">
-          <div class="text-xs pt-1">
+          <div class="pt-1 text-xs">
             © {{ new Date().getFullYear() }} Arc Inc.
           </div>
-          <div v-for="item in secondaryLinks" :key="item.title">
+          <div
+            v-for="item in secondaryLinks"
+            :key="item.title"
+          >
             <ULink
               :to="item.link"
               class="text-xs text-customGray-950
-              hover:underline hover:opacity-90 transition-all duration-200"
+              transition-all duration-200 hover:underline hover:opacity-90"
             >
               {{ item.title }}
             </ULink>

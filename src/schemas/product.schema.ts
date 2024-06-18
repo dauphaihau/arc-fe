@@ -203,7 +203,6 @@ export const productSchema = z.intersection(conditionVariantTypeSchema, baseProd
 
 export const productPopulateSchema = z.intersection(conditionVariantTypePopulatedSchema, baseProductPopulatedSchema);
 
-
 // ------ Request api
 
 export const productStateUserCanModify = z.union([

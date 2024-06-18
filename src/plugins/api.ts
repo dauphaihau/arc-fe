@@ -8,12 +8,12 @@ import { CategoryModule } from '~/repository/modules/category';
 
 export default defineNuxtPlugin(() => {
   const modules = {
+    shop: new ShopModule(),
     cart: cartModule,
     address: new AddressModule(),
     order: new OrderModule(),
-    product: productModule,
+    product: new productModule(),
     category: new CategoryModule(),
-    shop: new ShopModule(),
     upload: new UploadModule(),
   };
 

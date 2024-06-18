@@ -24,8 +24,8 @@ const state = reactive({
 onMounted(() => {
   const additionInfoItem = cartStore.mapAdditionInfoItems.get(shopId);
   if (additionInfoItem &&
-      additionInfoItem?.coupon_codes &&
-      additionInfoItem.coupon_codes.length > 0) {
+    additionInfoItem?.coupon_codes &&
+    additionInfoItem.coupon_codes.length > 0) {
     state.showCodeInput = true;
     state.codes = additionInfoItem.coupon_codes;
   }
@@ -142,7 +142,6 @@ watch(() => state.showCodeInput, () => {
     }
   }
 });
-
 </script>
 
 <template>
@@ -156,18 +155,24 @@ watch(() => state.showCodeInput, () => {
     Apply shop coupon codes
   </UButton>
 
-  <div v-if="state.showCodeInput" class="flex gap-3 mb-4">
+  <div
+    v-if="state.showCodeInput"
+    class="mb-4 flex gap-3"
+  >
     <UFormGroup
       required
       name="code"
       :error="state.errorMsg"
     >
-      <UButtonGroup size="lg" orientation="horizontal">
+      <UButtonGroup
+        size="lg"
+        orientation="horizontal"
+      >
         <UInput
           v-model="state.code"
           :disabled="state.codes.length === COUPON_CONFIG.MAX_USE_PER_ORDER"
           :ui="{
-            base: 'uppercase'
+            base: 'uppercase',
           }"
         />
         <UButton
@@ -181,14 +186,23 @@ watch(() => state.showCodeInput, () => {
       </UButtonGroup>
     </UFormGroup>
 
-    <div v-if="state.codes && state.codes.length > 0" class="flex gap-3">
-      <div v-for="(code, index) of state.codes" :key="index">
+    <div
+      v-if="state.codes && state.codes.length > 0"
+      class="flex gap-3"
+    >
+      <div
+        v-for="(code, index) of state.codes"
+        :key="index"
+      >
         <div class="relative">
-          <UButton color="gray" size="lg">
+          <UButton
+            color="gray"
+            size="lg"
+          >
             {{ code }}
           </UButton>
           <UButton
-            class="absolute -top-3 -right-2 z-[1]"
+            class="absolute -right-2 -top-3 z-[1]"
             size="2xs"
             color="gray"
             variant="solid"

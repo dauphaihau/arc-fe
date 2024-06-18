@@ -17,8 +17,11 @@ const ratesDefault = {
   VND: 24803,
 };
 
+export default function (amount: number | unknown) {
+  if (typeof amount !== 'number') {
+    return amount;
+  }
 
-export default function (amount: number | any) {
   const store = useStore();
 
   const rates = parseJSON<IExchangeRate>(
@@ -29,9 +32,6 @@ export default function (amount: number | any) {
     localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
   )?.currency || store.user_preferences?.currency || MARKET_CONFIG.BASE_CURRENCY;
 
-  if (typeof amount !== 'number') {
-    return amount;
-  }
   if (currency === MARKET_CONFIG.BASE_CURRENCY) {
     return formatCurrency(amount);
   }

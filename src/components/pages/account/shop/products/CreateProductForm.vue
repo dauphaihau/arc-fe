@@ -15,7 +15,7 @@ import type {
 import { toastCustom } from '~/config/toast';
 
 export type IOnChangeCreateVariant = Pick<CreateProductBody, 'variant_type' | 'new_variants'> &
-    (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null
+  (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null;
 
 const { $api } = useNuxtApp();
 const router = useRouter();
@@ -53,7 +53,7 @@ const onChangeImages = (values: File[]) => {
   fileImages.value = values;
 };
 
-const onChangeVariants = (values: IOnChangeCreateVariant): any => {
+const onChangeVariants = (values: IOnChangeCreateVariant) => {
   if (!values) {
     return;
   }
@@ -62,7 +62,7 @@ const onChangeVariants = (values: IOnChangeCreateVariant): any => {
   });
 };
 
-const validate = (state: CreateProductBody): FormError[] => {
+const validate = (values: CreateProductBody): FormError[] => {
   let errors: FormError[] = [];
   countValidate.value++;
 
@@ -73,7 +73,7 @@ const validate = (state: CreateProductBody): FormError[] => {
       price: isVariantProduct.value || undefined,
       stock: isVariantProduct.value || undefined,
       sku: isVariantProduct.value || undefined,
-    }).safeParse(state);
+    }).safeParse(values);
 
   if (!result.success) {
     errors = result.error.issues.map((detail) => {
@@ -88,20 +88,20 @@ const validate = (state: CreateProductBody): FormError[] => {
 };
 
 async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
-  const data = { ...event.data };
+  const dataSubmit = { ...event.data };
   if (isDraftProduct.value) {
-    data.state = PRODUCT_STATES.DRAFT;
+    dataSubmit.state = PRODUCT_STATES.DRAFT;
   }
-  if (isVariantProduct.value && data?.new_variants?.length === 0) {
+  if (isVariantProduct.value && dataSubmit?.new_variants?.length === 0) {
     return;
   }
   if (!fileImages.value || fileImages.value.length === 0) {
     return;
   }
-  if (data.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
-    delete data.price;
-    delete data.sku;
-    delete data.stock;
+  if (dataSubmit.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
+    delete dataSubmit.price;
+    delete dataSubmit.sku;
+    delete dataSubmit.stock;
   }
 
   loadingSubmit.value = true;
@@ -135,9 +135,9 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
   await Promise.all(promisesUploadImages);
 
   const { error } = await $api.shop.createProduct({
-    ...data,
+    ...dataSubmit,
     images: keys.map((key, index) => ({ relative_url: key, rank: index + 1 })),
-    is_digital: !!data.is_digital,
+    is_digital: !!dataSubmit.is_digital,
   });
   loadingSubmit.value = false;
   if (error.value) {
@@ -208,7 +208,6 @@ watch(() => [state.stock, state.price], () => {
     state.stock = 0;
   }
 });
-
 </script>
 
 <template>
@@ -237,13 +236,17 @@ watch(() => [state.stock, state.price], () => {
           description="Include keywords that buyers would use to search for your product."
           required
         >
-          <UInput v-model="state.title" :disabled="loadingSubmit" size="lg" />
+          <UInput
+            v-model="state.title"
+            :disabled="loadingSubmit"
+            size="lg"
+          />
         </UFormGroup>
         <UFormGroup
           label="Description"
           name="description"
-          :help="state.description &&
-            `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
+          :help="state.description
+            && `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
           "
           required
         >
@@ -270,7 +273,11 @@ watch(() => [state.stock, state.price], () => {
       </template>
       <template #content>
         <div>
-          <UFormGroup label="Type" name="is_digital" class="mb-4">
+          <UFormGroup
+            label="Type"
+            name="is_digital"
+            class="mb-4"
+          >
             <div class="flex gap-16">
               <URadio
                 v-for="type of isDigitalOpts"
@@ -296,37 +303,37 @@ watch(() => [state.stock, state.price], () => {
                 :options="productWhoMadeOpts"
               />
             </UFormGroup>
-            <!--          <UFormGroup-->
-            <!--            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE"-->
-            <!--            class="mb-4"-->
-            <!--            label="Brand"-->
-            <!--            name="attributes.brand"-->
-            <!--          >-->
+            <!--          <UFormGroup -->
+            <!--            v-if="selectedWhoMade.id === PRODUCT_WHO_MADE.SOMEONE_ELSE" -->
+            <!--            class="mb-4" -->
+            <!--            label="Brand" -->
+            <!--            name="attributes.brand" -->
+            <!--          > -->
             <!--            <UInput v-model="state.attributes.brand"
-            :disabled="loadingSubmit" size="lg" />-->
-            <!--          </UFormGroup>-->
-            <!--            <UFormGroup-->
-            <!--              label="What is it?"-->
-            <!--              name="description"-->
-            <!--              class="mb-4"-->
-            <!--            >-->
-            <!--              <USelectMenu-->
-            <!--                v-model="selected"-->
-            <!--                size="lg"-->
-            <!--                :options="productWhoMadeOpts"-->
-            <!--              />-->
-            <!--            </UFormGroup>-->
-            <!--            <UFormGroup-->
-            <!--              label="When did you make it?"-->
-            <!--              name="description"-->
-            <!--              class="mb-4"-->
-            <!--            >-->
-            <!--              <USelectMenu-->
-            <!--                v-model="selected"-->
-            <!--                size="lg"-->
-            <!--                :options="productWhoMadeOpts"-->
-            <!--              />-->
-            <!--            </UFormGroup>-->
+            :disabled="loadingSubmit" size="lg" /> -->
+            <!--          </UFormGroup> -->
+            <!--            <UFormGroup -->
+            <!--              label="What is it?" -->
+            <!--              name="description" -->
+            <!--              class="mb-4" -->
+            <!--            > -->
+            <!--              <USelectMenu -->
+            <!--                v-model="selected" -->
+            <!--                size="lg" -->
+            <!--                :options="productWhoMadeOpts" -->
+            <!--              /> -->
+            <!--            </UFormGroup> -->
+            <!--            <UFormGroup -->
+            <!--              label="When did you make it?" -->
+            <!--              name="description" -->
+            <!--              class="mb-4" -->
+            <!--            > -->
+            <!--              <USelectMenu -->
+            <!--                v-model="selected" -->
+            <!--                size="lg" -->
+            <!--                :options="productWhoMadeOpts" -->
+            <!--              /> -->
+            <!--            </UFormGroup> -->
           </div>
 
           <UpdateCreateProductSearchCategoryInput
@@ -369,8 +376,16 @@ watch(() => [state.stock, state.price], () => {
             @on-change="onChangeVariants"
           />
 
-          <div v-else class="max-w-[40%]">
-            <UFormGroup class="mb-4" label="Price" name="price" required>
+          <div
+            v-else
+            class="max-w-[40%]"
+          >
+            <UFormGroup
+              class="mb-4"
+              label="Price"
+              name="price"
+              required
+            >
               <UInput
                 v-model.number="state.price"
                 :disabled="loadingSubmit"
@@ -380,11 +395,16 @@ watch(() => [state.stock, state.price], () => {
                 @keypress="keyPressIsNumber($event)"
               >
                 <template #trailing>
-                  <span class="text-gray-500 text-xs">USD</span>
+                  <span class="text-xs text-gray-500">USD</span>
                 </template>
               </UInput>
             </UFormGroup>
-            <UFormGroup class="mb-4" label="Stock" name="stock" required>
+            <UFormGroup
+              class="mb-4"
+              label="Stock"
+              name="stock"
+              required
+            >
               <UInput
                 v-model.number="state.stock"
                 :disabled="loadingSubmit"
@@ -400,14 +420,23 @@ watch(() => [state.stock, state.price], () => {
               label="SKU"
               name="sku"
             >
-              <UInput v-model="state.sku" :disabled="loadingSubmit" size="lg" class="w-1/2" />
+              <UInput
+                v-model="state.sku"
+                :disabled="loadingSubmit"
+                size="lg"
+                class="w-1/2"
+              />
             </UFormGroup>
           </div>
         </div>
       </template>
     </WrapperFormGroupCard>
 
-    <button ref="btnSubmitRef" type="submit" class="hidden" />
+    <button
+      ref="btnSubmitRef"
+      type="submit"
+      class="hidden"
+    />
   </UForm>
 
   <div class="fixed-actions-form">

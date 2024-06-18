@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import type { IAddress } from '~/interfaces/address';
 
 definePageMeta({ layout: 'market', middleware: ['auth'] });
@@ -42,7 +41,6 @@ const onUpdatedAddress = (value: IAddress) => {
     addresses.value = filtered;
   }
 };
-
 </script>
 
 <template>
@@ -59,11 +57,17 @@ const onUpdatedAddress = (value: IAddress) => {
     />
 
     <div v-if="pendingGetAddresses">
-      <Loading />
+      <LoadingSvg />
     </div>
-    <div v-else class="mt-8 grid grid-cols-3 gap-x-56 gap-y-16">
-      <div v-for="item in addresses" :key="item.id">
-        <div class="flex flex-col gap-3 min-w-56">
+    <div
+      v-else
+      class="mt-8 grid grid-cols-3 gap-x-56 gap-y-16"
+    >
+      <div
+        v-for="item in addresses"
+        :key="item.id"
+      >
+        <div class="flex min-w-56 flex-col gap-3">
           <div class="">
             {{ item.full_name }}
           </div>
@@ -77,7 +81,7 @@ const onUpdatedAddress = (value: IAddress) => {
           <div class="">
             {{ item.country }}
           </div>
-          <div class="flex items-center gap-3 mt-4">
+          <div class="mt-4 flex items-center gap-3">
             <UButton
               :padded="false"
               variant="link"

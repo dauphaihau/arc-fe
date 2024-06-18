@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import type { IProduct } from '~/interfaces/product';
 
 const { images } = defineProps<{
@@ -27,22 +26,24 @@ const onSelectNextImg = () => {
   }
   selectedImg.value++;
 };
-
 </script>
 
 <template>
   <div class="flex gap-6">
-    <div class="flex flex-col gap-3 w-fit">
-      <div v-for="(image, index) of images" :key="image.id">
+    <div class="flex w-fit flex-col gap-3">
+      <div
+        v-for="(image, index) of images"
+        :key="image.id"
+      >
         <NuxtImg
           preload
           :src="config.public.awsHostBucket + '/' + image.relative_url"
           width="100"
           height="100"
           :class="[
-            'rounded cursor-pointer',
+            'cursor-pointer rounded',
             {
-              'rounded ring ring-primary': selectedImg === index,
+              'ring-primary rounded ring': selectedImg === index,
             }]"
           @click="() => selectedImg = index"
         />
@@ -60,23 +61,27 @@ const onSelectNextImg = () => {
         class="arrow absolute bottom-3 right-16"
         @click="onSelectPrevImg"
       >
-        <Icon name="i-material-symbols:arrow-back-ios-new-rounded" color="black" />
+        <Icon
+          name="i-material-symbols:arrow-back-ios-new-rounded"
+          color="black"
+        />
       </div>
       <div
         class="arrow absolute bottom-3 right-3"
         @click="onSelectNextImg"
       >
-        <Icon name="i-material-symbols:arrow-forward-ios" color="black" />
+        <Icon
+          name="i-material-symbols:arrow-forward-ios"
+          color="black"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-
 .arrow {
   @apply cursor-pointer bg-white rounded-full p-4
   h-10 w-10 grid place-content-center;
 }
-
 </style>

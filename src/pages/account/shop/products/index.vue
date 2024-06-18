@@ -1,8 +1,9 @@
 <script lang="ts" setup>
-
+import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import type { IProduct } from '~/interfaces/product';
+import type { ElementType } from '~/interfaces/utils';
 
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
@@ -49,20 +50,23 @@ const columns = [
 ];
 
 const rows = computed(() => {
-  return data.value?.results.map(product => ({
-    id: product.id,
-    title: product.title,
-    image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
-    variants: product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ? product.variants : null,
-    inventory: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory : null,
-    variant_type: product.variant_type,
-    price: { class: 'text-center' },
-    stock: { class: 'text-center' },
-    actions: { class: 'text-right' },
-  }));
+  if (data.value?.results && data.value.results.length > 0) {
+    return data.value.results.map(product => ({
+      id: product.id,
+      title: product.title,
+      image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
+      variants: product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ? product.variants : null,
+      inventory: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory : null,
+      variant_type: product.variant_type,
+      price: { class: 'text-center' },
+      stock: { class: 'text-center' },
+      actions: { class: 'text-right' },
+    }));
+  }
+  return [];
 });
 
-const itemsDropdown = (row: { id: string }) => [
+const itemsDropdownWithRow = (row: ElementType<typeof rows.value>): DropdownItem[][] => [
   [
     // {
     //   label: 'Edit',
@@ -111,7 +115,6 @@ async function removeProduct(id: IProduct['id']) {
     refresh();
   }
 }
-
 </script>
 
 <template>
@@ -128,34 +131,34 @@ async function removeProduct(id: IProduct['id']) {
       </UButton>
     </template>
     <template #content>
-      <!--    <div class="w-fit">-->
-      <!--      <UPopover>-->
-      <!--    <UButton-->
-      <!--      color="white"-->
-      <!--      label="Status"-->
-      <!--      trailing-icon="i-heroicons-chevron-down-20-solid"-->
-      <!--    />-->
+      <!--    <div class="w-fit"> -->
+      <!--      <UPopover> -->
+      <!--    <UButton -->
+      <!--      color="white" -->
+      <!--      label="Status" -->
+      <!--      trailing-icon="i-heroicons-chevron-down-20-solid" -->
+      <!--    /> -->
 
-      <!--        <template #panel>-->
-      <!--          <div class="p-4">-->
-      <!--            <Placeholder class="h-20 w-48"/>-->
-      <!--            <h3 class="font-semibold mb-3">-->
-      <!--              Filter by status-->
-      <!--            </h3>-->
-      <!--            <div v-for="status of productStates">-->
-      <!--              <UCheckbox-->
-      <!--                  :id="status"-->
-      <!--                  v-model="selectedCheckbox"-->
-      <!--                  name="status"-->
-      <!--                  :label="status"-->
-      <!--                  :value="status"-->
-      <!--                  class="mb-2"-->
-      <!--              />-->
-      <!--            </div>-->
-      <!--          </div>-->
-      <!--        </template>-->
-      <!--      </UPopover>-->
-      <!--    </div>-->
+      <!--        <template #panel> -->
+      <!--          <div class="p-4"> -->
+      <!--            <Placeholder class="h-20 w-48"/> -->
+      <!--            <h3 class="font-semibold mb-3"> -->
+      <!--              Filter by status -->
+      <!--            </h3> -->
+      <!--            <div v-for="status of productStates"> -->
+      <!--              <UCheckbox -->
+      <!--                  :id="status" -->
+      <!--                  v-model="selectedCheckbox" -->
+      <!--                  name="status" -->
+      <!--                  :label="status" -->
+      <!--                  :value="status" -->
+      <!--                  class="mb-2" -->
+      <!--              /> -->
+      <!--            </div> -->
+      <!--          </div> -->
+      <!--        </template> -->
+      <!--      </UPopover> -->
+      <!--    </div> -->
 
       <UTable
         v-model="selected"
@@ -167,7 +170,7 @@ async function removeProduct(id: IProduct['id']) {
         :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #title-data="{ row }">
-          <div class="flex gap-2 max-w-[200px]">
+          <div class="flex max-w-[200px] gap-2">
             <NuxtImg
               :src="row.image"
               width="50"
@@ -175,7 +178,7 @@ async function removeProduct(id: IProduct['id']) {
               class="rounded"
               preload
             />
-            <!--          <div class="inline-block max-w-[150px] break-words">-->
+            <!--          <div class="inline-block max-w-[150px] break-words"> -->
             <div class="truncate">
               {{ row.title }}
             </div>
@@ -187,13 +190,22 @@ async function removeProduct(id: IProduct['id']) {
             {{ row?.inventory?.sku || '-' }}
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-            <div v-for="vari of row.variants" :key="vari.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
               {{ vari?.inventory?.sku || '-' }}
             </div>
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div v-for="vari of row.variants" :key="vari.id">
-              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
+              <div
+                v-for="variOpt of vari.variant_options"
+                :key="variOpt.id"
+              >
                 {{ variOpt?.inventory?.sku || '-' }}
               </div>
             </div>
@@ -205,13 +217,22 @@ async function removeProduct(id: IProduct['id']) {
             None
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-            <div v-for="vari of row.variants" :key="vari.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
               {{ vari.variant_name }}
             </div>
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div v-for="variant of row.variants" :key="variant.id">
-              <div v-for="variantOption of variant.variant_options" :key="variantOption.id">
+            <div
+              v-for="variant of row.variants"
+              :key="variant.id"
+            >
+              <div
+                v-for="variantOption of variant.variant_options"
+                :key="variantOption.id"
+              >
                 {{ variant?.variant_name }}, {{ variantOption?.variant?.variant_name }}
               </div>
             </div>
@@ -222,13 +243,22 @@ async function removeProduct(id: IProduct['id']) {
             {{ formatCurrency(row?.inventory?.price) }}
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-            <div v-for="vari of row.variants" :key="vari.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
               {{ formatCurrency(vari?.inventory?.price) }}
             </div>
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div v-for="vari of row.variants" :key="vari.id">
-              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
+              <div
+                v-for="variOpt of vari.variant_options"
+                :key="variOpt.id"
+              >
                 {{ formatCurrency(variOpt.inventory.price) }}
               </div>
             </div>
@@ -239,13 +269,22 @@ async function removeProduct(id: IProduct['id']) {
             {{ row?.inventory?.stock ?? 0 }}
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
-            <div v-for="vari of row.variants" :key="vari.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
               {{ vari?.inventory?.stock }}
             </div>
           </div>
           <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div v-for="vari of row.variants" :key="vari.id">
-              <div v-for="variOpt of vari.variant_options" :key="variOpt.id">
+            <div
+              v-for="vari of row.variants"
+              :key="vari.id"
+            >
+              <div
+                v-for="variOpt of vari.variant_options"
+                :key="variOpt.id"
+              >
                 {{ variOpt.inventory.stock }}
               </div>
             </div>
@@ -261,10 +300,13 @@ async function removeProduct(id: IProduct['id']) {
                 variant="ghost"
                 class="p-1.5"
               >
-                <Icon name="i-material-symbols:ink-pen-rounded" class=" cursor-pointer" />
+                <Icon
+                  name="i-material-symbols:ink-pen-rounded"
+                  class=" cursor-pointer"
+                />
               </UButton>
             </UTooltip>
-            <UDropdown :items="itemsDropdown(row)">
+            <UDropdown :items="itemsDropdownWithRow(row)">
               <UButton
                 color="gray"
                 variant="ghost"

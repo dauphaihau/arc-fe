@@ -1,11 +1,11 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import type {
   IProduct,
   IProductInventory, IProductPopulated,
   IProductVariant
 } from './product';
 import type { Override } from './utils';
-import { cartSchema, itemCartSchema, productCartSchema } from '~/schemas/cart.schema';
+import type { cartSchema, itemCartSchema, productCartSchema } from '~/schemas/cart.schema';
 import type { ICoupon } from '~/interfaces/coupon';
 import type { IShop } from '~/interfaces/shop';
 import type { IAdditionInfoItem, ISummaryOrder } from '~/interfaces/order';
@@ -13,7 +13,7 @@ import type { IAddress } from '~/interfaces/address';
 
 export type ICart = z.infer<typeof cartSchema>;
 export type IItemCart = z.infer<typeof itemCartSchema>;
-export type IProductCart = z.infer<typeof productCartSchema>
+export type IProductCart = z.infer<typeof productCartSchema>;
 
 export type IAddProductCart = Pick<IProductCart, 'quantity'> & {
   inventory: IProductInventory['id']
@@ -27,30 +27,30 @@ export type IUpdateProductCart = Partial<Pick<IProductCart, 'quantity' | 'is_sel
 };
 
 export type IUpdateCouponsItem = {
-  shop: IShop['id'],
+  shop: IShop['id']
   coupon_codes: ICoupon['code'][]
-}
+};
 
 export type IProductCartPopulated = Override<IProductCart, {
   variant: Pick<IProductVariant, 'variant_name'>
   inventory: IProductInventory & {
     product: IProduct
-  },
-}>
+  }
+}>;
 
 export type IItemCartPopulated = Override<IItemCart, {
   shop: IShop
   products: IProductCartPopulated[]
-}>
+}>;
 
 export type IResponseGetCart = {
   cart: Override<ICart, {
     items: IItemCartPopulated[]
-  }>,
+  }>
   summaryOrder: ISummaryOrder
   totalProducts: number
   address: IAddress
-}
+};
 
 export type IResponseGetCartForHeaders = {
   cart: {
@@ -68,7 +68,7 @@ export type IResponseGetCartForHeaders = {
     }[]
     restProducts: number
   }
-}
+};
 
 export type IStateProductCheckoutNow = {
   product: IProductPopulated
@@ -78,4 +78,4 @@ export type IStateProductCheckoutNow = {
   url_image: string
   variantName1?: string
   variantName2?: string
-} & Pick<IProductInventory, 'price' | 'stock'>
+} & Pick<IProductInventory, 'price' | 'stock'>;

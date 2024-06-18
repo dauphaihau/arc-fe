@@ -47,19 +47,18 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
     }
   }
 }
-
 </script>
 
 <template>
   <UCard
     :ui="{
       body: {
-        padding: 'md:px-14 md:py-12'
+        padding: 'md:px-14 md:py-12',
       },
     }"
-    class="max-w-[500px] mx-auto mt-12"
+    class="mx-auto mt-12 max-w-[500px]"
   >
-    <h1 class="text-2xl font-bold text-center mb-3">
+    <h1 class="mb-3 text-center text-2xl font-bold">
       Name your shop
     </h1>
     <p class="mb-4">
@@ -88,11 +87,24 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
       :state="state"
       @submit="onSubmit"
     >
-      <UFormGroup name="shop_name" class="mb-4">
-        <UInput v-model="state.shop_name" :disabled="loading" size="xl" />
+      <UFormGroup
+        name="shop_name"
+        class="mb-4"
+      >
+        <UInput
+          v-model="state.shop_name"
+          :disabled="loading"
+          size="xl"
+        />
       </UFormGroup>
 
-      <UButton :disabled="loading" size="xl" block type="submit" class="mt-6">
+      <UButton
+        :disabled="loading"
+        size="xl"
+        block
+        type="submit"
+        class="mt-6"
+      >
         Continue
       </UButton>
     </UForm>

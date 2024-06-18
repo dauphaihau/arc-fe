@@ -103,12 +103,11 @@ watch(() => route.fullPath, () => {
     }
   }
 }, { immediate: true });
-
 </script>
 
 <template>
   <div class="pt-12">
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4 flex items-center justify-between">
       <div>
         <UBreadcrumb
           v-if="state.categoriesBreadcrumb && route.params.categories.length > 1"
@@ -116,7 +115,7 @@ watch(() => route.fullPath, () => {
           :links="state.categoriesBreadcrumb"
           :ui="{ active: 'text-gray-700' }"
         />
-        <div class="capitalize text-2xl font-semibold mb-2">
+        <div class="mb-2 text-2xl font-semibold capitalize">
           {{ state.currentCategory }} ( {{ data?.totalResults || 0 }} )
         </div>
       </div>
@@ -130,16 +129,28 @@ watch(() => route.fullPath, () => {
         <FilterProducts />
       </div>
 
-      <div v-if="pendingProducts" class="w-full grid place-content-center h-[80vh]">
-        <Loading :child-class="'!w-12 !h-12'" />
+      <div
+        v-if="pendingProducts"
+        class="grid h-[80vh] w-full place-content-center"
+      >
+        <LoadingSvg :child-class="'!w-12 !h-12'" />
       </div>
-      <div v-else class="">
-        <div v-if="data?.results" class="grid grid-cols-4 gap-x-3 gap-y-8 mb-16">
-          <div v-for="(product, i) of data.results" :key="i">
+      <div v-else>
+        <div
+          v-if="data?.results"
+          class="mb-16 grid grid-cols-4 gap-x-3 gap-y-8"
+        >
+          <div
+            v-for="(product, i) of data.results"
+            :key="i"
+          >
             <ProductCard :product="product" />
           </div>
         </div>
-        <div v-if="data?.totalResults" class="flex justify-center">
+        <div
+          v-if="data?.totalResults"
+          class="flex justify-center"
+        >
           <UPagination
             v-model="page"
             size="xl"

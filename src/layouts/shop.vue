@@ -4,14 +4,14 @@
 
 <template>
   <div class="bg-layout-shop">
-    <div class="fixed z-[1] right-0 h-full w-1/2 bg-white" />
-    <div class="flex min-h-screen max-w-shop-layout xl:mx-auto">
+    <div class="fixed right-0 z-[1] h-full w-1/2 bg-white" />
+    <div class="max-w-shop-layout flex min-h-screen xl:mx-auto">
       <LayoutShopSidebar />
-      <div class="h-full shrink-0 w-shop-layout-sidebar" />
+      <div class="w-shop-layout-sidebar h-full shrink-0" />
 
-      <div class="h-full grow bg-white relative z-[2]">
+      <div class="relative z-[2] h-full grow bg-white">
         <LayoutShopHeader />
-        <main class="px-10 mt-20 min-h-screen">
+        <main class="mt-20 min-h-screen px-10">
           <slot />
         </main>
       </div>

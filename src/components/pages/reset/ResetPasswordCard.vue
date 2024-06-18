@@ -6,17 +6,23 @@ const slots = useSlots();
   <UCard
     :ui="{
       body: {
-        padding: 'md:px-14 md:py-16'
+        padding: 'md:px-14 md:py-16',
       },
-      shadow: 'shadow-border'
+      shadow: 'shadow-border',
     }"
   >
     <div class="flex flex-col gap-4">
       <div class="space-y-2">
-        <h1 v-if="slots.title" class="text-2xl font-bold">
+        <h1
+          v-if="slots.title"
+          class="text-2xl font-bold"
+        >
           <slot name="title" />
         </h1>
-        <p v-if="slots.subtitle" class="text-customGray-950 text-sm">
+        <p
+          v-if="slots.subtitle"
+          class="text-sm text-customGray-950"
+        >
           <slot name="subtitle" />
         </p>
       </div>

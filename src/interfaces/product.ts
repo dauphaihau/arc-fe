@@ -1,7 +1,7 @@
-import { z } from 'zod';
+import type { z } from 'zod';
 import type { ICoupon } from './coupon';
 import type { ICategory } from './category';
-import {
+import type {
   combineVariantSchema,
   createProductSchema,
   productAttributeSchema,
@@ -30,7 +30,7 @@ export type PRODUCT_STATES_USER_CAN_MODIFY = z.infer<typeof productStateUserCanM
 export type CreateProductSchema = z.infer<typeof createProductSchema>;
 export type CreateProductBody = Override<CreateProductSchema, {
   who_made: ComputedRef<CreateProductSchema['who_made']>
-}>
+}>;
 export type VariantOptionsCreate = z.infer<typeof variantOptionCreateSchema>;
 
 export type UpdateProductBody = z.infer<typeof updateProductSchema>;
@@ -38,16 +38,16 @@ export type VariantOptionsUpdate = z.infer<typeof variantOptionsUpdateSchema>;
 
 export type IProductVirtualFields = {
   summary_inventory: Record<'lowest_price' | 'highest_price' | 'stock', number>
-}
+};
 
-export type GetProductsLowestPriceQueries = Partial<Pick<IProduct, 'category' | 'shop'> & RequestGetListParams>
+export type GetProductsLowestPriceQueries = Partial<Pick<IProduct, 'category' | 'shop'> & RequestGetListParams>;
 
-export type GetProductsQueryParams = Partial<Pick<IProduct, 'title' > & RequestGetListParams>
+export type GetProductsQueryParams = Partial<Pick<IProduct, 'title' > & RequestGetListParams>;
 
 type IVariantGetProducts = Omit<IProductVariant, 'variant_options'> & {
   variant_options: {
     inventory: IProductInventory
-  }[];
+  }[]
   inventory: IProductInventory
 };
 
@@ -60,6 +60,9 @@ export type ResponseGetProducts = Override<IProduct, {
     , number> & { discount_types: ICoupon['type'][] }
 }>;
 
-export type ResponseGetDetailProduct = Omit<IProductPopulated, 'category'> & {
-  category: ICategory['id']
-} & IProductPopulated;
+export type ResponseGetDetailProduct = {
+  product: Omit<IProductPopulated, 'category'> & {
+    category: ICategory['id']
+    inventory: IProductInventory
+  } & IProductPopulated
+};

@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-
 import { useCartStore } from '~/stores/cart';
 import { ORDER_CONFIG } from '~/config/enums/order';
 import { ROUTES } from '~/config/enums/routes';
@@ -65,7 +64,6 @@ function onScroll() {
     return;
   }
 
-
   const wrapperContentTop = wrapperSummaryOrderRef.value?.getBoundingClientRect()?.top + window.pageYOffset;
   const contentHeight = contentSummaryOrderRef.value?.getBoundingClientRect().height;
 
@@ -78,19 +76,19 @@ function onScroll() {
     contentSummaryOrderRef.value.style.position = '';
   }
 }
-
-
 </script>
-
 
 <template>
   <div class="mt-2 py-12">
-    <div v-if="pendingGetCart" class="w-full grid place-content-center h-[80vh]">
-      <Loading :child-class="'!w-12 !h-12'" />
+    <div
+      v-if="pendingGetCart"
+      class="grid h-[80vh] w-full place-content-center"
+    >
+      <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
     <div v-else>
       <div v-if="itemShops.length > 0">
-        <h1 class="text-2xl font-medium mb-4">
+        <h1 class="mb-4 text-2xl font-medium">
           {{ cartStore.totalProductsCart }} products in your cart
         </h1>
 
@@ -104,14 +102,23 @@ function onScroll() {
             />
           </div>
 
-          <div ref="wrapperSummaryOrderRef" class="">
-            <div ref="contentSummaryOrderRef" class="space-y-8 w-[400px]">
+          <div
+            ref="wrapperSummaryOrderRef"
+            class=""
+          >
+            <div
+              ref="contentSummaryOrderRef"
+              class="w-[400px] space-y-8"
+            >
               <CheckoutSummaryOrder
                 v-if="dataGetCart?.summaryOrder"
                 :data="cartStore.summaryOrder || dataGetCart.summaryOrder"
               />
 
-              <div v-if="isTotalOrderInvalid" class="text-red-500">
+              <div
+                v-if="isTotalOrderInvalid"
+                class="text-red-500"
+              >
                 The total amount due must be no more than
                 {{ formatCurrency(ORDER_CONFIG.MAX_ORDER_TOTAL) }}
               </div>
@@ -122,7 +129,7 @@ function onScroll() {
                 size="xl"
                 :disabled="dataGetCart?.totalProducts === 0 || isTotalOrderInvalid"
                 :ui="{
-                  rounded: 'shadow-border'
+                  rounded: 'shadow-border',
                 }"
                 @click="navigateCheckout"
               >
@@ -133,7 +140,10 @@ function onScroll() {
         </div>
       </div>
 
-      <div v-else class="text-center">
+      <div
+        v-else
+        class="text-center"
+      >
         <h3 class="text-3xl text-customGray-950">
           Your cart is empty.
         </h3>

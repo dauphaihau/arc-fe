@@ -11,12 +11,12 @@ const { stateParent } = defineProps<{
 }>();
 
 interface IOnModifyCoupons {
-  summaryOrder: ISummaryOrder,
+  summaryOrder: ISummaryOrder
   coupon_codes: ICoupon['code'][]
 }
 
 const emit = defineEmits<{
-  (e: 'onModifyCoupons', value: IOnModifyCoupons): void,
+  (e: 'onModifyCoupons', value: IOnModifyCoupons): void
 }>();
 
 const state = reactive({
@@ -103,8 +103,6 @@ const deleteCoupon = async (coupon: string) => {
     state.codes = filtered;
   }
 };
-
-
 </script>
 
 <template>
@@ -118,14 +116,23 @@ const deleteCoupon = async (coupon: string) => {
     Apply shop coupon codes
   </UButton>
 
-  <div v-if="state.active" class="flex gap-3 mb-4">
+  <div
+    v-if="state.active"
+    class="mb-4 flex gap-3"
+  >
     <UFormGroup
       required
       name="code"
       :error="state.errorMsg"
     >
-      <UButtonGroup size="lg" orientation="horizontal">
-        <UInput v-model="state.code" :disabled="state.codes.length === 3" />
+      <UButtonGroup
+        size="lg"
+        orientation="horizontal"
+      >
+        <UInput
+          v-model="state.code"
+          :disabled="state.codes.length === 3"
+        />
         <UButton
           color="gray"
           variant="solid"
@@ -136,14 +143,23 @@ const deleteCoupon = async (coupon: string) => {
       </UButtonGroup>
     </UFormGroup>
 
-    <div v-if="state.codes.length > 0" class="flex gap-3">
-      <div v-for="(code, index) of state.codes" :key="index">
+    <div
+      v-if="state.codes.length > 0"
+      class="flex gap-3"
+    >
+      <div
+        v-for="(code, index) of state.codes"
+        :key="index"
+      >
         <div class="relative">
-          <UButton color="gray" size="lg">
+          <UButton
+            color="gray"
+            size="lg"
+          >
             {{ code }}
           </UButton>
           <UButton
-            class="absolute -top-3 -right-2 z-[1]"
+            class="absolute -right-2 -top-3 z-[1]"
             size="2xs"
             color="gray"
             variant="solid"

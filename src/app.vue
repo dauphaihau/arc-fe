@@ -4,10 +4,10 @@
 <template>
   <NuxtLayout class="min-h-screen">
     <NuxtPage />
-
-    <UNotifications />
-    <RegisterLoginDialog />
   </NuxtLayout>
+
+  <UNotifications />
+  <UModals />
 </template>
 
 <style>

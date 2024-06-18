@@ -4,8 +4,8 @@ import { useCartStore } from '~/stores/cart';
 import type { IShop } from '~/interfaces/shop';
 
 const { checked, inventoryId, shopId } = defineProps<{
-  checked: boolean,
-  inventoryId: IProductInventory['id'];
+  checked: boolean
+  inventoryId: IProductInventory['id']
   shopId: IShop['id']
 }>();
 
@@ -41,7 +41,6 @@ watch(() => selectedCheckbox.value, async () => {
     });
   }
 });
-
 </script>
 
 <template>
