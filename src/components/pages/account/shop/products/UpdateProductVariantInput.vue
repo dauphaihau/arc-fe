@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import type {
-  IProductCombineVariant,
-  IProductInventory,
-  IProductPopulated,
-  IProductVariant,
+  ProductCombineVariant,
+  ProductInventory,
+  ProductPopulated,
+  ProductVariant,
   UpdateProductBody,
   VariantOptionsUpdate
-} from '~/interfaces/product';
+} from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import { productInventorySchema } from '~/schemas/product.schema';
+import { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { IOnChangeUpdateVariants } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
 
-type VariantOption = { id: IProductVariant['id'], variant_name: string, errorMsg: string };
+type VariantOption = { id: ProductVariant['id'], variant_name: string, errorMsg: string };
 
 type State = {
   isActiveSubVariant: boolean
@@ -21,29 +21,29 @@ type State = {
   errorSubVariantOption: string
   errorVariantGroupName: string
   errorVariantSubGroupName: string
-  variantIdsDelete: IProductVariant['id'][]
-  variantsCurrent: Map<IProductVariant['id'], IProductVariant['variant_name']>
+  variantIdsDelete: ProductVariant['id'][]
+  variantsCurrent: Map<ProductVariant['id'], ProductVariant['variant_name']>
 } & Record<'variants' | 'subVariants', VariantOption[]>
     // & Pick<IProduct, 'variant_group_name' | 'variant_sub_group_name'>
-& Partial<Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>;
+& Partial<Pick<ProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>>;
 
 type VariantTable = {
   id: number
-  inventoryId?: IProductInventory['id'] | null
-  subVariantId?: IProductVariant['id'] | null
+  inventoryId?: ProductInventory['id'] | null
+  subVariantId?: ProductVariant['id'] | null
   sub_variant_name?: string
   errorPrice: string
   errorStock: string
   isUpdated?: boolean
-  price?: IProductInventory['price']
-} & Pick<IProductVariant, 'variant_name'> &
-Pick<IProductInventory, | 'stock' | 'sku'>;
+  price?: ProductInventory['price']
+} & Pick<ProductVariant, 'variant_name'> &
+Pick<ProductInventory, | 'stock' | 'sku'>;
 
 const generateRandomId = () => new Date().getTime().toString();
 
 const props = defineProps<{
   countValidate: number
-  product: IProductPopulated
+  product: ProductPopulated
   // product: ResponseShopGetDetailProduct['product']
 }>();
 
@@ -385,7 +385,7 @@ watch(() => props.countValidate, () => {
   }
 
   // validate duplicate variant name
-  const variantNameMap = new Map<IProductVariant['variant_name'], number>();
+  const variantNameMap = new Map<ProductVariant['variant_name'], number>();
   const errorMsg = 'Duplicate';
   let isAnyDuplicateVariantName = false;
   state.variants.forEach((variant, idx) => {

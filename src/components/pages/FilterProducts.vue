@@ -46,9 +46,10 @@ watch(state, () => {
     if (state[key] !== 'all') {
       routeQuery[key] = state[key];
     }
-    // else {
-    //   delete routeQuery[key];
-    // }
+    else {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete routeQuery[key];
+    }
   });
   router.push({ query: routeQuery });
 });

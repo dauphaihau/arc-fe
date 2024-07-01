@@ -44,7 +44,6 @@ onMounted(async () => {
   if (authStore.isLogged) {
     await cartStore.getCartHeader();
   }
-
   state.lastScrollPosition = window.pageYOffset;
   window.addEventListener('scroll', onScroll);
   const viewportMeta = document.createElement('meta');

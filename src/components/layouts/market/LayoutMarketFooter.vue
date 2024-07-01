@@ -159,7 +159,7 @@ const secondaryLinks = [
       </div>
       <UDivider />
       <div class="flex items-center justify-between py-4">
-        <UpdateUserPreferencesDialog />
+        <UpdateUserPreferencesBtn />
         <div class="flex items-center gap-4">
           <div class="pt-1 text-xs">
             © {{ new Date().getFullYear() }} Arc Inc.

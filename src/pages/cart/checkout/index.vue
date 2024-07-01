@@ -1,163 +1,60 @@
 <script lang="ts" setup>
 import { useCartStore } from '~/stores/cart';
-import { ROUTES } from '~/config/enums/routes';
-import { PAYMENT_TYPES } from '~/config/enums/order';
-import type { CreateOrderFromCartBody } from '~/interfaces/order';
-import { type IExchangeRate, LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
-import type { IUser } from '~/interfaces/user';
-import { toastCustom } from '~/config/toast';
+import { CHECKOUT_CART_STEPS } from '~/types/pages/cart/checkout';
+import { useGetCart } from '~/services/cart';
 
-enum STEPS { ADDRESS_SHIPPING, PAYMENT, REVIEW_CONFIRMATION, ORDER }
+definePageMeta({ layout: 'market', middleware: ['auth'] });
 
-definePageMeta({ layout: 'market', middleware: ['auth', 'cart-checkout'] });
-
-const { $api } = useNuxtApp();
 const cartStore = useCartStore();
-const store = useStore();
-const toast = useToast();
+
+const {
+  data: dataGetCart,
+} = useGetCart();
 
 onBeforeUnmount(() => {
-  if (cartStore.mapAdditionInfoItems.size) {
-    cartStore.mapAdditionInfoItems.clear();
+  cartStore.resetStateCheckoutCart();
+  if (cartStore.additionInfoOrderShops.size) {
+    cartStore.additionInfoOrderShops.clear();
   }
 });
 
-const state = reactive({
-  currentStep: STEPS.ADDRESS_SHIPPING,
-  steps: ['Billing Address', 'Payment', 'Review & Confirmation'],
-  loadingOrder: false,
-  isAddressEmpty: false,
-  countRefreshConvertCurrency: 0,
-});
-
-const onCreateOrder = async () => {
-  state.currentStep++;
-  if (state.currentStep !== STEPS.ORDER) {
-    return;
-  }
-
-  state.loadingOrder = true;
-
-  const { payment_type, address } = cartStore.stateCheckout;
-
-  const body: CreateOrderFromCartBody = {
-    payment_type: payment_type as PAYMENT_TYPES,
-    address: address.id,
-  };
-
-  if (payment_type === PAYMENT_TYPES.CARD) {
-    const currencySelected = parseJSON<IUser['market_preferences']>(
-      localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
-    )?.currency;
-    if (!currencySelected) {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Oops',
-        description: 'Something wrong',
-      });
-      return;
-    }
-    body.currency = currencySelected;
-
-    // validate currency
-    const exchangeRate = parseJSON<IExchangeRate>(localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]);
-    const ratePrev = exchangeRate?.rates[currencySelected];
-    await store.getExchangeRates();
-    if (!store.rates) {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Oops',
-        description: 'Something wrong',
-      });
-      return;
-    }
-    const rateNew = store.rates[currencySelected];
-    if (ratePrev !== rateNew) {
-      toast.add({
-        ...toastCustom.info,
-        title: 'Currency have a update, please recheck',
-      });
-      state.loadingOrder = false;
-      state.countRefreshConvertCurrency++;
-      return;
-    }
-  }
-
-  if (cartStore.mapAdditionInfoItems) {
-    body.additionInfoItems = Array
-      .from(cartStore.mapAdditionInfoItems)
-      .map(([keyShopId, value]) => ({
-        shop: keyShopId,
-        coupon_codes: value?.coupon_codes || [],
-        note: value?.note || '',
-      }));
-  }
-
-  const { data, error } = await $api.order.createOrderFromCart(body);
-
-  if (error.value) {
-    toast.add({
-      ...toastCustom.error,
-      title: 'Order failed',
-    });
-    return;
-  }
-
-  if (payment_type === PAYMENT_TYPES.CARD && data.value?.checkoutSessionUrl) {
-    navigateTo(data.value.checkoutSessionUrl, {
-      external: true,
-    });
-  }
-  else {
-    navigateTo(ROUTES.SUCCESS);
-    cartStore.getCartHeader();
-  }
-};
+const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
 </script>
 
 <template>
   <div class="py-16">
     <CheckoutStepper
+      v-model="cartStore.stateCheckoutCart.currentStep"
       class="mx-auto mb-24 max-w-[30rem]"
-      :steps="state.steps"
-      :step="state.currentStep"
+      :steps="steps"
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
-        <CheckoutAddressShipping
-          v-if="state.currentStep === STEPS.ADDRESS_SHIPPING"
+        <CartCheckoutAddressShipping
+          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ADDRESS_SHIPPING"
           class="mb-10"
-          @on-address-empty="(val) => state.isAddressEmpty = val"
         />
-        <CheckoutPaymentOptions v-if="state.currentStep === STEPS.PAYMENT" />
+        <CartCheckoutPaymentOptions
+          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.PAYMENT"
+        />
 
-        <CheckoutReviewAndConfirmation
-          v-if="state.currentStep === STEPS.REVIEW_CONFIRMATION
-            || state.currentStep === STEPS.ORDER"
-          :key="state.countRefreshConvertCurrency"
-        />
+        <div
+          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.REVIEW_CONFIRMATION
+            || cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ORDER"
+        >
+          <CartCheckoutReviewShippingAndPayment class="mb-12" />
+          <div
+            v-for="item of dataGetCart?.cart.items"
+            :key="item.id"
+          >
+            <CartCheckoutOrderShop :data="item" />
+          </div>
+        </div>
       </div>
 
       <div class="col-span-4">
-        <CheckoutSummaryOrder
-          v-if="cartStore.summaryOrder"
-          :key="state.countRefreshConvertCurrency"
-          :data="cartStore.summaryOrder"
-        />
-
-        <UButton
-          class="mx-auto mt-8"
-          block
-          size="xl"
-          :disabled="state.isAddressEmpty"
-          :loading="state.loadingOrder"
-          :ui="{
-            rounded: 'shadow-border',
-          }"
-          @click="onCreateOrder"
-        >
-          {{ state.currentStep === STEPS.REVIEW_CONFIRMATION ? 'Complete Order' : 'Continue' }}
-        </UButton>
+        <CartCheckoutSummaryOrder :key="cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp" />
+        <CartCheckoutCreateOrderBtn />
       </div>
     </div>
   </div>

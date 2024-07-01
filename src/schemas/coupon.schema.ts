@@ -93,4 +93,6 @@ export const couponSchema = z.object({
     .boolean()
     .default(false)
     .optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });

@@ -22,3 +22,9 @@ export const productInventorySchema = z.object({
   variant: z.string().optional(),
   reservations: z.array(z.any()),
 });
+
+export const createProductInventorySchema = productInventorySchema.pick({
+  price: true,
+  sku: true,
+  stock: true,
+});

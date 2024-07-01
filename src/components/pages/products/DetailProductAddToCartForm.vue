@@ -2,27 +2,37 @@
 import type { FormError, FormSubmitEvent } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import type { IAddProductCart } from '~/interfaces/cart';
-import type { ResponseGetDetailProduct } from '~/interfaces/product';
-import { toastCustom } from '~/config/toast';
+import type { AddCartProduct } from '~/types/cart';
+import type { ResponseGetDetailProduct } from '~/types/product';
 import { RegisterLoginDialog } from '#components';
+import { useAddProductToCart } from '~/services/cart';
 
-interface IStateSubmit extends IAddProductCart {
+interface StateSubmit extends AddCartProduct {
   variantOption: string
   variantSubOption: string
 }
-
-const { $api } = useNuxtApp();
-const toast = useToast();
-const cartStore = useCartStore();
-const authStore = useAuthStore();
-const config = useRuntimeConfig();
-const modal = useModal();
 
 const { product } = defineProps<ResponseGetDetailProduct>();
 
 const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
 
+const cartStore = useCartStore();
+const authStore = useAuthStore();
+const modal = useModal();
+const queryClient = useQueryClient();
+
+const {
+  mutate: addProductToCart,
+  isPending: isPendingAddProductToCart,
+} = useAddProductToCart({
+  onSuccess: () => {
+    cartStore.getCartHeader();
+    queryClient.removeQueries({ queryKey: ['get-cart'] });
+    navigateTo(ROUTES.CART);
+  },
+});
+
+// ------------- States
 const formRef = ref();
 
 const state = reactive({
@@ -33,10 +43,9 @@ const state = reactive({
   variantName1: '',
   variantName2: '',
   isBuyNow: false,
-  loading: false,
 });
 
-const stateSubmit = reactive<IStateSubmit>({
+const stateSubmit = reactive<StateSubmit>({
   quantity: 1,
   inventory: '',
   variant: '',
@@ -44,6 +53,16 @@ const stateSubmit = reactive<IStateSubmit>({
   variantSubOption: '',
 });
 
+const maxQuantity = computed(() => {
+  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+    return (product.inventory && product.inventory.stock) || 1;
+  }
+  else {
+    return state.stockVariant;
+  }
+});
+
+// ------------- Lifecycle Hooks
 onMounted(() => {
   switch (product.variant_type) {
     case PRODUCT_VARIANT_TYPES.NONE:
@@ -61,23 +80,14 @@ onMounted(() => {
   }
 });
 
-const maxQuantity = computed(() => {
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-    return (product.inventory && product.inventory.stock) || 1;
-  }
-  else {
-    return state.stockVariant;
-  }
-});
 
+// ------------- Features
 const decreaseQty = () => {
-  if (stateSubmit.quantity === 1) {
-    return;
-  }
+  if (stateSubmit.quantity === 1) return;
   stateSubmit.quantity--;
 };
 
-const validate = (stateValidate: IStateSubmit): FormError[] => {
+const validateForm = (stateValidate: StateSubmit): FormError[] => {
   const errors: FormError[] = [];
 
   if (product.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
@@ -98,7 +108,7 @@ const validate = (stateValidate: IStateSubmit): FormError[] => {
   return errors;
 };
 
-async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
+async function onSubmit(event: FormSubmitEvent<StateSubmit>) {
   if (!authStore.isLogged) {
     modal.open(RegisterLoginDialog);
     return;
@@ -109,30 +119,39 @@ async function onSubmit(event: FormSubmitEvent<IStateSubmit>) {
     onBuyNow();
     return;
   }
-  state.loading = true;
 
-  const payload: IAddProductCart = {
+  const payload: AddCartProduct = {
     inventory: stateSubmit.inventory,
     quantity: Number(event.data.quantity),
   };
   if (stateSubmit.variant) {
     payload.variant = stateSubmit.variant;
   }
-  const { error, data, pending } = await $api.cart.addProduct(payload);
-  state.loading = pending.value;
-  if (error.value) {
-    toast.add({
-      ...toastCustom.error,
-      title: 'Add to cart failed',
-    });
-  }
-  else {
-    cartStore.summaryOrder = data.value?.summaryOrder || null;
-    await cartStore.getCartHeader();
-    navigateTo(ROUTES.CART);
-  }
+  addProductToCart(payload);
 }
 
+const onBuyNow = () => {
+  const productCheckout = cartStore.stateCheckoutNow.product;
+
+  productCheckout.id = product.id;
+  productCheckout.inventory = stateSubmit.inventory;
+  productCheckout.quantity = stateSubmit.quantity;
+
+  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+    productCheckout.price = product.inventory.price;
+    productCheckout.stock = product.inventory.stock;
+  }
+  else {
+    productCheckout.price = state.priceVariant;
+    productCheckout.stock = state.stockVariant;
+  }
+  productCheckout.variantName1 = state.variantName1;
+  productCheckout.variantName2 = state.variantName2;
+
+  navigateTo(ROUTES.CHECKOUT);
+};
+
+// ------------ Side effects
 watch(() => [stateSubmit.variantOption, stateSubmit.variantSubOption], () => {
   stateSubmit.quantity = 1;
   if (product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
@@ -174,21 +193,6 @@ watch(() => stateSubmit.quantity, () => {
     stateSubmit.quantity = maxQuantity.value;
   }
 });
-
-const onBuyNow = () => {
-  cartStore.productCheckoutNow = {
-    product,
-    url_image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
-    variantName1: state.variantName1,
-    variantName2: state.variantName2,
-    price: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory.price : state.priceVariant,
-    stock: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory.stock : state.stockVariant,
-    variant: stateSubmit.variant,
-    quantity: stateSubmit.quantity,
-    inventory: stateSubmit.inventory,
-  };
-  navigateTo(ROUTES.CHECKOUT);
-};
 </script>
 
 <template>
@@ -197,10 +201,10 @@ const onBuyNow = () => {
     :validate-on="['submit']"
     :state="stateSubmit"
     class="space-y-4"
-    :validate="validate"
+    :validate="validateForm"
     @submit="onSubmit"
   >
-    <div class="mb-6 flex w-[41%] flex-col gap-4">
+    <div class="mb-6 flex w-1/4 flex-col gap-4">
       <UFormGroup
         v-if="product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE
           || product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE"
@@ -264,13 +268,14 @@ const onBuyNow = () => {
         size="xl"
         variant="soft"
         type="submit"
+        :disabled="isPendingAddProductToCart"
       >
         Add to card
       </UButton>
       <UButton
         size="xl"
         type="submit"
-        :loading="state.loading"
+        :disabled="isPendingAddProductToCart"
         @click="state.isBuyNow = true"
       >
         Buy it now

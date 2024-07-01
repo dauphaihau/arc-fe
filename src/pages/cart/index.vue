@@ -1,60 +1,39 @@
 <script lang="ts" setup>
+import { StatusCodes } from 'http-status-codes';
 import { useCartStore } from '~/stores/cart';
-import { ORDER_CONFIG } from '~/config/enums/order';
-import { ROUTES } from '~/config/enums/routes';
+import { useGetCart } from '~/services/cart';
+import type { ItemCartPopulated, ResponseGetCart } from '~/types/cart';
 
-definePageMeta({ layout: 'market' });
+definePageMeta({ layout: 'market', middleware: ['auth'] });
 
-const { $api } = useNuxtApp();
 const cartStore = useCartStore();
 
-const { pending: pendingGetCart, data: dataGetCart } = await $api.cart.getCart();
-
-onMounted(() => {
-  window.addEventListener('scroll', onScroll);
-
-  if (dataGetCart.value) {
-    cartStore.summaryOrder = dataGetCart.value?.summaryOrder || null;
-    cartStore.totalProductsCart = dataGetCart.value?.totalProducts || 0;
-    cartStore.itemsCart = dataGetCart.value?.cart?.items;
-
-    dataGetCart.value.cart.items.forEach((item) => {
-      cartStore.mapAdditionInfoItems.set(item.shop.id, {
-        coupon_codes: [],
-        note: '',
-      });
-    });
-  }
-});
-
+const orderShops = ref<ItemCartPopulated[]>([]);
 const wrapperSummaryOrderRef = ref<HTMLDivElement | null>(null);
 const contentSummaryOrderRef = ref<HTMLDivElement | null>(null);
 
-const itemShops = ref(dataGetCart.value?.cart?.items || []);
-const isRedirectCheckout = ref(false);
+const {
+  isPending: isPendingGetCart,
+  data: dataGetCart,
+} = useGetCart({
+  onResponse: ({ response }) => {
+    const responseGetCart: ResponseGetCart = response._data;
+    if (response.status === StatusCodes.OK && responseGetCart) {
+      responseGetCart.cart.items.forEach((item) => {
+        cartStore.additionInfoOrderShops.set(item.shop.id, {
+          coupon_codes: [],
+          note: '',
+        });
+      });
 
-const isTotalOrderInvalid = computed(() => {
-  if (!cartStore.summaryOrder) {
-    return true;
-  }
-  return !(cartStore.summaryOrder.totalPrice < ORDER_CONFIG.MAX_ORDER_TOTAL);
+      orderShops.value = responseGetCart.cart.items;
+    }
+  },
 });
 
 const onProductsEmpty = (index: number) => {
-  itemShops.value.splice(index, 1);
+  orderShops.value.splice(index, 1);
 };
-
-const navigateCheckout = () => {
-  isRedirectCheckout.value = true;
-  navigateTo(ROUTES.CART + ROUTES.CHECKOUT);
-};
-
-onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll);
-  if (cartStore.mapAdditionInfoItems.size && !isRedirectCheckout.value) {
-    cartStore.mapAdditionInfoItems.clear();
-  }
-});
 
 function onScroll() {
   const scrollTop = window.scrollY;
@@ -76,65 +55,47 @@ function onScroll() {
     contentSummaryOrderRef.value.style.position = '';
   }
 }
+
+onMounted(() => {
+  window.addEventListener('scroll', onScroll);
+});
+
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll);
+});
 </script>
 
 <template>
   <div class="mt-2 py-12">
     <div
-      v-if="pendingGetCart"
+      v-if="isPendingGetCart"
       class="grid h-[80vh] w-full place-content-center"
     >
       <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
     <div v-else>
-      <div v-if="itemShops.length > 0">
+      <div v-if="orderShops.length > 0">
         <h1 class="mb-4 text-2xl font-medium">
-          {{ cartStore.totalProductsCart }} products in your cart
+          {{ dataGetCart?.totalProducts }} products in your cart
         </h1>
 
         <div class="grid grid-cols-12 gap-16">
           <div class="col-span-8">
-            <CartItem
-              v-for="(item, index) of itemShops"
+            <CartOrderShop
+              v-for="(item, index) of orderShops"
               :key="item.id"
               :data="item"
               @on-products-empty="() => onProductsEmpty(index)"
             />
           </div>
 
-          <div
-            ref="wrapperSummaryOrderRef"
-            class=""
-          >
+          <div ref="wrapperSummaryOrderRef">
             <div
               ref="contentSummaryOrderRef"
-              class="w-[400px] space-y-8"
+              class="w-[400px]"
             >
-              <CheckoutSummaryOrder
-                v-if="dataGetCart?.summaryOrder"
-                :data="cartStore.summaryOrder || dataGetCart.summaryOrder"
-              />
-
-              <div
-                v-if="isTotalOrderInvalid"
-                class="text-red-500"
-              >
-                The total amount due must be no more than
-                {{ formatCurrency(ORDER_CONFIG.MAX_ORDER_TOTAL) }}
-              </div>
-
-              <UButton
-                class="mx-auto"
-                block
-                size="xl"
-                :disabled="dataGetCart?.totalProducts === 0 || isTotalOrderInvalid"
-                :ui="{
-                  rounded: 'shadow-border',
-                }"
-                @click="navigateCheckout"
-              >
-                Proceed to checkout
-              </UButton>
+              <CartSummaryOrder :key="cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp" />
             </div>
           </div>
         </div>

@@ -1,16 +1,14 @@
 <script lang="ts" setup>
-import type { IProduct } from '~/interfaces/product';
+import type { Product } from '~/types/product';
 
 const { images } = defineProps<{
-  images: IProduct['images']
+  images: Product['images']
 }>();
-
-const config = useRuntimeConfig();
 
 const selectedImg = ref(0);
 
 const image_url_selected = computed(() => {
-  return config.public.awsHostBucket + '/' + images[selectedImg.value].relative_url;
+  return `domainAwsS3/${images[selectedImg.value].relative_url}`;
 });
 
 const onSelectPrevImg = () => {
@@ -37,7 +35,7 @@ const onSelectNextImg = () => {
       >
         <NuxtImg
           preload
-          :src="config.public.awsHostBucket + '/' + image.relative_url"
+          :src="`domainAwsS3/${image.relative_url}`"
           width="100"
           height="100"
           :class="[

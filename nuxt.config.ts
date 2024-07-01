@@ -91,6 +91,12 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   image: {
     provider: 'ipx',
+    ipx: {
+      maxAge: 2592000,
+    },
     domains: [process.env.AWS_S3_HOST_BUCKET as string],
+    alias: {
+      domainAwsS3: process.env.AWS_S3_HOST_BUCKET as string
+    }
   },
 })

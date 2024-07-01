@@ -19,19 +19,21 @@ const linksAccountSidebar = [
     to: ROUTES.ACCOUNT + ROUTES.ADDRESSES,
   },
   {
-    label: 'Preferences',
-    disabled: true,
-    icon: 'i-heroicons-cog',
-    to: ROUTES.HOME,
-  },
-  {
     label: 'Payment',
+    disabled: true,
     icon: 'i-heroicons-credit-card',
     to: ROUTES.HOME,
   },
   {
     label: 'Privacy',
+    disabled: true,
     icon: 'i-heroicons-shield-check',
+    to: ROUTES.HOME,
+  },
+  {
+    label: 'Preferences',
+    disabled: true,
+    icon: 'i-heroicons-cog',
     to: ROUTES.HOME,
   },
 ];
@@ -69,7 +71,17 @@ watch(() => route.path, () => {
               inactive: 'border-transparent hover:border-gray-400 text-gray-700 hover:text-gray-900',
             },
           }"
-        />
+        >
+          <template #default="{ link }">
+            <span :class="link.disabled && 'opacity-50'">{{ link.label }}</span>
+          </template>
+          <template #icon="{ link }">
+            <UIcon
+              :name="link.icon"
+              :class="link.disabled && 'opacity-50'"
+            />
+          </template>
+        </UVerticalNavigation>
         <slot />
       </div>
 

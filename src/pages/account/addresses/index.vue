@@ -1,70 +1,67 @@
 <script lang="ts" setup>
-import type { IAddress } from '~/interfaces/address';
+import type { UserAddress } from '~/types/user-address';
+import { useDeleteUserAddress, useGetUserAddresses } from '~/services/user';
+import UpdateUserAddressDialog from '~/components/dialogs/UpdateUserAddressDialog.vue';
+import { CreateUserAddressDialog } from '#components';
 
 definePageMeta({ layout: 'market', middleware: ['auth'] });
 
-const { $api } = useNuxtApp();
+const dialog = useModal();
 
 const {
-  pending: pendingGetAddresses,
-  data: addressesApi,
-} = await $api.address.getAddresses({
+  isPending: isPendingGetUserAddresses,
+  data: dataUserAddress,
+  refetch,
+} = useGetUserAddresses({
   select: '-user,-createdAt,-updatedAt',
   sortBy: '-is_primary',
 });
 
-const addresses = ref<IAddress[]>((addressesApi.value && addressesApi.value.results) || []);
-const dataEdit = ref<IAddress | null>(null);
+const {
+  isPending: isPendingDeleteUserAddresses,
+  mutate: deleteUserAddress,
+} = useDeleteUserAddress({
+  onSuccess() {
+    refetch();
+  },
+});
 
-const deleteAddress = async (id: IAddress['id']) => {
-  const { error } = await $api.address.deleteAddress(id);
-  if (!error.value) {
-    addresses.value = addresses.value.filter(item => item.id !== id);
-  }
+const showUpdateDialog = (item: UserAddress) => {
+  dialog.open(UpdateUserAddressDialog, {
+    dataEdit: item,
+  });
 };
 
-const onCreatedAddress = (value: IAddress) => {
-  if (value.is_primary) {
-    addresses.value[0].is_primary = false;
-    addresses.value.unshift(value);
-  }
-  else {
-    addresses.value.push(value);
-  }
-};
-
-const onUpdatedAddress = (value: IAddress) => {
-  if (value.is_primary) {
-    addresses.value[0].is_primary = false;
-    const filtered = addresses.value.filter(add => !add.is_primary);
-    filtered.unshift(value);
-    addresses.value = filtered;
-  }
+const showCreateDialog = () => {
+  dialog.open(CreateUserAddressDialog);
 };
 </script>
 
 <template>
-  <div>
-    <h3 class="text-2xl font-medium">
+  <div class="w-full">
+    <h3 class="mb-4 text-2xl font-medium">
       Your shipping addresses
     </h3>
-    <CreateUpdateAddressDialog
-      class="mt-4"
-      :data-edit="dataEdit"
-      @on-created-address="onCreatedAddress"
-      @on-updated-address="onUpdatedAddress"
-      @on-cancel-dialog="dataEdit = null"
-    />
+    <UButton
+      color="primary"
+      variant="solid"
+      @click="showCreateDialog"
+    >
+      Add a new address
+    </UButton>
 
-    <div v-if="pendingGetAddresses">
-      <LoadingSvg />
+    <div
+      v-if="isPendingGetUserAddresses"
+      class="grid h-[50vh] w-full place-content-center"
+    >
+      <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
     <div
-      v-else
+      v-else-if="dataUserAddress?.results && dataUserAddress.results.length > 0"
       class="mt-8 grid grid-cols-3 gap-x-56 gap-y-16"
     >
       <div
-        v-for="item in addresses"
+        v-for="item in dataUserAddress.results"
         :key="item.id"
       >
         <div class="flex min-w-56 flex-col gap-3">
@@ -85,14 +82,15 @@ const onUpdatedAddress = (value: IAddress) => {
             <UButton
               :padded="false"
               variant="link"
-              @click="() => dataEdit = item"
+              @click="showUpdateDialog(item)"
             >
               Edit
             </UButton>
             <UButton
               :padded="false"
               variant="link"
-              @click="() => deleteAddress(item.id)"
+              :disabled="isPendingDeleteUserAddresses"
+              @click="deleteUserAddress(item.id)"
             >
               Delete
             </UButton>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ResponseGetProducts } from '~/interfaces/product';
+import type { ResponseGetProducts } from '~/types/product';
 import { ROUTES } from '~/config/enums/routes';
 import { COUPON_TYPES } from '~/config/enums/coupon';
 
@@ -7,7 +7,6 @@ const { product } = defineProps<{
   product: ResponseGetProducts
 }>();
 
-const config = useRuntimeConfig();
 const router = useRouter();
 </script>
 
@@ -17,11 +16,10 @@ const router = useRouter();
     @click="() => router.push(`${ROUTES.PRODUCTS}/${product.id}`)"
   >
     <NuxtImg
-      :src="config.public.awsHostBucket + '/' + product.image_relative_url"
+      :src="`domainAwsS3/${product.image_relative_url}`"
       width="200"
       height="200"
       class="size-full rounded"
-      preload
     />
     <div class="space-y-1">
       <h1 class="truncate text-xl font-semibold">

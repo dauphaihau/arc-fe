@@ -74,7 +74,7 @@ const itemsLinkRoutes = Array.isArray(data.sub) && data.sub.map(item => item.rou
 </template>
 
 <style scoped>
-@import url("src/assets/css/layout-shop.css");
+@import url("~/assets/css/layout-shop.css");
 
 .slide-down-enter-active,
 .slide-down-leave-active {

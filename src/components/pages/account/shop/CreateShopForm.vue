@@ -1,50 +1,44 @@
 <script setup lang="ts">
-import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
 import { shopSchema } from '~/schemas/shop.schema';
-import type { IShop } from '~/interfaces/shop';
+import type { Shop } from '~/types/shop';
 import { ROUTES } from '~/config/enums/routes';
 import { toastCustom } from '~/config/toast';
+import { useCreateShop } from '~/services/shop';
 
-const { $api } = useNuxtApp();
 const toast = useToast();
 
 const formRef = ref();
 const unknownErrorMsg = ref('');
-const loading = ref(false);
 
-const state = reactive({
+const stateSubmit = reactive({
   shop_name: '',
 });
 
-async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }>) {
+const {
+  isPending,
+  mutateAsync: createShop,
+} = useCreateShop();
+
+async function onSubmit(event: FormSubmitEvent<{ shop_name: Shop['shop_name'] }>) {
   formRef.value.clear();
-
-  const { pending, error, data } = await $api.shop.createShop(event.data);
-  loading.value = pending.value;
-
-  if (!error.value) {
+  try {
+    const res = await createShop(event.data);
     toast.add({
       ...toastCustom.success,
       title: 'Create shop success',
     });
     const authStore = useAuthStore();
-    if (authStore?.user && data.value?.shop) {
-      authStore.user.shop = data.value?.shop;
+    if (authStore?.user && res.shop) {
+      authStore.user.shop = res.shop;
     }
     navigateTo(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.DASHBOARD}`);
-    return;
   }
-
-  if (error.value.data) {
-    switch (error.value.data.code) {
-      case StatusCodes.INTERNAL_SERVER_ERROR:
-        toast.add({
-          title: 'Unknown erorr from server',
-          icon: 'i-heroicons-exclamation-circle',
-          color: 'red',
-        });
-    }
+  catch (error) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Unknown error from server',
+    });
   }
 }
 </script>
@@ -84,7 +78,7 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
       ref="formRef"
       :validate-on="['submit']"
       :schema="shopSchema.pick({ shop_name: true })"
-      :state="state"
+      :state="stateSubmit"
       @submit="onSubmit"
     >
       <UFormGroup
@@ -92,14 +86,14 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: IShop['shop_name'] }
         class="mb-4"
       >
         <UInput
-          v-model="state.shop_name"
-          :disabled="loading"
+          v-model="stateSubmit.shop_name"
+          :disabled="isPending"
           size="xl"
         />
       </UFormGroup>
 
       <UButton
-        :disabled="loading"
+        :disabled="isPending"
         size="xl"
         block
         type="submit"

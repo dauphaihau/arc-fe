@@ -9,11 +9,13 @@ import {
 import { ROUTES } from '~/config/enums/routes';
 import type {
   UpdateProductBody,
-  IProduct,
-  IProductImage, IProductSingleVariant, IProductCombineVariant
-} from '~/interfaces/product';
-import type { Override } from '~/interfaces/utils';
+  Product,
+  ProductImage, ProductSingleVariant, ProductCombineVariant
+} from '~/types/product';
+import type { Override } from '~/types/utils';
 import { toastCustom } from '~/config/toast';
+import { useGetPresignedUrl } from '~/services/upload';
+import { useShopGetDetailProduct, useShopUpdateProduct } from '~/services/shop';
 
 type UpdateProductBodyOverride = Override<UpdateProductBody, {
   who_made: ComputedRef<UpdateProductBody['who_made']>
@@ -22,82 +24,81 @@ type UpdateProductBodyOverride = Override<UpdateProductBody, {
 export type IOnChangeUpdateVariants = Partial<Pick<UpdateProductBody,
   'update_variants' | 'variant_inventories' |
   'new_single_variants' | 'variant_type' | 'new_combine_variants'
->> & (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null;
+>> & (Omit<ProductSingleVariant, 'variants'> | Omit<ProductCombineVariant, 'variants'>) | null;
 
 export type IOnChangeUpdateImages = {
   fileImages: File[]
-  idsImagesForDelete: IProductImage['id'][]
+  idsImagesForDelete: ProductImage['id'][]
 };
 
-const { $api } = useNuxtApp();
 const router = useRouter();
 const route = useRoute();
 const toast = useToast();
 
-const {
-  data: dataDetailProduct,
-  error: errorGetDetailProduct,
-} = await $api.shop.getDetailProduct(route.params.id as IProduct['id']);
-
-if (errorGetDetailProduct.value || !dataDetailProduct.value || !dataDetailProduct.value.product) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: 'Page Not Found',
-    fatal: true,
-  });
-}
-
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
+const {
+  data: dataDetailProduct,
+} = useShopGetDetailProduct(route.params.id as Product['id'], {
+  onResponse: ({ response }) => {
+    const detailProduct = response._data.product;
+    if (detailProduct) {
+      const option = productWhoMadeOpts.find(opt => opt.id === detailProduct.who_made);
+      if (option) {
+        selectedWhoMade.value = option;
+      }
+      if (detailProduct.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+        stateSubmit.price = detailProduct.inventory.price;
+        stateSubmit.stock = detailProduct.inventory.stock;
+        stateSubmit.sku = detailProduct.inventory.sku;
+      }
+    }
+  },
+});
+
+const {
+  mutateAsync: getPresignedUrl,
+} = useGetPresignedUrl();
+
+const {
+  mutateAsync: updateProduct,
+} = useShopUpdateProduct();
+
 const product = computed(() => {
-  if (dataDetailProduct.value) {
-    if (dataDetailProduct.value.product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-      return omitFieldsObject(dataDetailProduct.value.product, ['category', 'attributes', 'inventory']);
+  const detailProduct = dataDetailProduct.value?.product;
+  if (detailProduct) {
+    if (detailProduct.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+      return omitFieldsObject(detailProduct, ['category', 'attributes', 'inventory']);
     }
     else {
-      return omitFieldsObject(dataDetailProduct.value.product, ['category', 'attributes', 'variants']);
+      return omitFieldsObject(detailProduct, ['category', 'attributes', 'variants']);
     }
   }
   return {};
 });
 
-const state = reactive<UpdateProductBodyOverride>({
+const stateSubmit = reactive<UpdateProductBodyOverride>({
   ...product.value,
   who_made: computed(() => selectedWhoMade.value.id),
   images: [],
 });
 
-const detailProduct = dataDetailProduct.value.product;
-
-onMounted(() => {
-  const option = productWhoMadeOpts.find(opt => opt.id === detailProduct.who_made);
-  if (option) {
-    selectedWhoMade.value = option;
-  }
-  if (detailProduct.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-    state.price = detailProduct.inventory.price;
-    state.stock = detailProduct.inventory.stock;
-    state.sku = detailProduct.inventory.sku;
-  }
-});
-
 const fileImages = ref<File[]>([]);
 const formRef = ref();
 const loadingSubmit = ref(false);
-const isVariantProduct = ref(state.variant_type !== PRODUCT_VARIANT_TYPES.NONE);
+const isVariantProduct = ref(stateSubmit.variant_type !== PRODUCT_VARIANT_TYPES.NONE);
 const btnSubmit = ref();
 const countValidate = ref(0);
 const countValidateInputs = ref(0);
-const idsImagesForDelete = ref<IProductImage['id'][]>([]);
+const idsImagesForDelete = ref<ProductImage['id'][]>([]);
 const disabledButtonSubmit = ref(true);
 const isVariantInputValid = ref(true);
 const countValidateVariantsInputs = ref(0);
 
 const onChangeVariants = (values: IOnChangeUpdateVariants) => {
   isVariantInputValid.value = Boolean(values);
-  if (!values) {
-    return;
-  }
+  if (!values) return;
+
   Object.keys(values).forEach((key) => {
     if (!values[key]) {
       return;
@@ -105,7 +106,7 @@ const onChangeVariants = (values: IOnChangeUpdateVariants) => {
     if (Array.isArray(values[key]) && values[key].length === 0) {
       return;
     }
-    state[key] = values[key];
+    stateSubmit[key] = values[key];
   });
 };
 
@@ -116,10 +117,10 @@ const onChangeImages = (values: IOnChangeUpdateImages) => {
 
 const onChangeVariantType = () => {
   isVariantProduct.value = !isVariantProduct.value;
-  state.variant_type = isVariantProduct.value ? PRODUCT_VARIANT_TYPES.SINGLE : PRODUCT_VARIANT_TYPES.NONE;
+  stateSubmit.variant_type = isVariantProduct.value ? PRODUCT_VARIANT_TYPES.SINGLE : PRODUCT_VARIANT_TYPES.NONE;
 };
 
-const validate = (values: UpdateProductBody): FormError[] => {
+const validateForm = (values: UpdateProductBody): FormError[] => {
   let errors: FormError[] = [];
   countValidate.value++;
 
@@ -149,9 +150,8 @@ const validate = (values: UpdateProductBody): FormError[] => {
 };
 
 async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
-  if (isVariantProduct.value && !isVariantInputValid.value) {
-    return;
-  }
+  if (isVariantProduct.value && !isVariantInputValid.value) return;
+
   const eventDataTemp = { ...event.data };
 
   const exceptKeys = ['id', 'variant_type', 'attributes', 'tags'];
@@ -179,12 +179,8 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
       const keys = [];
       const promisesUploadImages = [];
       for (let i = 0; i < fileImages.value.length; i++) {
-        const { data } = await $api.upload.getPresignedUrl();
-        if (!data.value) {
-          return;
-        }
-        const presignedUrl = data.value.presignedUrl;
-        if (!presignedUrl) {
+        const { presignedUrl, key } = await getPresignedUrl();
+        if (!presignedUrl || !key) {
           toast.add({
             ...toastCustom.error,
             title: 'Oops',
@@ -192,7 +188,9 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
           });
           return;
         }
-        keys.push(data.value.key);
+
+        keys.push(key);
+
         const promise = useFetch(presignedUrl, {
           method: 'PUT',
           headers: {
@@ -213,22 +211,21 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
     delete eventDataTemp.images;
   }
 
-  const { error } = await $api.shop.updateProduct(eventDataTemp);
-  loadingSubmit.value = false;
-
-  if (error.value) {
-    toast.add({
-      ...toastCustom.error,
-      title: 'Update product failed',
-    });
-  }
-  else {
-    router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
+  try {
+    await updateProduct(eventDataTemp);
+    await router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
     toast.add({
       ...toastCustom.success,
       title: 'Update product success',
     });
   }
+  catch (error) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Update product failed',
+    });
+  }
+  loadingSubmit.value = false;
 }
 
 function onError(event: FormErrorEvent) {
@@ -237,24 +234,24 @@ function onError(event: FormErrorEvent) {
   element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-watch(() => state.category, () => {
-  state.attributes = [];
+watch(() => stateSubmit.category, () => {
+  stateSubmit.attributes = [];
 });
 
-watch(() => [state.stock, state.price], () => {
-  if (state.price && state.price > PRODUCT_CONFIG.MAX_PRICE) {
-    state.price = PRODUCT_CONFIG.MAX_PRICE;
+watch(() => [stateSubmit.stock, stateSubmit.price], () => {
+  if (stateSubmit.price && stateSubmit.price > PRODUCT_CONFIG.MAX_PRICE) {
+    stateSubmit.price = PRODUCT_CONFIG.MAX_PRICE;
   }
-  if (state.stock && state.stock > PRODUCT_CONFIG.MAX_STOCK) {
-    state.stock = PRODUCT_CONFIG.MAX_STOCK;
+  if (stateSubmit.stock && stateSubmit.stock > PRODUCT_CONFIG.MAX_STOCK) {
+    stateSubmit.stock = PRODUCT_CONFIG.MAX_STOCK;
   }
-  if (!state.stock) {
-    state.stock = 0;
+  if (!stateSubmit.stock) {
+    stateSubmit.stock = 0;
   }
 });
 
 watchDebounced(
-  () => [state, fileImages.value, idsImagesForDelete.value, countValidateVariantsInputs.value],
+  () => [stateSubmit, fileImages.value, idsImagesForDelete.value, countValidateVariantsInputs.value],
   () => {
     countValidateInputs.value++;
 
@@ -267,9 +264,9 @@ watchDebounced(
         price: isVariantProduct.value || undefined,
         stock: isVariantProduct.value || undefined,
         sku: isVariantProduct.value || undefined,
-      }).safeParse(state);
+      }).safeParse(stateSubmit);
 
-    const isEmptyImages = idsImagesForDelete.value.length === detailProduct.images.length &&
+    const isEmptyImages = idsImagesForDelete.value.length === dataDetailProduct.value?.product.images.length &&
       fileImages.value.length === 0;
 
     disabledButtonSubmit.value = countValidateInputs.value === 1 ||
@@ -285,8 +282,8 @@ watchDebounced(
   <UForm
     ref="formRef"
     :validate-on="['submit']"
-    :validate="validate"
-    :state="state"
+    :validate="validateForm"
+    :state="stateSubmit"
     class="space-y-7"
     @error="onError"
     @submit="onSubmit"
@@ -298,7 +295,7 @@ watchDebounced(
       <template #content>
         <UpdateProductImagesInput
           class="mb-4"
-          :images="detailProduct.images"
+          :images="dataDetailProduct?.product.images"
           :loading="loadingSubmit"
           :count-validate="countValidate"
           @on-change="onChangeImages"
@@ -311,7 +308,7 @@ watchDebounced(
           required
         >
           <UInput
-            v-model="state.title"
+            v-model="stateSubmit.title"
             :disabled="loadingSubmit"
             size="lg"
           />
@@ -319,13 +316,13 @@ watchDebounced(
         <UFormGroup
           label="Description"
           name="description"
-          :help="state.description
-            && `${state.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
+          :help="stateSubmit.description
+            && `${stateSubmit.description.length}/${PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION}`
           "
           required
         >
           <UTextarea
-            v-model="state.description"
+            v-model="stateSubmit.description"
             autoresize
             :maxlength="PRODUCT_CONFIG.MAX_CHAR_DESCRIPTION"
             :rows="5"
@@ -355,7 +352,7 @@ watchDebounced(
             <URadio
               v-for="options of isDigitalOpts"
               :key="options.value.toString()"
-              v-model="state.is_digital"
+              v-model="stateSubmit.is_digital"
               v-bind="options"
             />
           </div>
@@ -377,23 +374,22 @@ watchDebounced(
         </div>
 
         <UpdateCreateProductSearchCategoryInput
-          :category="detailProduct.category"
-          :title="state.title"
-          @on-change="(categoryId) => state.category = categoryId"
+          v-model="stateSubmit.category"
+          :category="dataDetailProduct?.product.category"
+          :title="stateSubmit.title"
         />
 
         <UpdateCreateProductSelectAttributesInput
-          :key="state.category"
-          :category-id="state.category || detailProduct.category.id"
-          :attributes-selected="detailProduct.attributes"
-          @on-change="(attrs) => state.attributes = attrs"
+          :key="stateSubmit.category"
+          v-model="stateSubmit.attributes"
+          :category-id="stateSubmit.category || dataDetailProduct?.product.category.id"
+          :attributes-selected="dataDetailProduct?.product.attributes"
         />
 
         <UpdateCreateProductTagsInput
-          v-if="state.tags"
-          :tags="state.tags"
+          v-if="stateSubmit.tags"
+          v-model="stateSubmit.tags"
           :count-validate="countValidate"
-          @on-change="(tags) => state.tags = tags"
         />
       </template>
     </WrapperFormGroupCard>
@@ -432,7 +428,7 @@ watchDebounced(
               required
             >
               <UInput
-                v-model.number="state.price"
+                v-model.number="stateSubmit.price"
                 :disabled="loadingSubmit"
                 size="lg"
                 type="number"
@@ -451,7 +447,7 @@ watchDebounced(
               required
             >
               <UInput
-                v-model.number="state.stock"
+                v-model.number="stateSubmit.stock"
                 :disabled="loadingSubmit"
                 size="lg"
                 type="number"
@@ -466,7 +462,7 @@ watchDebounced(
               name="sku"
             >
               <UInput
-                v-model="state.sku"
+                v-model="stateSubmit.sku"
                 :disabled="loadingSubmit"
                 size="lg"
                 class="w-1/2"
@@ -506,5 +502,5 @@ watchDebounced(
 </template>
 
 <style scoped>
-@import url("src/assets/css/layout-shop.css");
+@import url("~/assets/css/layout-shop.css");
 </style>

@@ -8,7 +8,7 @@ A ecommerce marketplace web application  where people come together to make, sel
 #### Frontend:
 - [Nuxt.js](https://nuxt.com/) - Vue Framework
 - [Vue Query](https://tanstack.com/query/latest/docs/framework/vue/overview) - Managing and caching asynchronous data
-- [Pinia](https://pinia.vuejs.org/) - State management library for Vue
+- [Pinia](https://pinia.vuejs.org/) - StateCheckoutNow management library for Vue
 - [Typescript](https://www.typescriptlang.org/) - Static Type Checking
 - [Tailwind](https://tailwindcss.com/) - utility-first CSS framework
 - [Zod](https://zod.dev/) - TypeScript-first schema declaration and validation

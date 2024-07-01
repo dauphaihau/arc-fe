@@ -1,42 +1,40 @@
 <script setup lang="ts">
-import type { IProductInventory } from '~/interfaces/product';
+/*
+  use in cart, cart/checkout page
+ */
 import { ROUTES } from '~/config/enums/routes';
-import type { IProductCartPopulated } from '~/interfaces/cart';
+import type { ProductCartPopulated, ResponseGetCart } from '~/types/cart';
 import { useCartStore } from '~/stores/cart';
-import type { IShop } from '~/interfaces/shop';
-import { toastCustom } from '~/config/toast';
+import type { Shop } from '~/types/shop';
+import { useDeleteCartProduct } from '~/services/cart';
 
 const props = defineProps<{
-  data: IProductCartPopulated
-  shopId: IShop['id']
+  data: ProductCartPopulated
+  shopId: Shop['id']
 }>();
 
-const emit = defineEmits<{ (e: 'onDeleteProduct'): void }>();
+const emit = defineEmits<{ onDeleteProduct: [] }>();
 
 const cartStore = useCartStore();
-const { $api } = useNuxtApp();
-const toast = useToast();
-const config = useRuntimeConfig();
 const route = useRoute();
+const queryClient = useQueryClient();
+
+const {
+  mutate: deleteCartProduct,
+} = useDeleteCartProduct(props.data.inventory.id, {
+  onSuccess(data) {
+    cartStore.getCartHeader();
+    emit('onDeleteProduct');
+    const cacheGetCart = queryClient.getQueryData<ResponseGetCart>(['get-cart']);
+    if (cacheGetCart) {
+      cacheGetCart.summaryOrder = data.summaryOrder;
+      cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp++;
+    }
+  },
+});
 
 const goToDetailProduct = () => {
   navigateTo(`${ROUTES.PRODUCTS}/${props.data.inventory.product.id}`);
-};
-
-const removeProduct = async (id: IProductInventory['id']) => {
-  const { error, data } = await $api.cart.deleteProduct(id);
-  if (error.value) {
-    toast.add({
-      ...toastCustom.error,
-      title: 'Delete product cart failed',
-    });
-  }
-  else {
-    emit('onDeleteProduct');
-    await cartStore.getCartHeader();
-    cartStore.summaryOrder = data.value?.summaryOrder || null;
-    cartStore.totalProductsCart--;
-  }
 };
 </script>
 
@@ -57,7 +55,7 @@ const removeProduct = async (id: IProductInventory['id']) => {
     </div>
 
     <NuxtImg
-      :src="config.public.awsHostBucket + '/' + props.data?.inventory?.product?.images[0]?.relative_url"
+      :src="`domainAwsS3/${props.data?.inventory?.product?.images[0]?.relative_url}`"
       width="180"
       height="180"
       class="max-h-[180px] max-w-[180px] cursor-pointer rounded"
@@ -91,7 +89,7 @@ const removeProduct = async (id: IProductInventory['id']) => {
           <div
             v-if="route.path === ROUTES.CART"
             class="flex cursor-pointer items-center gap-1"
-            @click="removeProduct(props.data.inventory.id)"
+            @click.once="deleteCartProduct()"
           >
             <Icon name="uil:trash" />
             <p>Remove</p>

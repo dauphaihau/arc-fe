@@ -1,37 +1,51 @@
-import type { NitroFetchOptions } from 'nitropack';
-import { StatusCodes } from 'http-status-codes';
+import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
 import { RESOURCES } from '~/config/enums/resources';
-import type { IUser, LoginBody, RegisterBody } from '~/interfaces/user';
+import type { User } from '~/types/user';
 import { TOKEN_TYPES } from '~/config/enums/token';
 import { ROUTES } from '~/config/enums/routes';
 import { toastCustom } from '~/config/toast';
+import type {
+  LoginBody, RegisterBody, UserAuthenticated
+} from '~/types/auth';
 
-export function useRegister(
-  options?: NitroFetchOptions<never>
-) {
+export function useRegister() {
+  const authStore = useAuthStore();
+
   return useMutation({
     mutationKey: ['register'],
     mutationFn: (body: RegisterBody) => {
-      return useCustomFetchTemp.post<{ user: IUser }>(
+      return useCustomFetchTemp.post<{ user: UserAuthenticated }>(
         `${RESOURCES.AUTH}/register`,
-        body,
-        options
+        body
       );
+    },
+    onSuccess: (data) => {
+      if (data?.user) {
+        authStore.user = data.user;
+        authStore.setExpTokens();
+      }
     },
   });
 }
 
-export function useLogin(
-  options?: NitroFetchOptions<never>
-) {
+export function useLogin() {
+  const authStore = useAuthStore();
+  const cartStore = useCartStore();
+
   return useMutation({
     mutationKey: ['login'],
     mutationFn: (body: LoginBody) => {
-      return useCustomFetchTemp.post<{ user: IUser }>(
+      return useCustomFetchTemp.post<{ user: UserAuthenticated }>(
         `${RESOURCES.AUTH}/login`,
-        body,
-        options
+        body
       );
+    },
+    onSuccess: (data) => {
+      if (data?.user) {
+        authStore.user = data.user;
+        authStore.setExpTokens();
+        cartStore.getCartHeader();
+      }
     },
   });
 }
@@ -39,41 +53,35 @@ export function useLogin(
 export function useLogout() {
   const authStore = useAuthStore();
   const toast = useToast();
+
   return useMutation({
     mutationKey: ['logout'],
     mutationFn: () => {
       return useCustomFetchTemp.post(
         `${RESOURCES.AUTH}/logout`,
-        null,
-        {
-          onResponse: ({ response }) => {
-            if (response.status === StatusCodes.OK) {
-              authStore.clearAll();
-              navigateTo(ROUTES.HOME);
-            }
-            else {
-              toast.add({
-                ...toastCustom.error,
-                title: 'An unknown error occurred. Please try again',
-              });
-            }
-          },
-        }
+        null
       );
+    },
+    onSuccess() {
+      authStore.clearAll();
+      navigateTo(ROUTES.HOME);
+    },
+    onError() {
+      toast.add({
+        ...toastCustom.error,
+        title: 'An unknown error occurred. Please try again',
+      });
     },
   });
 }
 
-export function useForgetPassword(
-  options?: NitroFetchOptions<never>
-) {
+export function useForgetPassword() {
   return useMutation({
     mutationKey: ['forget-password'],
-    mutationFn: (email: IUser['email']) => {
+    mutationFn: (email: User['email']) => {
       return useCustomFetchTemp.post(
         `${RESOURCES.AUTH}/forgot-password`,
-        { email },
-        options
+        { email }
       );
     },
   });
@@ -81,9 +89,11 @@ export function useForgetPassword(
 
 export function useVerifyToken(
   token?: string,
-  options?: NitroFetchOptions<never>
+  options?: NitroFetchOptions<NitroFetchRequest>
 ) {
   return useQuery({
+    enabled: !!token,
+    retry: false,
     queryKey: ['verify-token'],
     queryFn: () => {
       return useCustomFetchTemp.get(
@@ -92,19 +102,28 @@ export function useVerifyToken(
         options
       );
     },
-    retry: false,
-    enabled: !!token,
   });
 }
 
 export function useResetPassword(token: string) {
+  const authStore = useAuthStore();
+  const cartStore = useCartStore();
+
   return useMutation({
     mutationKey: ['reset-password'],
-    mutationFn: (password: IUser['password']) => {
-      return useCustomFetchTemp.post<{ user: IUser }>(
+    mutationFn: (password: User['password']) => {
+      return useCustomFetchTemp.post<{ user: UserAuthenticated }>(
         `${RESOURCES.AUTH}/reset-password?token=${token}`,
         { password }
       );
+    },
+    onSuccess: (data) => {
+      if (data?.user) {
+        authStore.user = data.user;
+        authStore.tokenResetPassword = '';
+        authStore.setExpTokens();
+        cartStore.getCartHeader();
+      }
     },
   });
 }

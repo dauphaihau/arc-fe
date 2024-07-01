@@ -1,27 +1,26 @@
 <script setup lang="ts">
-import type { ICategory } from '~/interfaces/category';
-
-const { $api } = useNuxtApp();
+import type { Category } from '~/types/category';
+import { useGetCategories } from '~/services/category';
 
 const emit = defineEmits<
-  { (e: 'onChangeCategory', value: ICategory['id']): void }
+  { (e: 'onChangeCategory', value: Category['id']): void }
 >();
 
 const state = reactive({
   input: '',
   categoriesName: [] as string[],
-  name: '' as ICategory['name'],
-  parent: null as ICategory['parent'],
+  name: '' as Category['name'],
+  parent: null as Category['parent'],
   isOpen: false,
-  rootCategories: [] as ICategory[],
+  rootCategories: [] as Category[],
   requiredCategories: [],
   categoryToEmit: '',
 });
 
 const subCategories = ref<{
   [key: string]: {
-    name: ICategory['name']
-    categories: ICategory[]
+    name: Category['name']
+    categories: Category[]
   }
 }>({});
 
@@ -29,7 +28,7 @@ const params = computed(() => ({
   parent: state.parent,
 }));
 
-const { pending, data } = await $api.category.getCategories(params);
+const { isPending, data } = useGetCategories(params.value);
 
 onMounted(() => {
   if (!state.rootCategories.length && data.value) {
@@ -51,14 +50,14 @@ watch(() => data.value, () => {
   }
 });
 
-const onSelectRootCategory = ({ id: categoryId, name }: ICategory) => {
+const onSelectRootCategory = ({ id: categoryId, name }: Category) => {
   subCategories.value = {};
   state.parent = categoryId;
   state.name = name;
   state.categoriesName.push(name);
 };
 
-const onSelectSubCategory = ({ parent, id: categoryId, name }: ICategory) => {
+const onSelectSubCategory = ({ parent, id: categoryId, name }: Category) => {
   if (categoryId === state.parent) {
     return;
   }
@@ -140,7 +139,7 @@ const onSave = () => {
 
         <div class="rounded-lg bg-zinc-200/50 p-3">
           <div
-            v-if="pending && state.rootCategories.length === 0"
+            v-if="isPending && state.rootCategories.length === 0"
             class="grid place-content-center p-5"
           >
             <UIcon

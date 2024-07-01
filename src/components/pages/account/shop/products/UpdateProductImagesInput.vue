@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { PRODUCT_CONFIG } from '~/config/enums/product';
-import type { IProduct, IProductImage } from '~/interfaces/product';
+import type { Product, ProductImage } from '~/types/product';
 import { toastCustom } from '~/config/toast';
 import type { IOnChangeUpdateImages } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
 
@@ -8,7 +8,7 @@ const props = withDefaults(
   defineProps<{
     countValidate: number
     loading: boolean
-    images: IProduct['images']
+    images: Product['images']
   }>(),
   {
     images: () => [],
@@ -16,7 +16,6 @@ const props = withDefaults(
 );
 
 const toast = useToast();
-const config = useRuntimeConfig();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
@@ -24,7 +23,7 @@ const state = reactive({
   fileImages: [] as File[],
   urlImages: [] as string[],
   imagesInDB: [...props.images],
-  idsImagesForDelete: [] as IProductImage['id'][],
+  idsImagesForDelete: [] as ProductImage['id'][],
 });
 
 const emit = defineEmits<{
@@ -65,7 +64,7 @@ const removeImage = (index: number) => {
   state.urlImages.splice(index, 1);
 };
 
-const removeImageInDB = (id: IProductImage['id'], index: number) => {
+const removeImageInDB = (id: ProductImage['id'], index: number) => {
   state.imagesInDB.splice(index, 1);
   state.idsImagesForDelete.push(id);
 };
@@ -96,7 +95,7 @@ watch(state, () => {
           @click="removeImageInDB(img.id, index)"
         >
           <NuxtImg
-            :src="config.public.awsHostBucket + '/' + img?.relative_url"
+            :src="`domainAwsS3/${img?.relative_url}`"
             class="size-image"
           />
           <div

@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import dayjs from 'dayjs';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import type { CreateCouponPayload, ICoupon } from '~/interfaces/coupon';
+import type { CreateCouponBody, Coupon } from '~/types/coupon';
 import { COUPON_APPLIES_TO, COUPON_MIN_ORDER_TYPES, COUPON_TYPES } from '~/config/enums/coupon';
 import { couponSchema } from '~/schemas/coupon.schema';
-import type { UndefinableFields } from '~/interfaces/utils';
-import type { IProduct } from '~/interfaces/product';
+import type { UndefinableFields } from '~/types/utils';
+import type { Product } from '~/types/product';
 import { ROUTES } from '~/config/enums/routes';
+import { useShopCreateCoupon } from '~/services/shop';
+import { toastCustom } from '~/config/toast';
 
-const { $api } = useNuxtApp();
 const router = useRouter();
 const toast = useToast();
 
-type InitState = UndefinableFields<CreateCouponPayload, 'amount_off'
+const {
+  mutateAsync: runSale,
+  isPending: isPendingRunSale,
+} = useShopCreateCoupon();
+
+type InitState = UndefinableFields<CreateCouponBody, 'amount_off'
   | 'percent_off'
   | 'min_order_value'
   | 'min_products'
@@ -32,7 +38,6 @@ const state = reactive<InitState>({
 });
 
 const formRef = ref();
-const loading = ref(false);
 const btnSubmit = ref();
 
 const typeOptions = [
@@ -52,7 +57,7 @@ const couponAppliesToOptions = [
   { value: COUPON_APPLIES_TO.SPECIFIC, label: 'Select products' },
 ];
 
-const validate = (stateValidate: CreateCouponPayload): FormError[] => {
+const validate = (stateValidate: CreateCouponBody): FormError[] => {
   let errors: FormError[] = [];
 
   const { type, min_order_type, applies_to } = stateValidate;
@@ -81,9 +86,8 @@ const validate = (stateValidate: CreateCouponPayload): FormError[] => {
   return errors;
 };
 
-async function onSubmit(event: FormSubmitEvent<CreateCouponPayload>) {
+async function onSubmit(event: FormSubmitEvent<CreateCouponBody>) {
   formRef.value.clear();
-  loading.value = true;
 
   switch (event.data.type) {
     case COUPON_TYPES.FREE_SHIP:
@@ -113,14 +117,19 @@ async function onSubmit(event: FormSubmitEvent<CreateCouponPayload>) {
 
   event.data.code = event.data.code.toUpperCase();
 
-  const { error } = await $api.shop.createCoupon(event.data);
-  loading.value = false;
-  if (!error.value) {
-    router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.COUPONS);
-    toast.add({ title: 'Create coupon success' });
+  try {
+    await runSale(event.data);
+    await router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.SALES);
+    toast.add({
+      ...toastCustom.success,
+      title: 'Run sale success',
+    });
   }
-  else {
-    toast.add({ title: 'Create coupon failed' });
+  catch (error) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Run sale failed',
+    });
   }
 }
 
@@ -130,12 +139,12 @@ function onError(event: FormErrorEvent) {
   element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-const onChangeDuration = (values: Pick<ICoupon, 'start_date' | 'end_date'>) => {
+const onChangeDuration = (values: Pick<Coupon, 'start_date' | 'end_date'>) => {
   state.start_date = new Date(values.start_date);
   state.end_date = new Date(values.end_date);
 };
 
-const onSelectProd = (ids: IProduct['id'][]) => {
+const onSelectProd = (ids: Product['id'][]) => {
   state.applies_product_ids = ids;
 };
 </script>
@@ -163,7 +172,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
           <!--            description="The Voucher name will not be displayed to the Buyer" -->
           <!--            required -->
           <!--          > -->
-          <!--            <UInput v-model="state.title" :disabled="loading" size="lg" /> -->
+          <!--            <UInput v-model="state.title" :disabled="isPendingRunSale" size="lg" /> -->
           <!--          </UFormGroup> -->
           <UFormGroup
             label="Sale name"
@@ -176,7 +185,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
             <UInput
               v-model="state.code"
               placeholder="Ex. ARCSALE"
-              :disabled="loading"
+              :disabled="isPendingRunSale"
               size="lg"
               :ui="{
                 base: 'uppercase',
@@ -297,7 +306,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
         <!--          name="max_uses" -->
         <!--          class="mb-4 w-1/5" -->
         <!--        > -->
-        <!--          <UInput v-model="state.max_uses" type="number" :disabled="loading" size="lg" /> -->
+        <!--          <UInput v-model="state.max_uses" type="number" :disabled="isPendingRunSale" size="lg" /> -->
         <!--        </UFormGroup> -->
 
         <!--        <UFormGroup -->
@@ -305,7 +314,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
         <!--          name="max_uses_per_user" -->
         <!--          class="mb-4 w-1/5" -->
         <!--        > -->
-        <!--          <UInput v-model="state.max_uses_per_user" type="number" :disabled="loading" size="lg" /> -->
+        <!--          <UInput v-model="state.max_uses_per_user" type="number" :disabled="isPendingRunSale" size="lg" /> -->
         <!--        </UFormGroup> -->
 
         <UFormGroup
@@ -350,7 +359,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
   >
     <UButton
       :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.SALES}`"
-      :disabled="loading"
+      :disabled="isPendingRunSale"
       size="sm"
       type="submit"
       color="gray"
@@ -358,7 +367,7 @@ const onSelectProd = (ids: IProduct['id'][]) => {
       Cancel
     </UButton>
     <UButton
-      :disabled="loading"
+      :loading="isPendingRunSale"
       size="sm"
       type="submit"
       @click="() => btnSubmit.click()"

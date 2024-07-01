@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type {
-  IProductCombineVariant, IProductInventory, IProductVariant, VariantOptionsCreate
-} from '~/interfaces/product';
+  ProductCombineVariant, ProductInventory, ProductVariant, VariantOptionsCreate
+} from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import { productInventorySchema } from '~/schemas/product.schema';
+import { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { IOnChangeCreateVariant } from '~/components/pages/account/shop/products/CreateProductForm.vue';
 
 const props = defineProps<{ countValidate: number }>();
@@ -20,7 +20,7 @@ type State = {
   errorSubVariantOption: string
   errorVariantGroupName: string
   errorVariantSubGroupName: string
-} & Pick<IProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>
+} & Pick<ProductCombineVariant, 'variant_group_name' | 'variant_sub_group_name'>
 & Record<'variants' | 'subVariants', VariantOption[]>;
 
 type VariantTable = {
@@ -28,9 +28,9 @@ type VariantTable = {
   sub_variant_name?: string
   errorPrice: string
   errorStock: string
-  price?: IProductInventory['price']
-} & Pick<IProductVariant, 'variant_name'> &
-Pick<IProductInventory, | 'stock' | 'sku'>;
+  price?: ProductInventory['price']
+} & Pick<ProductVariant, 'variant_name'> &
+Pick<ProductInventory, | 'stock' | 'sku'>;
 
 const emit = defineEmits<{
   (e: 'onChange', value: IOnChangeCreateVariant | null): void

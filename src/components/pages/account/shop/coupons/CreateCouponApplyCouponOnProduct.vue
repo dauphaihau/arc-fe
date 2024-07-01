@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import type { IProduct } from '~/interfaces/product';
+import type { Product } from '~/types/product';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import { useShopGetProducts } from '~/services/shop';
 
-const { $api } = useNuxtApp();
-
-const emit = defineEmits<{ (e: 'onSelectProd', value: IProduct['id'][]): void }>();
+const emit = defineEmits<{ (e: 'onSelectProd', value: Product['id'][]): void }>();
 
 const isOpen = ref(false);
-const selectedRows = ref<IProduct[]>([]);
+const selectedRows = ref<Product[]>([]);
 const page = ref(1);
 
-const { pending, data } = await $api.shop.getProducts({
-  page,
+
+const {
+  isPending: isPendingShopGetProducts,
+  data: dataShopGetProducts,
+} = useShopGetProducts({
+  page: page.value,
 });
 
 defineShortcuts({
@@ -48,10 +51,10 @@ const columnsPreviewTable = [
 ];
 
 const rowsDialog = computed(() => {
-  if (!data.value) {
+  if (!dataShopGetProducts.value) {
     return [];
   }
-  return data.value.results.map(prod => ({
+  return dataShopGetProducts.value.results.map(prod => ({
     id: prod.id,
     title: prod.title,
     summary_inventory: prod.summary_inventory,
@@ -65,7 +68,7 @@ const applyProducts = () => {
   isOpen.value = false;
 };
 
-const removeProd = (id: IProduct['id']) => {
+const removeProd = (id: Product['id']) => {
   selectedRows.value = selectedRows.value.filter(row => row.id !== id);
 };
 </script>
@@ -89,7 +92,7 @@ const removeProd = (id: IProduct['id']) => {
           v-model="selectedRows"
           :rows="rowsDialog"
           :columns="columnsDialog"
-          :loading="pending"
+          :loading="isPendingShopGetProducts"
           :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
         >
           <template #price-data="{ row }">

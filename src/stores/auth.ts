@@ -1,24 +1,21 @@
 import dayjs from 'dayjs';
-import type { IUser, IUserPopulated } from '~/interfaces/user';
 import { RESOURCES } from '~/config/enums/resources';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
-import type { IShop } from '~/interfaces/shop';
+import type { UserAuthenticated } from '~/types/auth';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as IUserPopulated | IUser | null | undefined,
+    user: null as UserAuthenticated | null,
     tokenResetPassword: '',
     emailRequestForgetPassword: '',
   }),
   getters: {
-    getUser: state => state.user,
-    getShop: state => state.user?.shop as IShop,
     isLogged: state => !!state.user,
     isOwnedShop: state => !!state.user?.shop,
   },
   actions: {
     async getCurrentUser() {
-      const res = await useCustomFetchTemp.get<{ user: IUser }>(`${RESOURCES.USER}/me`);
+      const res = await useCustomFetchTemp.get<{ user: UserAuthenticated }>(`${RESOURCES.USER}/me`);
       this.user = res.user;
     },
 

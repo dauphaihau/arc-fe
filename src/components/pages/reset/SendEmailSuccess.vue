@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { StatusCodes } from 'http-status-codes';
 import { useForgetPassword } from '~/services/auth';
 import { toastCustom } from '~/config/toast';
 import { RESET_PASSWORD_VIEWS } from '~/config/enums/common';
@@ -14,24 +13,21 @@ const authStore = useAuthStore();
 const isResendEmail = ref(false);
 
 const {
-  mutate: resend,
+  mutateAsync: resend,
   isPending: isPendingResend,
-} = useForgetPassword({
-  onResponse: ({ response }) => {
-    if (response.status === StatusCodes.OK) {
-      isResendEmail.value = true;
-    }
-    else {
-      toast.add({
-        ...toastCustom.error,
-        title: 'An unknown error occurred. Please try again',
-      });
-    }
-  },
-});
+} = useForgetPassword();
 
-function resendEmail() {
-  resend(authStore.emailRequestForgetPassword);
+async function resendEmail() {
+  try {
+    await resend(authStore.emailRequestForgetPassword);
+    isResendEmail.value = true;
+  }
+  catch (error) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'An unknown error occurred. Please try again',
+    });
+  }
 }
 </script>
 

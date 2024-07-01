@@ -1,18 +1,33 @@
 <script setup lang="ts">
+/*
+  use in cart, cart/checkout page
+ */
 import { watchDebounced } from '@vueuse/core';
-import type { IUpdateProductCart, IProductCartPopulated } from '~/interfaces/cart';
+import type { UpdateCartProductBody, ProductCartPopulated, ResponseGetCart } from '~/types/cart';
 import { useCartStore } from '~/stores/cart';
-import { toastCustom } from '~/config/toast';
+import { useUpdateCartProduct } from '~/services/cart';
 
 const { data: { quantity, inventory } } = defineProps<{
-  data: IProductCartPopulated
+  data: ProductCartPopulated
 }>();
 
-const { $api } = useNuxtApp();
 const cartStore = useCartStore();
-const toast = useToast();
+const queryClient = useQueryClient();
 
 const stateInput = ref(quantity);
+
+const {
+  mutate: updateProductCart,
+  isPending: isPendingUpdateProductCart,
+} = useUpdateCartProduct({
+  onSuccess: (data) => {
+    const cacheGetCart = queryClient.getQueryData<ResponseGetCart>(['get-cart']);
+    if (cacheGetCart) {
+      cacheGetCart.summaryOrder = data.summaryOrder;
+      cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp++;
+    }
+  },
+});
 
 const decreaseQty = () => {
   if (stateInput.value === 1) {
@@ -30,29 +45,19 @@ watch(() => stateInput.value, () => {
 watchDebounced(
   stateInput,
   async () => {
-    const body: IUpdateProductCart = {
+    const body: UpdateCartProductBody = {
       inventory: inventory.id,
       quantity: Number(stateInput.value),
     };
-    if (cartStore.mapAdditionInfoItems) {
+    if (cartStore.additionInfoOrderShops) {
       body.additionInfoItems = Array
-        .from(cartStore.mapAdditionInfoItems)
+        .from(cartStore.additionInfoOrderShops)
         .map(([keyShopId, value]) => ({
           shop: keyShopId,
           coupon_codes: value?.coupon_codes || [],
         }));
     }
-
-    const { error, data } = await $api.cart.updateProduct(body);
-    if (error.value) {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Update product failed',
-      });
-    }
-    else {
-      cartStore.summaryOrder = data.value?.summaryOrder || null;
-    }
+    updateProductCart(body);
   },
   { debounce: 500, maxWait: 1000 }
 );
@@ -67,11 +72,13 @@ watchDebounced(
       icon="i-heroicons-minus"
       color="white"
       class="rounded-l-md rounded-r-none"
+      :disabled="isPendingUpdateProductCart"
       @click="decreaseQty"
     />
     <UInput
       v-model.number="stateInput"
       class="rounded-l-none"
+      :disabled="isPendingUpdateProductCart"
       type="number"
       :ui="{ base: 'text-center rounded-l-none' }"
       @keypress="keyPressIsNumber($event)"
@@ -80,6 +87,7 @@ watchDebounced(
       icon="i-heroicons-plus"
       color="white"
       class="rounded-l-none rounded-r-md"
+      :disabled="isPendingUpdateProductCart"
       @click="() => stateInput++"
     />
   </UButtonGroup>

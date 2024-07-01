@@ -3,41 +3,35 @@ import type { FormSubmitEvent } from '#ui/types';
 import { userSchema } from '~/schemas/user.schema';
 import { useResetPassword } from '~/services/auth';
 import { ROUTES } from '~/config/enums/routes';
+import type { ResetPasswordBody } from '~/types/auth';
 
 const authStore = useAuthStore();
+
+const formRef = ref();
+const resetPasswordSuccess = ref(false);
+const unknownErrorServerMsg = ref('');
+
+const stateSubmit: Partial<ResetPasswordBody> = reactive({});
+
 const {
   mutateAsync: resetPassword,
   isPending: isPendingResetPassword,
 } = useResetPassword(authStore.tokenResetPassword);
 
-const formRef = ref();
-const resetPasswordSuccess = ref(false);
-
-const state = reactive({
-  unknownErrorServerMsg: '',
-});
-
-const stateSubmit = reactive({
-  password: undefined,
-  passwordConfirm: undefined,
-});
-
-async function onSubmit(event: FormSubmitEvent<Record<'password' | 'passwordConfirm', string>>) {
+async function onSubmit(event: FormSubmitEvent<ResetPasswordBody>) {
   formRef.value.clear();
   const { password, passwordConfirm } = event.data;
   if (password !== passwordConfirm) {
     formRef.value.setErrors([{ path: 'passwordConfirm', message: 'This password does not match. Try again.' }]);
     return;
   }
-  const res = await resetPassword(password);
-  if (res.user) {
-    authStore.user = res.user;
-    authStore.tokenResetPassword = '';
-    authStore.setExpTokens();
+
+  try {
+    await resetPassword(password);
     resetPasswordSuccess.value = true;
   }
-  else {
-    state.unknownErrorServerMsg = 'An unknown error occurred. Please try again';
+  catch (error) {
+    unknownErrorServerMsg.value = 'An unknown error occurred. Please try again';
   }
 }
 </script>
@@ -51,7 +45,7 @@ async function onSubmit(event: FormSubmitEvent<Record<'password' | 'passwordConf
       <template #content>
         <div class="space-y-5">
           <UAlert
-            v-if="state.unknownErrorServerMsg"
+            v-if="unknownErrorServerMsg"
             color="rose"
             variant="solid"
             :close-button="{
@@ -61,8 +55,8 @@ async function onSubmit(event: FormSubmitEvent<Record<'password' | 'passwordConf
               padded: false,
             }"
             title=""
-            :description="state.unknownErrorServerMsg"
-            @close="state.unknownErrorServerMsg=''"
+            :description="unknownErrorServerMsg"
+            @close="unknownErrorServerMsg=''"
           />
 
           <UForm

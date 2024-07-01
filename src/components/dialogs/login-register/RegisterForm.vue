@@ -1,64 +1,56 @@
 <script setup lang="ts">
-import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
+import { FetchError } from 'ofetch';
+import { StatusCodes } from 'http-status-codes';
 import { userSchema } from '~/schemas/user.schema';
-import type { IUser, RegisterBody } from '~/interfaces/user';
+import type { User } from '~/types/user';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 import { useRegister } from '~/services/auth';
+import type { RegisterBody } from '~/types/auth';
 
-const authStore = useAuthStore();
-
+const invalidEmails: string[] = [];
 const formRef = ref();
+const unknownErrorServerMsg = ref('');
 
-const state = reactive({
-  invalidEmails: [] as string[],
-  unknownErrorServerMsg: '',
-});
-
-const stateSubmit = reactive({
-  name: '',
-  email: '',
-  password: '',
-});
+const stateSubmit: Partial<RegisterBody> = reactive({});
 
 const {
-  mutate: register,
+  mutateAsync: register,
   isPending: isPendingRegister,
-} = useRegister({
-  onResponse: ({ response }) => {
-    if (response.status === StatusCodes.CONFLICT) {
-      formRef.value.setErrors([{ path: 'email', message: 'Email already taken' }]);
-      state.invalidEmails.push(stateSubmit.email);
-      return;
-    }
-    if (response.status === StatusCodes.CREATED) {
-      authStore.user = response._data.user;
-      authStore.setExpTokens();
-      return;
-    }
-    state.unknownErrorServerMsg = 'An unknown error occurred. Please try again';
-  },
-});
+} = useRegister();
 
 async function onSubmit(event: FormSubmitEvent<RegisterBody>) {
   formRef.value.clear();
-  if (state.invalidEmails.includes(event.data.email)) {
+  if (invalidEmails.includes(event.data.email)) {
     formRef.value.setErrors([{ path: 'email', message: 'Invalid email' }]);
     return;
   }
 
-  const userPreferences = parseJSON<IUser['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
-  register({
-    ...event.data,
-    market_preferences: userPreferences,
-  });
+  const userPreferences = parseJSON<User['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
+
+  try {
+    await register({
+      ...event.data,
+      market_preferences: userPreferences,
+    });
+  }
+  catch (error) {
+    if (error instanceof FetchError) {
+      if (error.status === StatusCodes.CONFLICT) {
+        formRef.value.setErrors([{ path: 'email', message: 'Email already taken' }]);
+        invalidEmails.push(event.data.email);
+        return;
+      }
+      unknownErrorServerMsg.value = 'An unknown error occurred. Please try again';
+    }
+  }
 }
 </script>
 
 <template>
   <div class="space-y-5">
     <UAlert
-      v-if="state.unknownErrorServerMsg"
+      v-if="unknownErrorServerMsg"
       color="rose"
       variant="solid"
       :close-button="{
@@ -69,8 +61,8 @@ async function onSubmit(event: FormSubmitEvent<RegisterBody>) {
       }"
       title=""
       :ui="{ description: 'mt-[2px]' }"
-      :description="state.unknownErrorServerMsg"
-      @close="state.unknownErrorServerMsg = ''"
+      :description="unknownErrorServerMsg"
+      @close="unknownErrorServerMsg = ''"
     />
 
     <div class="rounded">

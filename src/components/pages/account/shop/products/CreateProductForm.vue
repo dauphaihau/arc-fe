@@ -8,18 +8,20 @@ import {
 import { ROUTES } from '~/config/enums/routes';
 import type {
   CreateProductBody,
-  IProductAttribute,
-  IProductCombineVariant,
-  IProductSingleVariant
-} from '~/interfaces/product';
+  ProductCombineVariant,
+  ProductSingleVariant
+} from '~/types/product';
 import { toastCustom } from '~/config/toast';
+import { CreateShippingProductDialog } from '#components';
+import { useShopCreateProduct } from '~/services/shop';
+import { useGetPresignedUrl } from '~/services/upload';
 
 export type IOnChangeCreateVariant = Pick<CreateProductBody, 'variant_type' | 'new_variants'> &
-  (Omit<IProductSingleVariant, 'variants'> | Omit<IProductCombineVariant, 'variants'>) | null;
+  (Omit<ProductSingleVariant, 'variants'> | Omit<ProductCombineVariant, 'variants'>) | null;
 
-const { $api } = useNuxtApp();
 const router = useRouter();
 const toast = useToast();
+const modal = useModal();
 
 const fileImages = ref<File[]>([]);
 const formRef = ref();
@@ -27,12 +29,12 @@ const isDraftProduct = ref(false);
 const isVariantProduct = ref(false);
 const loadingSubmit = ref(false);
 const btnSubmitRef = ref();
-const disabledButtonSubmit = ref(true);
+const enabledButtonSubmit = ref(false);
 const countValidate = ref(0);
 
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
-const state = reactive<CreateProductBody>({
+const state = reactive<Partial<CreateProductBody>>({
   title: '',
   description: '',
   who_made: computed(() => selectedWhoMade.value.id),
@@ -49,20 +51,32 @@ const state = reactive<CreateProductBody>({
   attributes: [],
 });
 
-const onChangeImages = (values: File[]) => {
-  fileImages.value = values;
+const {
+  mutateAsync: createProduct,
+  isPending: isPendingCreateProduct,
+} = useShopCreateProduct();
+
+const {
+  mutateAsync: getPresignedUrl,
+} = useGetPresignedUrl();
+
+const showCreateShippingProductDialog = () => {
+  modal.open(CreateShippingProductDialog, {
+    initData: state.shipping,
+    onApply(val) {
+      state.shipping = val;
+    },
+  });
 };
 
 const onChangeVariants = (values: IOnChangeCreateVariant) => {
-  if (!values) {
-    return;
-  }
+  if (!values) return;
   Object.keys(values).forEach((key) => {
     state[key] = values[key];
   });
 };
 
-const validate = (values: CreateProductBody): FormError[] => {
+const validateForm = (values: CreateProductBody): FormError[] => {
   let errors: FormError[] = [];
   countValidate.value++;
 
@@ -88,7 +102,9 @@ const validate = (values: CreateProductBody): FormError[] => {
 };
 
 async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
-  const dataSubmit = { ...event.data };
+  // const dataSubmit = { ...event.data };
+  const dataSubmit = event.data;
+
   if (isDraftProduct.value) {
     dataSubmit.state = PRODUCT_STATES.DRAFT;
   }
@@ -98,23 +114,21 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
   if (!fileImages.value || fileImages.value.length === 0) {
     return;
   }
-  if (dataSubmit.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
-    delete dataSubmit.price;
-    delete dataSubmit.sku;
-    delete dataSubmit.stock;
-  }
+  // if (dataSubmit.variant_type !== PRODUCT_VARIANT_TYPES.NONE) {
+  //   delete dataSubmit.price;
+  //   delete dataSubmit.sku;
+  //   delete dataSubmit.stock;
+  // }
 
   loadingSubmit.value = true;
 
   const promisesUploadImages = [];
   const keys = [];
+
   for (let i = 0; i < fileImages.value.length; i++) {
-    const { data } = await $api.upload.getPresignedUrl();
-    if (!data.value) {
-      return;
-    }
-    const presignedUrl = data.value.presignedUrl;
-    if (!presignedUrl) {
+    const { presignedUrl, key } = await getPresignedUrl();
+
+    if (!presignedUrl || !key) {
       toast.add({
         ...toastCustom.error,
         title: 'Oops',
@@ -122,7 +136,9 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
       });
       return;
     }
-    keys.push(data.value.key);
+
+    keys.push(key);
+
     const promise = useFetch(presignedUrl, {
       method: 'PUT',
       headers: {
@@ -130,32 +146,33 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
       },
       body: fileImages.value[i],
     });
+
     promisesUploadImages.push(promise);
   }
+
   await Promise.all(promisesUploadImages);
 
-  const { error } = await $api.shop.createProduct({
-    ...dataSubmit,
-    images: keys.map((key, index) => ({ relative_url: key, rank: index + 1 })),
-    is_digital: !!dataSubmit.is_digital,
-  });
-  loadingSubmit.value = false;
-  if (error.value) {
+  try {
+    await createProduct({
+      ...dataSubmit,
+      images: keys.map((key, index) => ({ relative_url: key, rank: index + 1 })),
+      is_digital: !!dataSubmit.is_digital,
+    });
+    toast.add({
+      ...toastCustom.success,
+      title: 'Create product success',
+    });
+    await router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
+  }
+  catch (error) {
     toast.add({
       ...toastCustom.error,
       title: 'Create product failed',
     });
   }
-  else {
-    router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
-    toast.add({
-      ...toastCustom.success,
-      title: 'Create product success',
-    });
-  }
 }
 
-function onError(event: FormErrorEvent) {
+function onErrorFrom(event: FormErrorEvent) {
   event.errors.sort((a, b) => {
     const sortingArr = ['description', 'title'];
     return sortingArr.indexOf(b.path) - sortingArr.indexOf(a.path);
@@ -176,11 +193,13 @@ watchDebounced(
       .omit({
         variants: true,
         images: true,
+        shipping: true,
         price: isVariantProduct.value || undefined,
         stock: isVariantProduct.value || undefined,
         sku: isVariantProduct.value || undefined,
       }).safeParse(state);
-    disabledButtonSubmit.value = !result.success || fileImages.value.length === 0;
+    const conditions = [result.success, fileImages.value.length > 0, state.shipping];
+    enabledButtonSubmit.value = conditions.every(Boolean);
   },
   { debounce: 500, maxWait: 1000, deep: true }
 );
@@ -214,10 +233,10 @@ watch(() => [state.stock, state.price], () => {
   <UForm
     ref="formRef"
     :validate-on="['submit']"
-    :validate="validate"
+    :validate="validateForm"
     :state="state"
     class="space-y-7"
-    @error="onError"
+    @error="onErrorFrom"
     @submit="onSubmit"
   >
     <WrapperFormGroupCard>
@@ -226,8 +245,8 @@ watch(() => [state.stock, state.price], () => {
       </template>
       <template #content>
         <CreateProductImagesInput
+          v-model="fileImages"
           class="mb-4"
-          @on-change="onChangeImages"
         />
         <UFormGroup
           label="Title"
@@ -337,21 +356,58 @@ watch(() => [state.stock, state.price], () => {
           </div>
 
           <UpdateCreateProductSearchCategoryInput
+            v-model="state.category"
             :title="state.title"
-            @on-change="(categoryId) => state.category = categoryId"
           />
 
           <UpdateCreateProductSelectAttributesInput
             v-if="state.category"
             :key="state.category"
+            v-model="state.attributes"
             :category-id="state.category"
-            @on-change="(attrs: IProductAttribute[]) => state.attributes = attrs"
           />
 
           <UpdateCreateProductTagsInput
+            v-model="state.tags"
             :count-validate="countValidate"
-            @on-change="(tags) => state.tags = tags"
           />
+        </div>
+      </template>
+    </WrapperFormGroupCard>
+
+    <WrapperFormGroupCard>
+      <template #title>
+        Shipping
+      </template>
+      <template #subtitle>
+        Give shoppers clear expectations about delivery time and cost by
+        making sure your shipping info is accurate,
+        including the shipping profile and your order processing schedule.
+      </template>
+      <template #content>
+        <div>
+          <UFormGroup
+            class="mb-4"
+            label="Shipping option"
+            name="shipping"
+            required
+          >
+            <div class="flex items-center gap-3">
+              <div
+                v-if="state.shipping"
+                class="text-gray-600"
+              >
+                {{ state.shipping.process_time }} processing time, from {{ state.shipping.zip }}
+              </div>
+              <UButton
+                color="gray"
+                variant="solid"
+                @click="showCreateShippingProductDialog"
+              >
+                {{ state.shipping ? 'Edit' : 'Add' }} shipping
+              </UButton>
+            </div>
+          </UFormGroup>
         </div>
       </template>
     </WrapperFormGroupCard>
@@ -449,7 +505,8 @@ watch(() => [state.stock, state.price], () => {
       Cancel
     </UButton>
     <UButton
-      :disabled="loadingSubmit || disabledButtonSubmit"
+      :disabled="!enabledButtonSubmit"
+      :loading="isPendingCreateProduct"
       size="md"
       type="submit"
       variant="soft"
@@ -461,7 +518,8 @@ watch(() => [state.stock, state.price], () => {
       Save
     </UButton>
     <UButton
-      :disabled="loadingSubmit || disabledButtonSubmit"
+      :disabled="!enabledButtonSubmit"
+      :loading="isPendingCreateProduct"
       size="md"
       type="submit"
       @click="() => btnSubmitRef.click()"
@@ -472,5 +530,5 @@ watch(() => [state.stock, state.price], () => {
 </template>
 
 <style scoped>
-@import url("src/assets/css/layout-shop.css");
+@import url("~/assets/css/layout-shop.css");
 </style>

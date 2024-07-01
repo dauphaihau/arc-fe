@@ -1,38 +1,39 @@
 <script lang="ts" setup>
 import { useSessionStorage } from '@vueuse/core';
+import { StatusCodes } from 'http-status-codes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
+import type { UserActivitiesSessionStorage } from '~/types/common';
+import { useGetDetailProduct } from '~/services/product';
 
 definePageMeta({ layout: 'market' });
 
-const { $api } = useNuxtApp();
 const route = useRoute();
 
 const {
-  pending, data, error: notFound,
-} = await $api.product.getDetailProduct(route.params.id as string);
+  data,
+  isPending: isPendingGetDetailProduct,
+} = useGetDetailProduct(route.params.id as string, {
+  onResponse: ({ response }) => {
+    if (response.status === StatusCodes.OK && response._data?.product) {
+      const userActivities = parseJSON<UserActivitiesSessionStorage>(
+        sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
+        ));
+      sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
 
-if (notFound.value) {
-  throw createError({
-    statusCode: 404,
-    statusMessage: 'Page Not Found',
-    fatal: true,
-  });
-}
-
-onMounted(() => {
-  if (data.value) {
-    const userActivities = parseJSON<IUserActivitiesSessionStorage>(
-      sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
-      ));
-    sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
-
-    useSessionStorage(
-      SESSION_STORAGE_KEYS.USER_ACTIVITIES,
-      { ...userActivities, categoryProductVisited: data.value.product.category }
-    );
-  }
+      useSessionStorage(
+        SESSION_STORAGE_KEYS.USER_ACTIVITIES,
+        { ...userActivities, categoryProductVisited: response._data.product.category }
+      );
+    }
+    else {
+      throw showError({
+        statusCode: 404,
+        statusMessage: 'Product Not Found',
+        fatal: true,
+      });
+    }
+  },
 });
 
 const priceVariantSelected = ref(0);
@@ -85,61 +86,59 @@ const summaryInventory = computed(() => {
 <template>
   <div class="mt-24">
     <div
-      v-if="pending"
+      v-if="isPendingGetDetailProduct"
       class="grid h-[80vh] w-full place-content-center"
     >
       <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
     <div
-      v-else
+      v-else-if="data?.product"
       class="space-y-20"
     >
-      <div v-if="data?.product">
-        <div class="mb-20 grid grid-cols-7">
-          <DetailProductImages
-            :images="data.product.images"
-            class="col-span-4"
-          />
-          <div class="col-span-2 space-y-6">
-            <!--            <div class="text-red-800 text-md font-semibold"> -->
-            <!--              Only 6 left and in 7 baskets -->
-            <!--            </div> -->
-            <div
-              v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
-              class="text-xl font-bold"
-            >
-              {{ convertCurrency(summaryInventory.lowestPrice) }}
-            </div>
-            <div
-              v-else
-              class="text-xl font-bold"
-            >
-              {{ priceVariantSelected
-                ? convertCurrency(priceVariantSelected)
-                : summaryInventory.lowestPrice === summaryInventory.highestPrice
-                  ? `${convertCurrency(summaryInventory.lowestPrice)}`
-                  : `${convertCurrency(summaryInventory.lowestPrice)} -
-                ${convertCurrency(summaryInventory.highestPrice)}`
-              }}
-            </div>
-
-            {{ data.product.title }}
-
-            <DetailProductAddToCartForm
-              :product="data.product"
-              @on-change-variant="(val) => priceVariantSelected = val"
-            />
-            <DetailProductInformation
-              :product="data.product"
-            />
-          </div>
-        </div>
-        <DetailProductMoreProductsByShop
-          :shop-id="data.product.shop.id"
-          class="mb-16"
+      <div class="mb-20 grid grid-cols-10">
+        <DetailProductImages
+          :images="data.product.images"
+          class="col-span-6"
         />
-        <DetailProductMoreProductsByCategory :category-id="data.product.category" />
+        <div class="col-span-4 space-y-6">
+          <!--            <div class="text-red-800 text-md font-semibold"> -->
+          <!--              Only 6 left and in 7 baskets -->
+          <!--            </div> -->
+          <div
+            v-if="data.product.variant_type === PRODUCT_VARIANT_TYPES.NONE"
+            class="text-xl font-bold"
+          >
+            {{ convertCurrency(summaryInventory.lowestPrice) }}
+          </div>
+          <div
+            v-else
+            class="text-xl font-bold"
+          >
+            {{ priceVariantSelected
+              ? convertCurrency(priceVariantSelected)
+              : summaryInventory.lowestPrice === summaryInventory.highestPrice
+                ? `${convertCurrency(summaryInventory.lowestPrice)}`
+                : `${convertCurrency(summaryInventory.lowestPrice)} -
+                ${convertCurrency(summaryInventory.highestPrice)}`
+            }}
+          </div>
+
+          {{ data.product.title }}
+
+          <DetailProductAddToCartForm
+            :product="data.product"
+            @on-change-variant="(val) => priceVariantSelected = val"
+          />
+          <DetailProductInformation
+            :product="data.product"
+          />
+        </div>
       </div>
+      <DetailProductMoreProductsByShop
+        :shop-id="data.product.shop.id"
+        class="mb-16"
+      />
+      <DetailProductMoreProductsByCategory :category-id="data.product.category" />
     </div>
   </div>
 </template>

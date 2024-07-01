@@ -1,7 +1,7 @@
 import type { IExchangeRate } from '~/config/enums/local-storage-keys';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 import { MARKET_CONFIG } from '~/config/enums/market';
-import type { IUser } from '~/interfaces/user';
+import type { User } from '~/types/user';
 
 // default rates
 const ratesDefault = {
@@ -28,7 +28,7 @@ export default function (amount: number | unknown) {
     localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]
   )?.rates || store.rates || ratesDefault;
 
-  const currency = parseJSON<IUser['market_preferences']>(
+  const currency = parseJSON<User['market_preferences']>(
     localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
   )?.currency || store.user_preferences?.currency || MARKET_CONFIG.BASE_CURRENCY;
 

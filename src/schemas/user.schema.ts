@@ -36,4 +36,6 @@ export const userSchema = z.object({
     language: z.nativeEnum(MARKET_LANGUAGES).default(MARKET_LANGUAGES.EN),
     currency: z.nativeEnum(MARKET_CURRENCIES).default(MARKET_CURRENCIES.USD),
   }).optional(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useSessionStorage } from '@vueuse/core';
-import type { ICategory } from '~/interfaces/category';
+import type { Category } from '~/types/category';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
+import type { UserActivitiesSessionStorage } from '~/types/common';
 import { ROUTES } from '~/config/enums/routes';
 
 const store = useStore();
 
-const redirectByCategory = (category: ICategory) => {
+const redirectByCategory = (category: Category) => {
   const to = `${ROUTES.C}/${category.name.replaceAll(' ', '-').toLowerCase()}`;
 
   sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORY);
@@ -16,7 +16,7 @@ const redirectByCategory = (category: ICategory) => {
   sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORIES);
   useSessionStorage(SESSION_STORAGE_KEYS.CATEGORIES, [{ ...category, to }]);
 
-  const userActivities = parseJSON<IUserActivitiesSessionStorage>(
+  const userActivities = parseJSON<UserActivitiesSessionStorage>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES)
   );
   sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);

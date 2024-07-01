@@ -2,6 +2,10 @@
 import { PRODUCT_CONFIG } from '~/config/enums/product';
 import { toastCustom } from '~/config/toast';
 
+const model = defineModel<File[]>({
+  required: true,
+});
+
 const toast = useToast();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
@@ -10,8 +14,6 @@ const state = reactive({
   fileImages: [] as File[],
   urlImages: [] as string[],
 });
-
-const emit = defineEmits<{ (e: 'onChange', value: File[]): void }>();
 
 const onPickFile = () => {
   fileInputRef?.value?.click();
@@ -49,7 +51,7 @@ const removeImage = (index: number) => {
 };
 
 watch(state, () => {
-  emit('onChange', state.fileImages);
+  model.value = state.fileImages;
 });
 </script>
 

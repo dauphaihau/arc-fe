@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import type { ICategory } from '~/interfaces/category';
-import type { IProductAttribute } from '~/interfaces/product';
-
-const { $api } = useNuxtApp();
+import type { Category } from '~/types/category';
+import type { ProductAttribute } from '~/types/product';
+import { useGetAttributesByCategory } from '~/services/category';
 
 const { categoryId, attributesSelected } = defineProps<{
-  categoryId: ICategory['id']
-  attributesSelected?: IProductAttribute[] }
+  categoryId?: Category['id']
+  attributesSelected?: ProductAttribute[] }
 >();
 
-const emit = defineEmits<{ (e: 'onChange', value: IProductAttribute[]): void }>();
+const model = defineModel<ProductAttribute[] | undefined>({
+  required: true,
+  default: [],
+});
 
-const { data } = await $api.category.getAttributesByCategory(categoryId);
+const { data } = useGetAttributesByCategory(categoryId);
 
 const state = reactive({});
 
@@ -34,7 +36,7 @@ onMounted(() => {
 });
 
 watch(() => state, () => {
-  const attrsValid: IProductAttribute[] = [];
+  const attrsValid: ProductAttribute[] = [];
   Object.keys(state).forEach((key) => {
     if (state[key]) {
       attrsValid.push({
@@ -43,7 +45,7 @@ watch(() => state, () => {
       });
     }
   });
-  emit('onChange', attrsValid);
+  model.value = attrsValid;
 }, { deep: true });
 </script>
 

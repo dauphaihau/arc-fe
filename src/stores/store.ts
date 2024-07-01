@@ -1,16 +1,16 @@
 import { useStorage } from '@vueuse/core';
-import type { IUser } from '~/interfaces/user';
+import type { User } from '~/types/user';
 import type { IExchangeRate } from '~/config/enums/local-storage-keys';
 import { MARKET_CONFIG } from '~/config/enums/market';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
-import type { ICategory, ResponseGetCategories } from '~/interfaces/category';
+import type { Category, ResponseGetCategories } from '~/types/category';
 import { RESOURCES } from '~/config/enums/resources';
 
 export const useStore = defineStore('store', {
   state: () => ({
-    user_preferences: null as IUser['market_preferences'] | null,
+    user_preferences: null as User['market_preferences'] | null,
     rates: null as IExchangeRate['rates'] | null,
-    rootCategories: [] as ICategory[],
+    rootCategories: [] as Category[],
   }),
   getters: {},
   actions: {

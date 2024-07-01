@@ -1,76 +1,60 @@
 <script setup lang="ts">
 import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
+import { FetchError } from 'ofetch';
 import { userSchema } from '~/schemas/user.schema';
-import type { IUser, LoginBody } from '~/interfaces/user';
+import type { User } from '~/types/user';
 import { ROUTES } from '~/config/enums/routes';
 import { useLogin } from '~/services/auth';
-
-const authStore = useAuthStore();
-const cartStore = useCartStore();
+import type { LoginBody } from '~/types/auth';
 
 const formRef = ref();
-
-const state = reactive({
-  invalidUsers: new Map<IUser['email'], IUser['password'][]>(),
-  unknownErrorServerMsg: '',
-});
-
-const stateSubmit: Partial<LoginBody> = reactive({
-  email: undefined,
-  password: undefined,
-});
+const unknownErrorServerMsg = ref('');
+const invalidUsers = new Map<User['email'], User['password'][]>();
+const stateSubmit: Partial<LoginBody> = reactive({});
 
 const {
-  mutate: login,
+  mutateAsync: login,
   isPending: isPendingLogin,
-} = useLogin({
-  onResponse: ({ response }) => {
-    if (response.status === StatusCodes.UNAUTHORIZED) {
-      const { email, password } = stateSubmit;
-      if (email && password) {
-        const user = state.invalidUsers.get(email);
-        user ? user.push(password) : state.invalidUsers.set(email, [password]);
-      }
-      state.unknownErrorServerMsg = 'Incorrect email or password';
-      return;
-    }
+} = useLogin();
 
-    if (response.status === StatusCodes.OK) {
-      authStore.user = response._data.user;
-      authStore.setExpTokens();
-      cartStore.getCartHeader();
-      return;
-    }
-
-    state.unknownErrorServerMsg = 'An unknown error occurred. Please try again';
-  },
-});
-
-function onSubmit(event: FormSubmitEvent<LoginBody>) {
+async function onSubmit(event: FormSubmitEvent<LoginBody>) {
   const { email, password } = event.data;
-  const user = state.invalidUsers.get(email);
-  if (user && user.includes(password)) {
-    state.unknownErrorServerMsg = 'Incorrect email or password';
+  const invalidUser = invalidUsers.get(email);
+  if (invalidUser && invalidUser.includes(password)) {
+    unknownErrorServerMsg.value = 'Incorrect email or password';
     return;
   }
-  login(event.data);
+
+  try {
+    await login(event.data);
+  }
+  catch (error) {
+    if (error instanceof FetchError) {
+      if (error.status === StatusCodes.UNAUTHORIZED) {
+        invalidUser ? invalidUser.push(password) : invalidUsers.set(email, [password]);
+        unknownErrorServerMsg.value = 'Incorrect email or password';
+        return;
+      }
+      unknownErrorServerMsg.value = 'An unknown error occurred. Please try again';
+    }
+  }
 }
 </script>
 
 <template>
   <div class="space-y-5">
     <UAlert
-      v-if="state.unknownErrorServerMsg"
+      v-if="unknownErrorServerMsg"
       color="rose"
       variant="solid"
       :close-button="{
         icon: 'i-heroicons-x-mark-20-solid', color: 'white', variant: 'link', padded: false,
       }"
       title=""
-      :description="state.unknownErrorServerMsg"
+      :description="unknownErrorServerMsg"
       :ui="{ description: 'mt-[2px]' }"
-      @close="state.unknownErrorServerMsg=''"
+      @close="unknownErrorServerMsg=''"
     />
 
     <div class="rounded">

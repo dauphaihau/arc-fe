@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { StatusCodes } from 'http-status-codes';
 import type { FormSubmitEvent } from '#ui/types';
 import { userSchema } from '~/schemas/user.schema';
-import type { IUser } from '~/interfaces/user';
+import type { User } from '~/types/user';
 import { useForgetPassword } from '~/services/auth';
 import { RESET_PASSWORD_VIEWS } from '~/config/enums/common';
 import { toastCustom } from '~/config/toast';
@@ -13,7 +12,6 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore();
 const toast = useToast();
-
 const formRef = ref();
 
 const stateSubmit = reactive({
@@ -21,25 +19,22 @@ const stateSubmit = reactive({
 });
 
 const {
-  mutate: forgetPassword,
+  mutateAsync: forgetPassword,
   isPending: isPendingForgetPassword,
-} = useForgetPassword({
-  onResponse: ({ response }) => {
-    if (response.status === StatusCodes.OK) {
-      emit('changeView', RESET_PASSWORD_VIEWS.SEND_EMAIL_SUCCESS);
-    }
-    else {
-      toast.add({
-        ...toastCustom.error,
-        title: 'An unknown error occurred. Please try again',
-      });
-    }
-  },
-});
+} = useForgetPassword();
 
-function onSubmit(event: FormSubmitEvent<Pick<IUser, 'email'>>) {
+async function onSubmit(event: FormSubmitEvent<Pick<User, 'email'>>) {
   authStore.emailRequestForgetPassword = event.data.email;
-  forgetPassword(event.data.email);
+  try {
+    await forgetPassword(event.data.email);
+    emit('changeView', RESET_PASSWORD_VIEWS.SEND_EMAIL_SUCCESS);
+  }
+  catch (error) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'An unknown error occurred. Please try again',
+    });
+  }
 }
 </script>
 

@@ -1,14 +1,14 @@
 <script lang="ts" setup>
 import { useSessionStorage } from '@vueuse/core';
-import type { ICategorySessionStorage } from '~/interfaces/category';
+import type { CategorySessionStorage } from '~/types/category';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
+import { useGetProductsLowestPrice } from '~/services/product';
 
 definePageMeta({ layout: 'market' });
 
-const { $api } = useNuxtApp();
 const route = useRoute();
 
-const limit = 40;
+const limit = 20;
 const page = ref(1);
 
 const redirectErrorPage = () => {
@@ -20,10 +20,10 @@ const redirectErrorPage = () => {
 };
 
 const categoryId = computed(() => {
-  const categoriesInSS = parseJSON<ICategorySessionStorage[]>(
+  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
 
-  const categoryInSS = parseJSON<ICategorySessionStorage>(
+  const categoryInSS = parseJSON<CategorySessionStorage>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORY));
 
   if (!categoryInSS) {
@@ -50,12 +50,13 @@ const queriesGetProducts = computed(() => {
 });
 
 const {
-  pending: pendingProducts, data, error,
-} = await $api.product.getProductsLowestPrice(queriesGetProducts);
-
-if (error.value) {
-  redirectErrorPage();
-}
+  data,
+  isPending: isPendingGetProducts,
+} = useGetProductsLowestPrice(queriesGetProducts, {
+  onResponseError: () => {
+    redirectErrorPage();
+  },
+});
 
 const state = reactive({
   currentCategory: computed(() => {
@@ -66,7 +67,7 @@ const state = reactive({
     return str;
   }),
   categoriesBreadcrumb: computed(() => {
-    let categoriesInSS = parseJSON<ICategorySessionStorage[]>(
+    let categoriesInSS = parseJSON<CategorySessionStorage[]>(
       sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
 
     if (!categoriesInSS) {
@@ -90,7 +91,7 @@ const state = reactive({
 
 // on root category change, reset categories in ss
 watch(() => route.fullPath, () => {
-  const categoriesInSS = parseJSON<ICategorySessionStorage[]>(
+  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES)
   );
 
@@ -130,7 +131,7 @@ watch(() => route.fullPath, () => {
       </div>
 
       <div
-        v-if="pendingProducts"
+        v-if="isPendingGetProducts"
         class="grid h-[80vh] w-full place-content-center"
       >
         <LoadingSvg :child-class="'!w-12 !h-12'" />
@@ -148,7 +149,7 @@ watch(() => route.fullPath, () => {
           </div>
         </div>
         <div
-          v-if="data?.totalResults"
+          v-if="data?.totalResults && data.totalResults > limit"
           class="flex justify-center"
         >
           <UPagination

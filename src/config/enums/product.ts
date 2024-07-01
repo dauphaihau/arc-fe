@@ -17,6 +17,10 @@ export const PRODUCT_CONFIG = {
   MAX_CHAR_TAG: 21,
 };
 
+export const PRODUCT_SHIPPING_CONFIG = {
+  MAX_DAYS_DELIVERY: 45,
+};
+
 export enum PRODUCT_STATES {
   ACTIVE = 'active', // currently for sale.
   INACTIVE = 'inactive', // When updating a product
@@ -61,3 +65,12 @@ export const isDigitalOpts = [
   { value: false, label: 'Physical', help: 'A tangible product that you will ship to buyers.' },
   { value: true, label: 'Digital', help: 'A digital file that buyers will download.' },
 ];
+
+export enum PRODUCT_SHIPPING_CHARGE {
+  FIXED_PRICE = 'fixed_price',
+  FREE_SHIPPING = 'free_shipping'
+}
+
+export enum PRODUCT_SHIPPING_SERVICES {
+  OTHER = 'other'
+}

@@ -5,11 +5,11 @@ import { useLogout } from '~/services/auth';
 
 const { show } = defineProps<{ show: boolean }>();
 
-const authStore = useAuthStore();
-const { user } = storeToRefs(authStore);
 const router = useRouter();
+const authStore = useAuthStore();
 const cartStore = useCartStore();
 const modal = useModal();
+
 const {
   mutate: logout,
   isPending: isPendingLogout,
@@ -150,7 +150,7 @@ const handleLogout = () => {
                 name="i-heroicons-arrow-left-start-on-rectangle"
                 color="gray"
               />
-              Logout {{ user?.name }}
+              Logout {{ authStore?.user?.name }}
             </div>
           </div>
         </div>

@@ -2,22 +2,25 @@
 import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import type { IProduct } from '~/interfaces/product';
-import type { ElementType } from '~/interfaces/utils';
+import type { Product } from '~/types/product';
+import type { ElementType } from '~/types/utils';
+import { useShopDeleteProduct, useShopGetProducts } from '~/services/shop';
 
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
-
-const { $api } = useNuxtApp();
-const config = useRuntimeConfig();
-const toast = useToast();
 
 const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
 
-const { pending, data, refresh } = await $api.shop.getProducts({
-  page,
+const {
+  isPending: isPendingShopGetProducts,
+  data: dataShopGetProducts,
+  refetch,
+} = useShopGetProducts({
+  page: page.value,
 });
+
+const { mutateAsync: deleteProduct } = useShopDeleteProduct();
 
 const columns = [
   {
@@ -50,11 +53,11 @@ const columns = [
 ];
 
 const rows = computed(() => {
-  if (data.value?.results && data.value.results.length > 0) {
-    return data.value.results.map(product => ({
+  if (dataShopGetProducts.value?.results && dataShopGetProducts.value.results.length > 0) {
+    return dataShopGetProducts.value.results.map(product => ({
       id: product.id,
       title: product.title,
-      image: config.public.awsHostBucket + '/' + product?.images[0]?.relative_url,
+      image: `domainAwsS3/${product?.images[0]?.relative_url}`,
       variants: product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ? product.variants : null,
       inventory: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory : null,
       variant_type: product.variant_type,
@@ -68,12 +71,6 @@ const rows = computed(() => {
 
 const itemsDropdownWithRow = (row: ElementType<typeof rows.value>): DropdownItem[][] => [
   [
-    // {
-    //   label: 'Edit',
-    //   icon: 'i-heroicons-pencil-square-20-solid',
-    //   click: () => row,
-    //   // click: () => console.log('Edit', row.id),
-    // },
     {
       label: 'Duplicate',
       icon: 'i-heroicons-document-duplicate-20-solid',
@@ -105,15 +102,9 @@ const itemsDropdownWithRow = (row: ElementType<typeof rows.value>): DropdownItem
   ],
 ];
 
-async function removeProduct(id: IProduct['id']) {
-  const { error } = await $api.shop.deleteProduct(id);
-  if (error.value) {
-    toast.add({ title: 'Delete product success' });
-  }
-  else {
-    toast.add({ title: 'Delete product success' });
-    refresh();
-  }
+async function removeProduct(id: Product['id']) {
+  await deleteProduct(id);
+  await refetch();
 }
 </script>
 
@@ -166,7 +157,7 @@ async function removeProduct(id: IProduct['id']) {
         :rows="rows"
         :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No products.' }"
         :columns="columns"
-        :loading="pending"
+        :loading="isPendingShopGetProducts"
         :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #title-data="{ row }">
@@ -319,7 +310,7 @@ async function removeProduct(id: IProduct['id']) {
       <FixedPagination
         :page="page"
         :page-count="pageCount"
-        :total="data?.totalResults"
+        :total="dataShopGetProducts?.totalResults"
         @on-change-page="(val) => page = val"
       />
     </template>

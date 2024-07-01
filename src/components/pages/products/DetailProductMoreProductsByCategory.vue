@@ -1,21 +1,19 @@
 <script lang="ts" setup>
-import type { ICategory } from '~/interfaces/category';
+import type { Category } from '~/types/category';
+import { useGetProductsLowestPrice } from '~/services/product';
 
-const { $api } = useNuxtApp();
-
-const state = reactive({
-  pending: false,
-  limit: 12,
-});
+const limit = 12;
 
 const { categoryId } = defineProps<{
-  categoryId: ICategory['id']
+  categoryId: Category['id']
 }>();
 
-const { data } = await $api.product.getProductsLowestPrice({
-  limit: state.limit,
+const queryParams = computed(() => ({
   category: categoryId,
-});
+  limit,
+}));
+
+const { data } = useGetProductsLowestPrice(queryParams);
 </script>
 
 <template>

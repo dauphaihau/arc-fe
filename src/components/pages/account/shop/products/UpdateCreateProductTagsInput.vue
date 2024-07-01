@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { PRODUCT_CONFIG } from '~/config/enums/product';
-import type { IProduct } from '~/interfaces/product';
+import type { Product } from '~/types/product';
 
-const props = defineProps<{ countValidate: number, tags?: IProduct['tags'] }>();
+const props = defineProps<{ countValidate: number }>();
 
-const emit = defineEmits<{ (e: 'onChange', value: IProduct['tags']): void }>();
+const model = defineModel<Product['tags'] | undefined>({
+  required: true,
+  default: [],
+});
 
 const state = reactive({
   input: '',
-  tags: props.tags || [],
+  tags: model.value || [],
   errorMsgInput: '',
 });
 
@@ -22,7 +25,7 @@ const removeTag = (index: number) => {
 };
 
 watch(() => props.countValidate, () => {
-  emit('onChange', state.tags);
+  model.value = state.tags;
 });
 
 watchDebounced(

@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import type { IProductCartPopulated } from '~/interfaces/cart';
+/*
+  use in cart, cart/checkout page
+ */
+import type { ProductCartPopulated } from '~/types/cart';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 
-const { data } = defineProps<{ data: IProductCartPopulated }>();
+const { data } = defineProps<{ data: ProductCartPopulated }>();
 
 const state = reactive({
   v1: '',
@@ -12,8 +15,8 @@ const state = reactive({
 });
 
 onMounted(() => {
-  if (data.variant.variant_name) {
-    const [v1, v2] = data.variant.variant_name.split('-');
+  if (data.inventory.variant) {
+    const [v1, v2] = data.inventory.variant.split('-');
     state.v1 = v1;
     state.v2 = v2;
   }

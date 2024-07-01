@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import type { ResponseGetProducts } from '~/interfaces/product';
+import type { ResponseGetProducts } from '~/types/product';
+import { useSearchProducts } from '~/services/product';
+import { ROUTES } from '~/config/enums/routes';
 
 const props = defineProps<{ show: boolean }>();
 
-const { $api } = useNuxtApp();
 const route = useRoute();
 const router = useRouter();
+const limit = 5;
 
 const state = reactive({
   search: '',
   products: [] as ResponseGetProducts[],
   pending: false,
-  limit: 5,
 });
 
 watch(() => [route.query.s, props.show], () => {
@@ -21,9 +22,17 @@ watch(() => [route.query.s, props.show], () => {
   }
 });
 
+const {
+  mutate: searchProducts,
+} = useSearchProducts({
+  onSuccess(data) {
+    state.products = data.results;
+  },
+});
+
 const redirectSearch = () => {
   router.push({
-    path: '/search',
+    path: ROUTES.SEARCH,
     query: {
       s: state.search,
     },
@@ -32,15 +41,12 @@ const redirectSearch = () => {
 
 watchDebounced(
   () => state.search,
-  async () => {
-    const { data, error } = await $api.product.getProducts({
-      limit: state.limit,
+  () => {
+    searchProducts({
+      limit,
       title: state.search,
       select: 'title,category',
     });
-    if (!error.value && data.value && data.value.results.length > 0) {
-      state.products = data.value.results;
-    }
   },
   { debounce: 500, maxWait: 1000 }
 );

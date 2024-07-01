@@ -1,40 +1,46 @@
 <script setup lang="ts">
-import type { ICategory } from '~/interfaces/category';
-import type { IProduct } from '~/interfaces/product';
+import type { Category } from '~/types/category';
+import type { Product } from '~/types/product';
+import { useGetSearchCategories } from '~/services/category';
 
-const { $api } = useNuxtApp();
+const props = defineProps<{ title?: Product['title'], category?: Category | null }>();
 
-const props = defineProps<{ title?: IProduct['title'], category?: ICategory | null }>();
+const model = defineModel<Product['category'] | undefined>({
+  required: true,
+});
 
-const emit = defineEmits<{ (e: 'onChange', value: ICategory['id']): void }>();
-
-const loading = ref(false);
 const selected = ref();
 const query = ref(props.category?.name ?? '');
 const placeholder = ref('');
 
-async function search(q: string) {
-  if (!q) {
+const {
+  isPending: isPendingGetSearchCategories,
+  mutateAsync: searchCategories,
+} = useGetSearchCategories();
+
+async function search(q: Category['name']) {
+  if (!q) return [];
+
+  try {
+    const response = await searchCategories(q);
+    return response.categories;
+  }
+  catch (error) {
     return [];
   }
-  loading.value = true;
-  const { pending, data } = await $api.category.getSearchCategories(q);
-  loading.value = pending.value;
-
-  return data.value?.categories || [];
 }
 
 watch(selected, () => {
-  emit('onChange', selected.value.id);
+  model.value = selected.value.id;
 });
 
 watchDebounced(
   () => props.title,
   async () => {
     if (props.title && !selected.value) {
-      const { data } = await $api.category.getSearchCategories(props.title);
-      if (data.value) {
-        placeholder.value = data.value.categories
+      const categories = await search(props.title);
+      if (categories) {
+        placeholder.value = categories
           .map(c => c.lastNameCategory)
           .toString()
           .replaceAll(',', ', ');
@@ -58,7 +64,7 @@ watchDebounced(
       v-model="selected"
       v-model:query="query"
       :search="search"
-      :loading="loading"
+      :loading="isPendingGetSearchCategories"
       :placeholder="placeholder"
       option-attribute="lastNameCategory"
       :debounce="300"

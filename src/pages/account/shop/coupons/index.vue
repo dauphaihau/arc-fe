@@ -4,18 +4,21 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { COUPON_APPLIES_TO, COUPON_TYPES } from '~/config/enums/coupon';
+import { useShopGetCoupons } from '~/services/shop';
 
 dayjs.extend(localizedFormat);
 
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
 
-const { $api } = useNuxtApp();
-
 const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
-const { pending, data } = await $api.shop.getCoupons({
-  page,
+
+const {
+  isPending: isPendingShopGetCoupons,
+  data: dataShopGetCoupons,
+} = useShopGetCoupons({
+  page: page.value,
 });
 
 const columns = [
@@ -51,8 +54,8 @@ const columns = [
 ];
 
 const rows = computed(() => {
-  if (data.value?.results && data.value.results.length > 0) {
-    return data.value.results.map(prod => ({
+  if (dataShopGetCoupons.value?.results && dataShopGetCoupons.value.results.length > 0) {
+    return dataShopGetCoupons.value.results.map(prod => ({
       id: prod.id,
       title: prod.title,
       code: prod.code,
@@ -125,7 +128,7 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
         :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No coupons.' }"
         :rows="rows"
         :columns="columns"
-        :loading="pending"
+        :loading="isPendingShopGetCoupons"
         :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #title-code-data="{ row }">
@@ -205,7 +208,7 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
       <FixedPagination
         :page="page"
         :page-count="pageCount"
-        :total="data?.totalResults"
+        :total="dataShopGetCoupons?.totalResults"
         @on-change-page="(val) => page = val"
       />
     </template>

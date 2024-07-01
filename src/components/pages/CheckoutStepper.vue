@@ -1,42 +1,39 @@
 <script setup lang="ts">
-const props = defineProps({
-  step: {
-    type: Number,
-    default: 0,
-  },
-  steps: {
-    type: Array,
-    default: () => ['task A', 'task B', 'task C'],
-  },
-});
+/*
+  use in checkout, cart, cart/checkout,  page
+ */
+const props = defineProps<{
+  steps: string[]
+}>();
 
-// const emit = defineEmits<{(e: 'onChangeStep', value: number): void }>();
+const model = defineModel<number>({
+  required: true,
+  default: 0,
+});
 
 const widthAddition = 17.2;
 const steps = props.steps;
 const widthPerStep = 100 / steps.length;
 
-const step = computed(() => {
-  if (props.step > steps?.length) {
-    return steps?.length;
+const currentStep = computed(() => {
+  if (model.value > steps.length) {
+    return steps.length;
   }
-  return props.step;
+  return model.value;
 });
 
 const valueProgress = computed(() => {
-  return (widthPerStep + widthAddition) * step.value;
+  return (widthPerStep + widthAddition) * currentStep.value;
 });
 
-// const clickStepDone = (index?: number) => {
-//   console.log('index', index);
-//   step.value = index;
-//   emit('onChangeStep', index)
-// };
+const clickStepDone = (index: number) => {
+  model.value = index;
+};
 </script>
 
 <template>
   <div
-    :key="step"
+    :key="currentStep"
     class=""
   >
     <UProgress
@@ -60,17 +57,18 @@ const valueProgress = computed(() => {
             class="absolute bottom-[-14px] right-0 z-[2] flex size-3.5
             items-center justify-center sm:size-6"
           >
-            <div v-if="(percent > (widthPerStep + widthAddition) * (index)) || step === index + 1">
+            <div v-if="(percent > (widthPerStep + widthAddition) * (index)) || currentStep === index + 1">
               <Icon
                 name="material-symbols:check-circle-rounded"
                 class="done"
+                @click="() => clickStepDone(index)"
               />
-              <!--                @click="() => clickStepDone(index)" -->
             </div>
 
             <div
-              v-else-if="step + 1 === index + 1"
+              v-else-if="currentStep === index"
               class="active"
+              :class="[index === 0 && 'ml-[3px]', index === steps.length - 1 && 'mr-[4px]']"
             >
               {{ index + 1 }}
             </div>
@@ -78,6 +76,7 @@ const valueProgress = computed(() => {
             <div
               v-else
               class="inactive"
+              :class="[index === steps.length - 1 && 'mr-[4px]']"
             >
               {{ index + 1 }}
             </div>
@@ -85,9 +84,8 @@ const valueProgress = computed(() => {
             <div
               :class="[
                 'center-title whitespace-nowrap break-keep font-medium',
-                step === index + 1 || step + 1 === index + 1 || step > index + 1
-                  ? 'text-primary' : 'text-customGray-900',
-                (step - 1 === index || step > index + 1) && 'cursor-pointer',
+                currentStep === index + 1 || currentStep + 1 === index + 1 || currentStep > index + 1 ? 'text-primary' : 'text-customGray-900',
+                (currentStep - 1 === index || currentStep > index + 1) && 'cursor-pointer',
               ]"
             >
               {{ title }}
@@ -108,8 +106,8 @@ const valueProgress = computed(() => {
 }
 
 .base {
-  @apply rounded rounded-full w-5 h-5 ring-[3px]
-  flex justify-center text-sm font-semibold;
+  @apply rounded-full w-[17px] h-[17px] ring-[3px]
+  flex justify-center items-center text-sm font-semibold;
 }
 
 .done {

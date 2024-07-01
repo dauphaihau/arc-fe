@@ -73,6 +73,7 @@ const itemsShopDropdown: DropdownItem[][] = [
     {
       label: 'Archive',
       icon: 'i-heroicons-archive-box-20-solid',
+      disabled: true,
     },
     {
       label: 'Arc Marketplace',
@@ -113,7 +114,7 @@ const itemsShopDropdown: DropdownItem[][] = [
           />
         </UButton>
         <div class="text-sm font-medium text-customGray-950">
-          {{ authStore.getShop?.shop_name }}
+          {{ authStore.user?.shop?.shop_name }}
         </div>
       </div>
     </UDropdown>
@@ -158,5 +159,5 @@ const itemsShopDropdown: DropdownItem[][] = [
 </template>
 
 <style scoped>
-@import url("src/assets/css/layout-shop.css");
+@import url("~/assets/css/layout-shop.css");
 </style>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { useSessionStorage } from '@vueuse/core';
-import type { ICategorySessionStorage } from '~/interfaces/category';
+import type { CategorySessionStorage } from '~/types/category';
 import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { IUserActivitiesSessionStorage } from '~/interfaces/common';
+import type { UserActivitiesSessionStorage } from '~/types/common';
+import { useGetCategories } from '~/services/category';
 
-const { $api } = useNuxtApp();
 const route = useRoute();
 
 const redirectErrorPage = () => {
@@ -16,10 +16,10 @@ const redirectErrorPage = () => {
 };
 
 const categoryId = computed(() => {
-  const categoriesInSS = parseJSON<ICategorySessionStorage[]>(
+  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
 
-  const categoryInSS = parseJSON<ICategorySessionStorage>(
+  const categoryInSS = parseJSON<CategorySessionStorage>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORY));
 
   if (!categoryInSS) {
@@ -32,13 +32,16 @@ const categoryId = computed(() => {
   return categoryInSS.id;
 });
 
-const { data: dataCategories, pending: pendingDataCategories } = await $api.category.getCategories({
+const {
+  isPending: isPendingGetCategories,
+  data: dataCategories,
+} = useGetCategories({
   parent: categoryId.value,
 });
 
 onMounted(() => {
   if (dataCategories.value) {
-    const userActivities = parseJSON<IUserActivitiesSessionStorage>(
+    const userActivities = parseJSON<UserActivitiesSessionStorage>(
       sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES)
     );
     sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
@@ -49,11 +52,11 @@ onMounted(() => {
   }
 });
 
-const redirectPage = (category: ICategorySessionStorage) => {
+const redirectPage = (category: CategorySessionStorage) => {
   sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORY);
   useSessionStorage(SESSION_STORAGE_KEYS.CATEGORY, category);
 
-  const categoriesInSS = parseJSON<ICategorySessionStorage[]>(
+  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
     sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
 
   if (categoriesInSS) {
@@ -73,8 +76,8 @@ const redirectPage = (category: ICategorySessionStorage) => {
 
 <template>
   <div class="mb-8 flex gap-3">
-    <div v-if="pendingDataCategories">
-      loading...
+    <div v-if="isPendingGetCategories">
+      <LoadingSvg :child-class="'!w-8 !h-8'" />
     </div>
     <div v-else>
       <div class="flex flex-col gap-2">

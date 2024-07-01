@@ -1,26 +1,66 @@
-import type { ILineItemOrder, ISummaryOrder } from '~/interfaces/order';
-import type { IAddress } from '~/interfaces/address';
-import type { IItemCartPopulated, IStateProductCheckoutNow } from '~/interfaces/cart';
+import { StatusCodes } from 'http-status-codes';
+import type { OrderShop, ResponseCreateOrder } from '~/types/order';
+import type { ResponseGetProductsRecentlyAdded } from '~/types/cart';
+import type { Shop } from '~/types/shop';
+import { useGetProductsRecentlyAdded } from '~/services/cart';
+import { CHECKOUT_NOW_STEPS, type StateCheckoutNow } from '~/types/pages/checkout';
+import { PAYMENT_TYPES } from '~/config/enums/order';
+import type { Coupon } from '~/types/coupon';
+import { CHECKOUT_CART_STEPS, type StateCheckoutCart } from '~/types/pages/cart/checkout';
+import { ROUTES } from '~/config/enums/routes';
+
+export type AdditionInfoOrderShops = {
+  key: Shop['id']
+  value: {
+    coupon_codes: Coupon['code'][]
+    note: OrderShop['note']
+  }
+};
 
 export const useCartStore = defineStore('cart', () => {
-  const summaryOrderPrev = ref<ISummaryOrder | null>(null);
-  const summaryOrder = ref<ISummaryOrder | null>(null);
+  const router = useRouter();
 
-  const totalProductsCart = ref(0);
-  const productCheckoutNow = ref<IStateProductCheckoutNow>();
-  const itemsCart = ref<IItemCartPopulated[]>([]);
+  const initStateCheckoutNow: StateCheckoutNow = {
+    product: {
+      quantity: 1,
+      coupon_codes: [],
+      note: '',
+    },
+    invalidCodes: new Map<Coupon['code'], string>(),
+    currentStep: CHECKOUT_NOW_STEPS.ADDRESS_SHIPPING,
+    countRefreshConvertCurrency: 0,
+    loadingSubmit: false,
+    payment_type: PAYMENT_TYPES.CARD,
+    address: null,
+  };
+  const stateCheckoutNow = reactive<StateCheckoutNow>({ ...initStateCheckoutNow });
+  function resetStateCheckoutNow() {
+    Object.assign(stateCheckoutNow, initStateCheckoutNow);
+  }
 
-  const stateCheckout = ref({
-    payment_type: '',
-    address: {} as IAddress,
-  });
+  const initStateCheckoutCart: StateCheckoutCart = {
+    invalidCodes: new Map<Coupon['code'], string>(),
+    currentStep: CHECKOUT_CART_STEPS.ADDRESS_SHIPPING,
+    countRefreshConvertCurrency: 0,
+    keyRefreshCartSummaryOrderComp: 0,
+    isPendingCreateOrder: false,
+    payment_type: PAYMENT_TYPES.CARD,
+    address: null,
+  };
+  const stateCheckoutCart = reactive<StateCheckoutCart>({ ...initStateCheckoutCart });
+  function resetStateCheckoutCart() {
+    Object.assign(stateCheckoutCart, initStateCheckoutCart);
+  }
 
-  const mapAdditionInfoItems = ref(new Map<string, Partial<Pick<ILineItemOrder, 'note' | 'coupon_codes'>>>());
-  const additionInfoItems = ref({});
+  // use in cart, cart/checkout page
+  const additionInfoOrderShops = ref(new Map<AdditionInfoOrderShops['key'], AdditionInfoOrderShops['value']>());
 
-  watch(() => summaryOrder.value, (_, oldVal) => {
-    if (oldVal) {
-      summaryOrderPrev.value = oldVal;
+  // use for checkout by cash
+  const orderShops = ref<ResponseCreateOrder['orderShops']>([]);
+
+  watch(router.currentRoute, () => {
+    if (additionInfoOrderShops.value.size && router.currentRoute.value.path !== `${ROUTES.CART}${ROUTES.CHECKOUT}`) {
+      additionInfoOrderShops.value.clear();
     }
   });
 
@@ -33,37 +73,37 @@ export const useCartStore = defineStore('cart', () => {
     return cartHeader.products.length + cartHeader.restProducts;
   });
 
-  const { $api } = useNuxtApp();
-  const config = useRuntimeConfig();
-
-  async function getCartHeader() {
-    const { data, error } = await $api.cart.getProductsForHeader();
-    if (!error.value && data.value?.cart) {
-      cartHeader.products = data.value.cart.products.map((item) => {
-        const variant = item.inventory?.variant ?
-          ` - ${item.inventory?.variant && item.inventory.variant.replaceAll('-', ' ')}` :
-          null;
-        return {
-          id: item.product._id,
-          title: item.product.title + variant,
-          image_url: config.public.awsHostBucket + '/' + item.product.image.relative_url,
-        };
-      });
-      cartHeader.restProducts = data.value.cart.restProducts;
-    }
-  }
+  const {
+    refetch,
+  } = useGetProductsRecentlyAdded({
+    onResponse: ({ response }) => {
+      const responseGetCart: ResponseGetProductsRecentlyAdded = response._data;
+      if (response.status === StatusCodes.OK && responseGetCart) {
+        cartHeader.products = responseGetCart.cart.products.map((item) => {
+          const variant = item.inventory?.variant ?
+            ` - ${item.inventory?.variant && item.inventory.variant.replaceAll('-', ' ')}` :
+            null;
+          return {
+            id: item.product._id,
+            title: item.product.title + variant,
+            image_url: `domainAwsS3/${item.product.image.relative_url}`,
+          };
+        });
+        cartHeader.restProducts = responseGetCart.cart.restProducts;
+      }
+    },
+  });
 
   return {
-    totalProductsCart,
     cartHeader,
-    summaryOrder,
     getCountAllProducts,
-    getCartHeader,
-    productCheckoutNow,
-    additionInfoItems,
-    stateCheckout,
-    summaryOrderPrev,
-    mapAdditionInfoItems,
-    itemsCart,
+    getCartHeader: () => refetch(),
+    resetStateCheckoutNow,
+    orderShops,
+    // itemsCart,
+    stateCheckoutNow,
+    stateCheckoutCart,
+    resetStateCheckoutCart,
+    additionInfoOrderShops,
   };
 });

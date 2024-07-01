@@ -1,7 +1,8 @@
 <script lang="ts" setup>
+import { useGetProductsLowestPrice } from '~/services/product';
+
 definePageMeta({ layout: 'market' });
 
-const { $api } = useNuxtApp();
 const route = useRoute();
 
 const redirectErrorPage = () => {
@@ -32,15 +33,17 @@ const queryParams = computed(() => {
 });
 
 const {
-  pending, data, error, refresh,
-} = await $api.product.getProductsLowestPrice(queryParams);
-
-if (error.value) {
-  redirectErrorPage();
-}
+  data,
+  refetch,
+  isPending,
+} = useGetProductsLowestPrice(queryParams, {
+  onResponseError: () => {
+    redirectErrorPage();
+  },
+});
 
 watch(() => route.query.s, () => {
-  refresh();
+  refetch();
 });
 </script>
 
@@ -55,7 +58,7 @@ watch(() => route.query.s, () => {
         <FilterProducts />
       </div>
 
-      <div v-if="pending">
+      <div v-if="isPending">
         loading...
       </div>
       <div

@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import type { ResponseGetProducts } from '~/interfaces/product';
+import type { ResponseGetProducts } from '~/types/product';
 import { ROUTES } from '~/config/enums/routes';
 
 const { product } = defineProps<{
   product: ResponseGetProducts
 }>();
 
-const config = useRuntimeConfig();
 const router = useRouter();
 </script>
 
@@ -16,7 +15,7 @@ const router = useRouter();
     @click="() => router.push(`${ROUTES.PRODUCTS}/${product.id}`)"
   >
     <NuxtImg
-      :src="config.public.awsHostBucket + '/' + product.image_relative_url"
+      :src="`domainAwsS3/${product.image_relative_url}`"
       width="210"
       height="160"
       class="rounded"
@@ -31,7 +30,6 @@ const router = useRouter();
       </p>
       <p class="text-base font-medium text-customGray-950">
         {{ formatCurrency(product?.summary_inventory?.lowest_price) }}
-        <!--        }} -->
       </p>
     </div>
     <slot name="content" />
