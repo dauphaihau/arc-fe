@@ -13,20 +13,17 @@ const cacheGetDetailProduct = queryClient.getQueryData<ResponseGetDetailProduct>
 
 const showNoteInput = ref(!!cartStore.stateCheckoutNow.product.note);
 
+const tempProductQty = ref(cartStore.stateCheckoutNow.product.quantity);
+
 const decreaseQty = () => {
-  if (cartStore.stateCheckoutNow.product.quantity === 1) {
-    return;
-  }
-  cartStore.stateCheckoutNow.product.quantity--;
+  if (tempProductQty.value === 1) return;
+  tempProductQty.value--;
 };
 
 watchDebounced(
-  () => cartStore.stateCheckoutNow.product.quantity,
+  tempProductQty,
   () => {
-    const product = cartStore.stateCheckoutNow.product;
-    if (product?.stock && product.quantity > product.stock) {
-      product.quantity = product.stock;
-    }
+    cartStore.stateCheckoutNow.product.quantity = tempProductQty.value;
   },
   { debounce: 500, maxWait: 1000 }
 );
@@ -86,20 +83,24 @@ watchDebounced(
                   icon="i-heroicons-minus"
                   color="white"
                   class="rounded-l-md rounded-r-none"
+                  :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
                   @click="decreaseQty"
                 />
                 <UInput
-                  v-model.number="cartStore.stateCheckoutNow.product.quantity"
+                  v-model.number="tempProductQty"
+                  v-numeric
+                  v-max-number="cartStore.stateCheckoutNow.product.stock"
                   class="rounded-l-none"
                   type="number"
+                  :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
                   :ui="{ base: 'text-center rounded-l-none' }"
-                  @keypress="keyPressIsNumber($event)"
                 />
                 <UButton
                   icon="i-heroicons-plus"
                   color="white"
+                  :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
                   class="rounded-l-none rounded-r-md"
-                  @click="() => cartStore.stateCheckoutNow.product.quantity++"
+                  @click="() => tempProductQty++"
                 />
               </UButtonGroup>
             </div>
@@ -123,6 +124,7 @@ watchDebounced(
             variant="ghost"
             icon="i-heroicons-clipboard-document-list"
             color="gray"
+            :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
             class="mb-3 w-fit"
             @click="showNoteInput = !showNoteInput"
           >

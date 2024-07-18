@@ -6,27 +6,30 @@ import type { AddCartProduct } from '~/types/cart';
 import type { ResponseGetDetailProduct } from '~/types/product';
 import { RegisterLoginDialog } from '#components';
 import { useAddProductToCart } from '~/services/cart';
+import { useGetCurrentUser } from '~/services/user';
 
 interface StateSubmit extends AddCartProduct {
   variantOption: string
   variantSubOption: string
 }
 
-const { product } = defineProps<ResponseGetDetailProduct>();
+// const { product } = defineProps<ResponseGetDetailProduct>();
+const props = defineProps<ResponseGetDetailProduct>();
+const { product } = props;
 
 const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
 
 const cartStore = useCartStore();
-const authStore = useAuthStore();
 const modal = useModal();
 const queryClient = useQueryClient();
+const { data: dataUserAuth } = useGetCurrentUser();
 
 const {
   mutate: addProductToCart,
   isPending: isPendingAddProductToCart,
 } = useAddProductToCart({
   onSuccess: () => {
-    cartStore.getCartHeader();
+    cartStore.getProductsRecentlyAdded();
     queryClient.removeQueries({ queryKey: ['get-cart'] });
     navigateTo(ROUTES.CART);
   },
@@ -38,7 +41,7 @@ const formRef = ref();
 const state = reactive({
   firstVariantOpts: [] as string[],
   secondVariantOpts: [] as string[],
-  stockVariant: 0,
+  stockVariant: 1,
   priceVariant: 0,
   variantName1: '',
   variantName2: '',
@@ -54,8 +57,11 @@ const stateSubmit = reactive<StateSubmit>({
 });
 
 const maxQuantity = computed(() => {
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-    return (product.inventory && product.inventory.stock) || 1;
+  // if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+  //   return (product.inventory && product.inventory.stock) || 1;
+  // }
+  if (props.product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
+    return (props.product.inventory && props.product.inventory.stock) || 1;
   }
   else {
     return state.stockVariant;
@@ -109,7 +115,7 @@ const validateForm = (stateValidate: StateSubmit): FormError[] => {
 };
 
 async function onSubmit(event: FormSubmitEvent<StateSubmit>) {
-  if (!authStore.isLogged) {
+  if (!dataUserAuth.value?.user) {
     modal.open(RegisterLoginDialog);
     return;
   }
@@ -204,7 +210,7 @@ watch(() => stateSubmit.quantity, () => {
     :validate="validateForm"
     @submit="onSubmit"
   >
-    <div class="mb-6 flex w-1/4 flex-col gap-4">
+    <div class="mb-6 flex w-1/3 flex-col gap-4">
       <UFormGroup
         v-if="product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE
           || product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE"
@@ -248,10 +254,11 @@ watch(() => stateSubmit.quantity, () => {
           />
           <UInput
             v-model.number="stateSubmit.quantity"
+            v-max-number="maxQuantity"
+            v-numeric
             class="rounded-l-none"
             type="number"
             :ui="{ base: ' text-center rounded-l-none' }"
-            @keypress="keyPressIsNumber($event)"
           />
           <UButton
             icon="i-heroicons-plus"

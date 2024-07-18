@@ -31,15 +31,17 @@ export type IOnChangeUpdateImages = {
   idsImagesForDelete: ProductImage['id'][]
 };
 
-const router = useRouter();
 const route = useRoute();
 const toast = useToast();
+const queryClient = useQueryClient();
 
 const selectedWhoMade = ref(productWhoMadeOpts[0]);
 
+const productId = route.params.id as Product['id'];
+
 const {
   data: dataDetailProduct,
-} = useShopGetDetailProduct(route.params.id as Product['id'], {
+} = useShopGetDetailProduct(productId, {
   onResponse: ({ response }) => {
     const detailProduct = response._data.product;
     if (detailProduct) {
@@ -213,7 +215,9 @@ async function onSubmit(event: FormSubmitEvent<UpdateProductBody>) {
 
   try {
     await updateProduct(eventDataTemp);
-    await router.push(ROUTES.ACCOUNT + ROUTES.SHOP + ROUTES.PRODUCTS);
+    queryClient.removeQueries({
+      queryKey: ['shop-get-detail-product', productId],
+    });
     toast.add({
       ...toastCustom.success,
       title: 'Update product success',
@@ -429,11 +433,11 @@ watchDebounced(
             >
               <UInput
                 v-model.number="stateSubmit.price"
+                v-max-number="PRODUCT_CONFIG.MAX_PRICE"
+                v-numeric
                 :disabled="loadingSubmit"
                 size="lg"
-                type="number"
                 class="w-1/2"
-                @keypress="keyPressIsNumber($event)"
               >
                 <template #trailing>
                   <span class="text-xs text-gray-500">USD</span>
@@ -448,11 +452,11 @@ watchDebounced(
             >
               <UInput
                 v-model.number="stateSubmit.stock"
+                v-max-number="PRODUCT_CONFIG.MAX_STOCK"
+                v-numeric
                 :disabled="loadingSubmit"
                 size="lg"
-                type="number"
                 class="w-1/2"
-                @keypress="keyPressIsNumber($event)"
               />
             </UFormGroup>
             <UFormGroup
@@ -463,6 +467,9 @@ watchDebounced(
             >
               <UInput
                 v-model="stateSubmit.sku"
+                v-alphanumeric
+                v-uppercase
+                :maxlength="PRODUCT_CONFIG.MAX_CHAR_SKU"
                 :disabled="loadingSubmit"
                 size="lg"
                 class="w-1/2"

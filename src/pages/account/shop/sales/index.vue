@@ -59,7 +59,6 @@ const rows = computed(() => {
   if (dataShopGetSales.value?.results && dataShopGetSales.value.results.length > 0) {
     return dataShopGetSales.value.results.map(prod => ({
       id: prod.id,
-      title: prod.title,
       code: prod.code,
       type: prod.type,
       max_uses: prod.max_uses,

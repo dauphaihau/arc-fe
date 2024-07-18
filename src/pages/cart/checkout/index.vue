@@ -27,6 +27,7 @@ const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
       v-model="cartStore.stateCheckoutCart.currentStep"
       class="mx-auto mb-24 max-w-[30rem]"
       :steps="steps"
+      :disabled="cartStore.stateCheckoutCart.isPendingCreateOrder"
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">

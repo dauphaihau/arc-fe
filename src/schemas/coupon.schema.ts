@@ -11,11 +11,6 @@ import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 export const couponSchema = z.object({
   id: objectIdSchema,
   shop: objectIdSchema,
-  title: z
-    .string()
-    .min(COUPON_CONFIG.MIN_CHAR_TITLE,
-      `Title must contain at least ${COUPON_CONFIG.MIN_CHAR_TITLE} characters`)
-    .max(COUPON_CONFIG.MAX_CHAR_TITLE),
   code: z
     .string()
     .min(COUPON_CONFIG.MIN_CHAR_CODE,
@@ -58,14 +53,13 @@ export const couponSchema = z.object({
   max_uses: z
     .number()
     .min(1, `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_STOCK}.`)
-    .max(PRODUCT_CONFIG.MAX_STOCK,
-      `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_STOCK}.`),
+    .max(COUPON_CONFIG.MAX_USES,
+      `Please enter a value between 1 and ${COUPON_CONFIG.MAX_USES}.`),
   min_order_type: z
     .nativeEnum(COUPON_MIN_ORDER_TYPES)
     .default(COUPON_MIN_ORDER_TYPES.ORDER_TOTAL),
   min_order_value: z
     .number()
-    .max(PRODUCT_CONFIG.MAX_PRICE)
     .default(0)
     .optional(),
   min_products: z
@@ -74,12 +68,10 @@ export const couponSchema = z.object({
     .optional(),
   start_date: z
     .coerce
-    .date()
-    .refine(val => new Date(val) >= new Date(), 'must be greater than current date'),
+    .date(),
   end_date: z
     .coerce
-    .date()
-    .refine(val => new Date(val) >= new Date(), 'must be large than current date'),
+    .date(),
   uses_count: z
     .number()
     .default(0),
@@ -96,3 +88,25 @@ export const couponSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 });
+
+export const createPromoCodeBodySchema = couponSchema.omit({
+  id: true,
+  shop: true,
+  users_used: true,
+  uses_count: true,
+  is_active: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const createSaleBodySchema = couponSchema.omit({
+  id: true,
+  shop: true,
+  users_used: true,
+  uses_count: true,
+  is_active: true,
+  createdAt: true,
+  updatedAt: true,
+}).merge(z.object({
+  type: z.union([z.literal(COUPON_TYPES.PERCENTAGE), z.literal(COUPON_TYPES.FREE_SHIP)]),
+}));

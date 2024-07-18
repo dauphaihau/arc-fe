@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import type { Product } from '~/types/product';
-import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
+import type { Product, ShopGetProductsQueryParams } from '~/types/product';
 import { useShopGetProducts } from '~/services/shop';
 
-const emit = defineEmits<{ (e: 'onSelectProd', value: Product['id'][]): void }>();
+const productIdsModel = defineModel<Product['id'][]>();
 
 const isOpen = ref(false);
 const selectedRows = ref<Product[]>([]);
 const page = ref(1);
+const search = ref();
 
+const params = ref<ShopGetProductsQueryParams>({
+  page: page.value,
+  limit: 5,
+});
 
 const {
   isPending: isPendingShopGetProducts,
   data: dataShopGetProducts,
-} = useShopGetProducts({
-  page: page.value,
-});
+  refetch: refetchShopGetProducts,
+} = useShopGetProducts(params);
 
 defineShortcuts({
   escape: {
@@ -54,23 +57,40 @@ const rowsDialog = computed(() => {
   if (!dataShopGetProducts.value) {
     return [];
   }
-  return dataShopGetProducts.value.results.map(prod => ({
-    id: prod.id,
-    title: prod.title,
-    summary_inventory: prod.summary_inventory,
-    variant_type: prod.variant_type,
-    inventory: prod.variant_type === PRODUCT_VARIANT_TYPES.NONE ? prod.inventory : null,
-  }));
+  return dataShopGetProducts.value.results.map((prod) => {
+    toRaw(prod.inventories).sort((a, b) => a.price - b.price);
+    return {
+      ...prod,
+      lowestPrice: prod.inventories[0].price,
+      highestPrice: prod.inventories.length > 1 ? prod.inventories[prod.inventories.length - 1].price : 0,
+      stock: prod.inventories.reduce((acc, next) => acc + next.stock, 0),
+    };
+  });
 });
 
 const applyProducts = () => {
-  emit('onSelectProd', selectedRows.value.map(prod => prod.id));
+  productIdsModel.value = selectedRows.value.map(prod => prod.id);
   isOpen.value = false;
 };
 
-const removeProd = (id: Product['id']) => {
+const removeProduct = (id: Product['id']) => {
   selectedRows.value = selectedRows.value.filter(row => row.id !== id);
+  if (productIdsModel.value) {
+    productIdsModel.value = productIdsModel.value.filter(productId => productId !== id);
+  }
 };
+
+watchDebounced(
+  search,
+  () => {
+    if (!search.value) {
+      delete params.value.title;
+    }
+    else params.value.title = search.value;
+    refetchShopGetProducts();
+  },
+  { debounce: 500, maxWait: 1000 }
+);
 </script>
 
 <template>
@@ -83,35 +103,44 @@ const removeProd = (id: Product['id']) => {
       Add product
     </UButton>
 
-    <UModal v-model="isOpen">
+    <UModal
+      v-model="isOpen"
+      :ui="{ width: 'min-w-[800px]' }"
+    >
       <div class="space-y-5 p-6">
         <h1 class="text-xl font-medium">
           Select Products
         </h1>
+
+        <UInput
+          v-model="search"
+          icon="i-heroicons-magnifying-glass-20-solid"
+          placeholder="Title product..."
+          class="w-1/2"
+          size="lg"
+          :ui="{
+            size: {
+              xl: 'text-2xl',
+            },
+          }"
+        />
         <UTable
           v-model="selectedRows"
+          class="min-h-[315px]"
           :rows="rowsDialog"
           :columns="columnsDialog"
           :loading="isPendingShopGetProducts"
           :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
         >
           <template #price-data="{ row }">
-            <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-              {{ formatCurrency(row.inventory.price) }}
-            </div>
-            <div v-else>
-              {{ formatCurrency(row.summary_inventory.lowest_price) }} -
-              {{ formatCurrency(row.summary_inventory.highest_price) }}
+            <div>
+              {{ formatCurrency(row.lowestPrice) }}
+              {{ row.highestPrice > 0 ? `- ${formatCurrency(row.highestPrice)}` : '' }}
             </div>
           </template>
           <template #stock-data="{ row }">
             <div class="text-center">
-              <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-                {{ row.inventory.stock }}
-              </div>
-              <div v-else>
-                {{ row.summary_inventory.stock }}
-              </div>
+              {{ row.stock }}
             </div>
           </template>
         </UTable>
@@ -133,6 +162,7 @@ const removeProd = (id: Product['id']) => {
         </div>
       </div>
     </UModal>
+
     <div v-if="selectedRows.length > 0">
       <UTable
         :columns="columnsPreviewTable"
@@ -140,23 +170,15 @@ const removeProd = (id: Product['id']) => {
         :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #price-data="{ row }">
-          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-            {{ formatCurrency(row.inventory.price) }}
-          </div>
-          <div v-else>
-            {{ formatCurrency(row.summary_inventory.lowest_price) }} -
-            {{ formatCurrency(row.summary_inventory.highest_price) }}
+          <div>
+            {{ formatCurrency(row.lowestPrice) }}
+            {{ row.highestPrice > 0 ? `- ${formatCurrency(row.highestPrice)}` : '' }}
           </div>
         </template>
 
         <template #stock-data="{ row }">
           <div class="text-center">
-            <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-              {{ row.inventory.stock }}
-            </div>
-            <div v-else>
-              {{ row.summary_inventory.stock }}
-            </div>
+            {{ row.stock }}
           </div>
         </template>
 
@@ -166,7 +188,7 @@ const removeProd = (id: Product['id']) => {
               color="gray"
               variant="ghost"
               icon="i-heroicons-trash"
-              @click="() => removeProd(row.id)"
+              @click="() => removeProduct(row.id)"
             />
           </div>
         </template>

@@ -1,36 +1,24 @@
 <script setup lang="ts">
-import { useStorage } from '@vueuse/core';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import type { FormSubmitEvent } from '#ui/types';
-import {
-  type IExchangeRate,
-  type IIpData,
-  LOCAL_STORAGE_KEYS
-} from '~/config/enums/local-storage-keys';
 import type { MARKET_REGIONS } from '~/config/enums/market';
 import {
   MARKET_CONFIG,
   MARKET_CURRENCIES,
   MARKET_LANGUAGES, MARKET_REGION_EMOJIS
 } from '~/config/enums/market';
-import type { User, UpdateUserBody } from '~/types/user';
-import { toastCustom } from '~/config/toast';
-import { useUpdateUser } from '~/services/user';
+import type { UpdateUserBody } from '~/types/user';
+import { useGetCurrentUser, useUpdateUser } from '~/services/user';
 import { useGetCountries } from '~/services/address';
-
-dayjs.extend(utc);
+import type { ElementType } from '~/types/utils';
 
 type State = {
   region: MARKET_REGIONS
-  language: { id: MARKET_LANGUAGES, label: string }
-  ipData: IIpData
-  currency: { id: MARKET_CURRENCIES, label: string }
+  language: ElementType<typeof languageOpts>
+  currency: ElementType<typeof currencyOpts>
 };
 
-const authStore = useAuthStore();
-const store = useStore();
-const toast = useToast();
+const marketStore = useMarketStore();
+const { data: dataUserAuth } = useGetCurrentUser();
 const {
   mutateAsync: updateUser,
   isPending: isPendingUpdateUser,
@@ -112,7 +100,6 @@ const regionOpts = computed(() => {
   if (dataGetCountries.value?.data) {
     return dataGetCountries.value.data.map(country => country.name);
   }
-
   return [];
 });
 
@@ -120,71 +107,18 @@ const state = reactive<State>({
   region: MARKET_CONFIG.BASE_REGION,
   language: languageOpts[0],
   currency: currencyOpts[0],
-  ipData: undefined,
 });
 
-onMounted(async () => {
-  // get & refresh rates once every 24 hours
-  const exchangeRate = parseJSON<IExchangeRate>(localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]);
-  if (!exchangeRate || dayjs.utc().valueOf() >= exchangeRate.exp) {
-    await store.getExchangeRates();
-  }
-
-  // get info data of current ip
-  if (!authStore.isLogged) {
-    const ipData = parseJSON<IIpData>(localStorage[LOCAL_STORAGE_KEYS.IP_DATA]);
-    if (ipData) {
-      state.ipData = ipData;
-    }
-    else {
-      const { data, error } = await useFetch('/api/ip-data');
-      if (!error.value && data.value) {
-        useStorage(LOCAL_STORAGE_KEYS.IP_DATA, { ...data.value });
-        state.ipData = data.value as IIpData;
-      }
-    }
-    state.region = state.ipData?.country_name as MARKET_REGIONS || MARKET_CONFIG.BASE_REGION;
-  }
-
-  const userPreferences = authStore.user?.market_preferences ||
-    parseJSON<User['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
-
+watch(() => [marketStore.guestPreferences, dataUserAuth.value?.user], () => {
+  const userPreferences = dataUserAuth.value?.user?.market_preferences || marketStore.guestPreferences;
   if (userPreferences) {
-    const currencyOptSelected = currencyOpts.find(opt => opt.id === userPreferences.currency);
-    if (currencyOptSelected) {
-      state.currency = currencyOptSelected;
+    const currencyOpt = currencyOpts.find(opt => opt.id === userPreferences.currency);
+    if (currencyOpt) {
+      state.currency = currencyOpt;
     }
     state.region = userPreferences.region;
   }
-  else {
-    // set currency base on ip
-    const currencyByIp = currencyOpts.find(opt => opt.id === state.ipData?.currency.code);
-    if (currencyByIp) {
-      state.currency = currencyByIp;
-    }
-    const preferences = {
-      currency: state.currency.id,
-      language: state.language.id,
-      region: state.region as MARKET_REGIONS,
-    };
-    useStorage<User['market_preferences']>(LOCAL_STORAGE_KEYS.USER_PREFERENCES, preferences);
-    store.user_preferences = preferences;
-  }
-});
-
-watch(() => authStore.isLogged, () => {
-  if (authStore.isLogged) {
-    localStorage.removeItem(LOCAL_STORAGE_KEYS.USER_PREFERENCES);
-    if (authStore.user && authStore.user.market_preferences) {
-      useStorage<User['market_preferences']>(LOCAL_STORAGE_KEYS.USER_PREFERENCES, authStore.user.market_preferences);
-      const currencyOpt = currencyOpts.find(opt => opt.id === authStore.user?.market_preferences?.currency);
-      if (currencyOpt) {
-        state.currency = currencyOpt;
-      }
-      state.region = authStore.user.market_preferences.region;
-    }
-  }
-});
+}, { immediate: true });
 
 watch(isOpenDialog, async () => {
   if (isOpenDialog.value && regionOpts.value.length === 0) {
@@ -194,29 +128,24 @@ watch(isOpenDialog, async () => {
 
 const onSubmit = async (event: FormSubmitEvent<State>) => {
   const { currency, language, region } = event.data;
-  const update: UpdateUserBody['market_preferences'] = {
+
+  const preferences: UpdateUserBody['market_preferences'] = {
     currency: currency.id,
     language: language.id,
     region,
   };
 
-  if (authStore.isLogged) {
-    try {
-      await updateUser({
-        market_preferences: update,
-      });
-    }
-    catch (error) {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Update user preferences failed',
-      });
-      return;
-    }
+  if (dataUserAuth.value?.user) {
+    await updateUser({
+      market_preferences: preferences,
+    });
   }
-  localStorage.removeItem(LOCAL_STORAGE_KEYS.USER_PREFERENCES);
-  useStorage<User['market_preferences']>(LOCAL_STORAGE_KEYS.USER_PREFERENCES, update);
-  window.location.reload();
+  else {
+    marketStore.guestPreferences = preferences;
+  }
+
+  isOpenDialog.value = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 </script>
 

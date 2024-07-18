@@ -4,6 +4,7 @@
  */
 const props = defineProps<{
   steps: string[]
+  disabled: boolean
 }>();
 
 const model = defineModel<number>({
@@ -27,6 +28,7 @@ const valueProgress = computed(() => {
 });
 
 const clickStepDone = (index: number) => {
+  if (props.disabled) return;
   model.value = index;
 };
 </script>

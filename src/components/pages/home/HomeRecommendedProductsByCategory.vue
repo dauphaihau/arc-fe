@@ -1,17 +1,13 @@
 <script lang="ts" setup>
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { UserActivitiesSessionStorage } from '~/types/common';
-import { useGetProductsLowestPrice } from '~/services/product';
+import { useGetProducts } from '~/services/product';
 
 const limit = 10;
+const marketStore = useMarketStore();
 
-const queryParams = computed(() => {
-  const userActivities = parseJSON<UserActivitiesSessionStorage>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
-    ));
-  if (userActivities?.categoryProductVisited) {
+const params = computed(() => {
+  if (marketStore.userActivities.categoryIdProductVisited) {
     return {
-      category: userActivities?.categoryProductVisited,
+      category: marketStore.userActivities.categoryIdProductVisited,
       limit,
     };
   }
@@ -21,11 +17,11 @@ const queryParams = computed(() => {
 const {
   data,
   isPending: isPendingGetProducts,
-} = useGetProductsLowestPrice(queryParams);
+} = useGetProducts(params);
 </script>
 
 <template>
-  <div v-if="queryParams">
+  <div v-if="params">
     <div>
       <h3 class="mb-3 text-lg font-medium">
         Recently viewed & more

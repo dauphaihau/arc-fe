@@ -16,7 +16,11 @@ const locales = {
 
 const zeroDecimalCurrencies = [MARKET_CURRENCIES.KRW, MARKET_CURRENCIES.JPY, MARKET_CURRENCIES.VND];
 
-export default function (value: number | undefined, currency = MARKET_CONFIG.BASE_CURRENCY) {
+export default function (
+  value: number | undefined,
+  currency = MARKET_CONFIG.BASE_CURRENCY,
+  options?: Intl.NumberFormatOptions
+) {
   if (typeof value !== 'number') {
     value = 0;
   }
@@ -25,9 +29,10 @@ export default function (value: number | undefined, currency = MARKET_CONFIG.BAS
     return '₫' + valueFixed.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
   const formatter = new Intl.NumberFormat(locales[currency], {
-    style: 'currency',
     currency,
     minimumFractionDigits: zeroDecimalCurrencies.includes(currency) ? 0 : 2,
+    ...options,
+    style: 'currency',
   });
   return formatter.format(value);
 }

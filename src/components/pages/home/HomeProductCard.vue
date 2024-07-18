@@ -20,7 +20,7 @@ const { product } = defineProps<{
     />
     <div class="absolute bottom-3 left-3 space-y-0.5 rounded-lg bg-white px-2.5 py-1">
       <p class="text-md font-medium text-customGray-950">
-        {{ convertCurrency(product?.summary_inventory?.lowest_price) }}
+        {{ convertCurrency(product?.inventory?.price) }}
       </p>
     </div>
     <slot name="content" />

@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import type { ResponseGetProducts } from '~/types/product';
-import { useSearchProducts } from '~/services/product';
+import { useGetProducts } from '~/services/product';
 import { ROUTES } from '~/config/enums/routes';
 
 const props = defineProps<{ show: boolean }>();
@@ -11,23 +10,25 @@ const limit = 5;
 
 const state = reactive({
   search: '',
-  products: [] as ResponseGetProducts[],
-  pending: false,
 });
 
 watch(() => [route.query.s, props.show], () => {
   if (!route.query?.s || !props.show) {
     state.search = '';
-    state.products = [];
   }
 });
 
+const params = computed(() => ({
+  limit,
+  title: state.search,
+  select: 'title',
+}));
+
 const {
-  mutate: searchProducts,
-} = useSearchProducts({
-  onSuccess(data) {
-    state.products = data.results;
-  },
+  data: dataGetProducts,
+  refetch: refetchGetProducts,
+} = useGetProducts(params, {
+  enabled: false,
 });
 
 const redirectSearch = () => {
@@ -42,11 +43,7 @@ const redirectSearch = () => {
 watchDebounced(
   () => state.search,
   () => {
-    searchProducts({
-      limit,
-      title: state.search,
-      select: 'title,category',
-    });
+    refetchGetProducts();
   },
   { debounce: 500, maxWait: 1000 }
 );
@@ -80,7 +77,7 @@ function highlightText(text: string) {
 
         <transition name="slide-down">
           <div
-            v-if="state.products.length > 0"
+            v-if="dataGetProducts?.results && dataGetProducts.results.length > 0"
             class="mt-8"
           >
             <div class="mb-2 ml-4 text-[12px]  text-gray-500">
@@ -89,7 +86,7 @@ function highlightText(text: string) {
 
             <div class="ml-2 flex flex-col gap-1">
               <div
-                v-for="prod of state.products"
+                v-for="prod of dataGetProducts.results"
                 :key="prod.id"
               >
                 <div

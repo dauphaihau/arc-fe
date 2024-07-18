@@ -29,7 +29,7 @@ export const useCartStore = defineStore('cart', () => {
     invalidCodes: new Map<Coupon['code'], string>(),
     currentStep: CHECKOUT_NOW_STEPS.ADDRESS_SHIPPING,
     countRefreshConvertCurrency: 0,
-    loadingSubmit: false,
+    isPendingCreateOrder: false,
     payment_type: PAYMENT_TYPES.CARD,
     address: null,
   };
@@ -97,7 +97,7 @@ export const useCartStore = defineStore('cart', () => {
   return {
     cartHeader,
     getCountAllProducts,
-    getCartHeader: () => refetch(),
+    getProductsRecentlyAdded: () => refetch(),
     resetStateCheckoutNow,
     orderShops,
     // itemsCart,

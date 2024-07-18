@@ -5,7 +5,7 @@
 
 import { StatusCodes } from 'http-status-codes';
 import { FetchError } from 'ofetch';
-import consola from 'consola';
+import { consola } from 'consola';
 import { type AdditionInfoOrderShops, useCartStore } from '~/stores/cart';
 import { COUPON_CONFIG } from '~/config/enums/coupon';
 import type { Shop } from '~/types/shop';
@@ -45,7 +45,6 @@ const {
 
 const addCoupon = async () => {
   state.errorMsg = '';
-  state.code = state.code.toUpperCase();
 
   if (state.invalidCodes.length > 0 && state.invalidCodes.includes(state.code)) {
     state.errorMsg = 'Coupon code not found';
@@ -200,6 +199,7 @@ const disabledAddBtn = computed(() => {
       icon="i-heroicons-ticket"
       color="gray"
       class="mb-1 w-fit"
+      :disabled="cartStore.stateCheckoutCart.isPendingCreateOrder"
       @click="toggleShowAddCouponInput"
     >
       Apply shop coupon codes
@@ -220,15 +220,13 @@ const disabledAddBtn = computed(() => {
         >
           <UInput
             v-model="state.code"
+            v-uppercase
             :disabled="state.codes.length === COUPON_CONFIG.MAX_USE_PER_ORDER"
-            :ui="{
-              base: 'uppercase',
-            }"
           />
           <UButton
             color="gray"
             variant="solid"
-            :disabled="disabledAddBtn"
+            :disabled="disabledAddBtn || cartStore.stateCheckoutCart.isPendingCreateOrder"
             @click="addCoupon"
           >
             Add
@@ -256,6 +254,7 @@ const disabledAddBtn = computed(() => {
               size="2xs"
               color="gray"
               variant="solid"
+              :disabled="isPendingCalcSummaryOrder || cartStore.stateCheckoutNow.isPendingCreateOrder"
               icon="i-heroicons-x-mark-20-solid"
               :ui="{ rounded: 'rounded-full' }"
               @click="() => deleteCoupon(code)"

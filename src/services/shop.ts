@@ -1,24 +1,36 @@
 import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
+import type { ComputedRef } from 'vue';
 import { RESOURCES } from '~/config/enums/resources';
 import type {
-  CreateProductBody, GetProductsQueryParams,
+  CreateProductBody, ShopGetProductsQueryParams,
   Product,
-  ProductVirtualFields, ResponseShopGetDetailProduct,
-  UpdateProductBody
+  ResponseShopGetDetailProduct,
+  UpdateProductBody, ResponseShopGetProducts
 } from '~/types/product';
 import type { Shop } from '~/types/shop';
-import type { GetListResponse } from '~/types/common';
-import type { Coupon, CreateCouponBody, GetCouponsParams } from '~/types/coupon';
+import type { ResponseBaseGetList } from '~/types/common';
+import type {
+  Coupon, CreatePromoCodeBody, CreateSaleBody, GetCouponsParams
+} from '~/types/coupon';
 import { toastCustom } from '~/config/toast';
+import type { UserAuthenticated } from '~/types/auth';
+import { useGetCurrentUser } from '~/services/user';
 
 export function useCreateShop() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ['create-shop'],
     mutationFn: (body: Pick<Shop, 'shop_name'>) => {
-      return useCustomFetchTemp.post<{ shop: Shop }>(
+      return useCustomFetch.post<{ shop: Shop }>(
         RESOURCES.SHOPS,
         body
       );
+    },
+    onSuccess(data) {
+      const dataUserAuth = queryClient.getQueryData<{ user: UserAuthenticated }>(['current-user']);
+      if (dataUserAuth) {
+        dataUserAuth.user.shop = data.shop;
+      }
     },
   });
 }
@@ -27,12 +39,12 @@ export function useShopGetDetailProduct(
   id: Product['id'],
   options?: NitroFetchOptions<NitroFetchRequest>
 ) {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   return useQuery({
-    queryKey: ['shop-get-detail-product'],
+    queryKey: ['shop-get-detail-product', id],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseShopGetDetailProduct>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,
+      return useCustomFetch.get<ResponseShopGetDetailProduct>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,
         undefined,
         options
       );
@@ -41,12 +53,12 @@ export function useShopGetDetailProduct(
 }
 
 export function useShopCreateProduct() {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   return useMutation({
     mutationKey: ['shop-create-product'],
     mutationFn: (body: CreateProductBody) => {
-      return useCustomFetchTemp.post<{ product: Product }>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.PRODUCTS}`,
+      return useCustomFetch.post<{ product: Product }>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}`,
         body
       );
     },
@@ -54,13 +66,13 @@ export function useShopCreateProduct() {
 }
 
 export function useShopUpdateProduct() {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   return useMutation({
     mutationKey: ['shop-update-product'],
     mutationFn: (body: UpdateProductBody) => {
       const { id, ...resBody } = body;
-      return useCustomFetchTemp.patch<{ product: Product }>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,
+      return useCustomFetch.patch<{ product: Product }>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,
         resBody
       );
     },
@@ -68,13 +80,13 @@ export function useShopUpdateProduct() {
 }
 
 export function useShopDeleteProduct() {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   const toast = useToast();
   return useMutation({
     mutationKey: ['shop-delete-product'],
     mutationFn: (id: Product['id']) => {
-      return useCustomFetchTemp.delete(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`
+      return useCustomFetch.delete(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`
       );
     },
     onSuccess() {
@@ -92,26 +104,28 @@ export function useShopDeleteProduct() {
   });
 }
 
-export function useShopGetProducts(queryParams: GetProductsQueryParams) {
-  const authStore = useAuthStore();
+export function useShopGetProducts(
+  queryParams: Ref<ShopGetProductsQueryParams> | ComputedRef<ShopGetProductsQueryParams>
+) {
+  const { data } = useGetCurrentUser();
   return useQuery({
-    queryKey: ['shop-get-products'],
+    queryKey: ['shop-get-products', queryParams],
     queryFn: () => {
-      return useCustomFetchTemp.get<GetListResponse<Product & ProductVirtualFields>>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.PRODUCTS}`,
-        queryParams
+      return useCustomFetch.get<ResponseBaseGetList<ResponseShopGetProducts>>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}`,
+        queryParams.value
       );
     },
   });
 }
 
 export function useShopCreateCoupon() {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   return useMutation({
     mutationKey: ['shop-create-coupon'],
-    mutationFn: (body: CreateCouponBody) => {
-      return useCustomFetchTemp.post<{ product: Product }>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.COUPONS}`,
+    mutationFn: (body: CreatePromoCodeBody | CreateSaleBody) => {
+      return useCustomFetch.post<{ product: Product }>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.COUPONS}`,
         body
       );
     },
@@ -119,12 +133,12 @@ export function useShopCreateCoupon() {
 }
 
 export function useShopGetCoupons(queryParams: GetCouponsParams) {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
   return useQuery({
     queryKey: ['shop-get-coupons'],
     queryFn: () => {
-      return useCustomFetchTemp.get<GetListResponse<Coupon>>(
-        `${RESOURCES.SHOPS}/${authStore?.user?.shop?.id}${RESOURCES.COUPONS}`,
+      return useCustomFetch.get<ResponseBaseGetList<Coupon>>(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.COUPONS}`,
         queryParams
       );
     },

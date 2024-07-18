@@ -1,7 +1,8 @@
 <script setup lang="ts">
-const authStore = useAuthStore();
+import { useGetCurrentUser } from '~/services/user';
 
 const route = useRoute();
+const { data: dataUserAuth } = useGetCurrentUser();
 const isOpen = ref(false);
 const isLoginForm = ref(true);
 const modal = useModal();
@@ -18,8 +19,8 @@ watch(() => route.path, () => {
   modal.close();
 });
 
-authStore.$subscribe((_mutation, state) => {
-  if (state.user) {
+watch(() => dataUserAuth.value?.user, () => {
+  if (dataUserAuth.value?.user) {
     modal.close();
   }
 });

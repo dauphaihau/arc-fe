@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
+import { useGetCurrentUser } from '~/services/user';
 
-const authStore = useAuthStore();
-const { user } = storeToRefs(authStore);
+const { data: dataUserAuth } = useGetCurrentUser();
 </script>
 
 <template>
@@ -37,7 +37,7 @@ const { user } = storeToRefs(authStore);
               >
               <div class="text-left">
                 <div>
-                  {{ user?.name }}
+                  {{ dataUserAuth?.user?.name }}
                 </div>
                 <div class="text-xs text-zinc-500/70">
                   View your profile

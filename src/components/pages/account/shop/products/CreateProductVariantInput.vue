@@ -666,11 +666,11 @@ watchDebounced(
         >
           <UInput
             v-model.number="row.price"
+            v-max-number="PRODUCT_CONFIG.MAX_PRICE"
+            v-numeric
             size="lg"
             name="price"
-            :maxlength="PRODUCT_CONFIG.MAX_PRICE.toString().length"
             @change="(e: Event) => onChangeInputTable(e, row)"
-            @keypress="keyPressIsNumber($event)"
           >
             <template #trailing>
               <span class="text-xs text-gray-500 dark:text-gray-400">USD</span>
@@ -691,11 +691,11 @@ watchDebounced(
         >
           <UInput
             v-model.number="row.stock"
+            v-max-number="PRODUCT_CONFIG.MAX_STOCK"
+            v-numeric
             name="stock"
             size="lg"
-            :maxlength="PRODUCT_CONFIG.MAX_STOCK.toString().length"
             @change="(e: Event) => onChangeInputTable(e, row)"
-            @keypress="keyPressIsNumber($event)"
           />
           <template #error="{ error }">
             <p class="error-message">
@@ -709,9 +709,11 @@ watchDebounced(
         <UFormGroup class="mt-6">
           <UInput
             v-model="row.sku"
+            v-alphanumeric
             :maxlength="PRODUCT_CONFIG.MAX_CHAR_SKU"
             name="sku"
             size="lg"
+            :ui="{ base: 'uppercase' }"
             @change="(e: Event) => onChangeInputTable(e, row)"
           />
           <template #error="{ error }">

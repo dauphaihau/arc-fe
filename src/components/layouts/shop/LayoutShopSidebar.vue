@@ -3,14 +3,14 @@ import type { DropdownItem } from '#ui/types';
 import avatarDefault from '~/assets/images/avatar-default.jpg';
 import { ROUTES } from '~/config/enums/routes';
 import { useLogout } from '~/services/auth';
+import { useGetCurrentUser } from '~/services/user';
 
 const routes = useRoute();
-const authStore = useAuthStore();
-
+const { data: dataUserAuth } = useGetCurrentUser();
 const { mutate: logout } = useLogout();
 
 const {
-  ACCOUNT, SHOP, PRODUCTS, COUPONS, SALES,
+  ACCOUNT, SHOP, PRODUCTS, COUPONS,
 } = ROUTES;
 
 type ILinkBase = {
@@ -24,13 +24,24 @@ export type ILink = {
 } & ILinkBase;
 
 const itemsLinkSidebar: ILink[] = [
-  { title: 'Dashboard', route: `${ACCOUNT}${SHOP}/dashboard` },
-  { title: 'Products', route: ACCOUNT + SHOP + PRODUCTS },
   {
-    title: 'Messages', route: `${ACCOUNT}${SHOP}/messages`, disabled: true,
+    title: 'Dashboard',
+    route: `${ACCOUNT}${SHOP}/dashboard`,
+    disabled: true,
   },
   {
-    title: 'Orders & Shipping', route: `${ACCOUNT}${SHOP}/orders`, disabled: true,
+    title: 'Products',
+    route: ACCOUNT + SHOP + PRODUCTS,
+  },
+  {
+    title: 'Messages',
+    route: `${ACCOUNT}${SHOP}/messages`,
+    disabled: true,
+  },
+  {
+    title: 'Orders & Shipping',
+    route: `${ACCOUNT}${SHOP}/orders`,
+    disabled: true,
   },
   {
     title: 'Marketing',
@@ -41,17 +52,15 @@ const itemsLinkSidebar: ILink[] = [
         route: `${ACCOUNT}${SHOP}/ads`,
       },
       {
-        title: 'Sales',
-        route: `${ACCOUNT}${SHOP}${SALES}`,
-      },
-      {
         title: 'Coupons',
         route: `${ACCOUNT}${SHOP}${COUPONS}`,
       },
     ],
   },
   {
-    title: 'Finances', route: `${ACCOUNT}${SHOP}/finances`, disabled: true,
+    title: 'Finances',
+    route: `${ACCOUNT}${SHOP}/finances`,
+    disabled: true,
   },
 ];
 
@@ -114,7 +123,7 @@ const itemsShopDropdown: DropdownItem[][] = [
           />
         </UButton>
         <div class="text-sm font-medium text-customGray-950">
-          {{ authStore.user?.shop?.shop_name }}
+          {{ dataUserAuth?.user?.shop?.shop_name }}
         </div>
       </div>
     </UDropdown>
@@ -132,8 +141,8 @@ const itemsShopDropdown: DropdownItem[][] = [
         <div
           v-else
           class="flex"
-          :class="[item.disabled && 'opacity-50']"
         >
+          <!--          :class="[item.disabled && 'opacity-50']" -->
           <UDivider
             :ui="{ border: { base: routes.path.indexOf(item.route) > -1 ? 'border-primary' : 'border-transparent' } }"
             orientation="vertical"
@@ -141,17 +150,22 @@ const itemsShopDropdown: DropdownItem[][] = [
             size="sm"
           />
 
-          <NuxtLink
-            :to="item?.disabled ? '' : item.route"
-            prefetch
-            class="link-default link-theme ml-2 mr-4 w-full"
-            :class="[
-              'pl-5',
-              routes.path.includes(item.route) ? 'link-active' : 'link-inactive',
-            ]"
+          <UTooltip
+            text="Feature not available"
+            :prevent="!item.disabled"
           >
-            {{ item.title }}
-          </NuxtLink>
+            <NuxtLink
+              :to="item?.disabled ? '' : item.route"
+              prefetch
+              class="link-default link-theme ml-2 mr-4 w-full"
+              :class="[
+                'pl-5',
+                routes.path.includes(item.route) ? 'link-active' : 'link-inactive',
+              ]"
+            >
+              {{ item.title }}
+            </NuxtLink>
+          </UTooltip>
         </div>
       </div>
     </div>

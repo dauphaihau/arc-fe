@@ -5,6 +5,7 @@ import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { COUPON_APPLIES_TO, COUPON_TYPES } from '~/config/enums/coupon';
 import { useShopGetCoupons } from '~/services/shop';
+import { CREATE_COUPON_PAGE_TYPES } from '~/config/enums/shop';
 
 dayjs.extend(localizedFormat);
 
@@ -23,8 +24,8 @@ const {
 
 const columns = [
   {
-    key: 'title-code',
-    label: 'Title | Code',
+    key: 'code',
+    label: 'Code',
   },
   {
     key: 'applies-to',
@@ -35,8 +36,6 @@ const columns = [
     key: 'discount',
     label: 'Discount',
     class: 'text-center',
-    // key: 'type',
-    // label: 'Coupon type | Discount',
   },
   {
     key: 'max_uses',
@@ -55,17 +54,10 @@ const columns = [
 
 const rows = computed(() => {
   if (dataShopGetCoupons.value?.results && dataShopGetCoupons.value.results.length > 0) {
-    return dataShopGetCoupons.value.results.map(prod => ({
-      id: prod.id,
-      title: prod.title,
-      code: prod.code,
-      type: prod.type,
-      max_uses: prod.max_uses,
-      applies_to: prod.applies_to,
-      percent_off: prod.percent_off,
-      amount_off: prod.amount_off,
-      start_date: dayjs(prod.start_date).format('hh:mm - L'),
-      end_date: dayjs(prod.end_date).format('hh:mm - L'),
+    return dataShopGetCoupons.value.results.map(coupon => ({
+      ...coupon,
+      start_date: dayjs(coupon.start_date).format('hh:mm - L'),
+      end_date: dayjs(coupon.end_date).format('hh:mm - L'),
       actions: { class: 'text-right' },
     }));
   }
@@ -114,12 +106,20 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
       Coupons
     </template>
     <template #actions>
-      <UButton
-        :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}${ROUTES.NEW}`"
-        size="sm"
-      >
-        + Create a coupon
-      </UButton>
+      <div class="space-x-3">
+        <UButton
+          :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}${ROUTES.NEW}?type=${CREATE_COUPON_PAGE_TYPES.PROMO_CODE}`"
+          size="sm"
+        >
+          + Create a promo code
+        </UButton>
+        <UButton
+          :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}${ROUTES.NEW}?type=${CREATE_COUPON_PAGE_TYPES.SALE}`"
+          size="sm"
+        >
+          + Run sale
+        </UButton>
+      </div>
     </template>
 
     <template #content>
@@ -131,20 +131,20 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
         :loading="isPendingShopGetCoupons"
         :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
-        <template #title-code-data="{ row }">
+        <template #code-data="{ row }">
           <div>
-            <div class="max-w-80 truncate text-sm">
-              {{ row.title }}
+            <div class="text-xs">
+              {{ row.is_auto_sale ? 'Sale' : 'Promo code' }}
             </div>
             <div class="text-xs">
-              CODE: {{ row.code }}
+              {{ row.code }}
             </div>
           </div>
         </template>
 
         <template #applies-to-data="{ row }">
           <div class="text-center">
-            {{ row.applies_to === COUPON_APPLIES_TO.ALL ? 'All' : 'specify products' }}
+            {{ row.applies_to === COUPON_APPLIES_TO.ALL ? 'All' : `${row.applies_product_ids.length}` }} products
           </div>
         </template>
 
@@ -183,7 +183,7 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
 
         <template #actions-data="{ row }">
           <div class="flex items-center justify-end">
-            <UTooltip text="Edit">
+            <UTooltip text="Feature not available">
               <UButton
                 color="gray"
                 variant="ghost"
@@ -195,13 +195,18 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
                 />
               </UButton>
             </UTooltip>
-            <UDropdown :items="itemsDropdownWithRow(row)">
-              <UButton
-                color="gray"
-                variant="ghost"
-                icon="i-heroicons-ellipsis-horizontal-20-solid"
-              />
-            </UDropdown>
+            <UTooltip text="Feature not available">
+              <UDropdown
+                disabled
+                :items="itemsDropdownWithRow(row)"
+              >
+                <UButton
+                  color="gray"
+                  variant="ghost"
+                  icon="i-heroicons-ellipsis-horizontal-20-solid"
+                />
+              </UDropdown>
+            </UTooltip>
           </div>
         </template>
       </UTable>

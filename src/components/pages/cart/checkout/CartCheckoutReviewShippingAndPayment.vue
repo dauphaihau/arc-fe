@@ -7,6 +7,7 @@ const cartStore = useCartStore();
 const changeUserAddress = () => {
   cartStore.stateCheckoutCart.currentStep = CHECKOUT_CART_STEPS.ADDRESS_SHIPPING;
 };
+
 const changePayment = () => {
   cartStore.stateCheckoutCart.currentStep = CHECKOUT_CART_STEPS.PAYMENT;
 };
@@ -44,6 +45,7 @@ const changePayment = () => {
           <UButton
             :padded="false"
             variant="link"
+            :disabled="cartStore.stateCheckoutCart.isPendingCreateOrder"
             @click="changeUserAddress"
           >
             Change
@@ -63,6 +65,7 @@ const changePayment = () => {
           <UButton
             :padded="false"
             variant="link"
+            :disabled="cartStore.stateCheckoutCart.isPendingCreateOrder"
             @click="changePayment"
           >
             Change

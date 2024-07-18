@@ -1,96 +1,90 @@
 <script setup lang="ts">
-import consola from 'consola';
+import { consola } from 'consola';
 import type { CreateOrderForBuyNowBody } from '~/types/order';
 import { PAYMENT_TYPES } from '~/config/enums/order';
-import type { User } from '~/types/user';
-import { type IExchangeRate, LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 import { toastCustom } from '~/config/toast';
-import { MARKET_CONFIG } from '~/config/enums/market';
 import { ROUTES } from '~/config/enums/routes';
 import { useCartStore } from '~/stores/cart';
 import { useCreateOrderForBuyNow } from '~/services/order';
 import { CHECKOUT_NOW_STEPS } from '~/types/pages/checkout';
+import { useGetCurrentUser } from '~/services/user';
+import { useGetExchangeRates } from '~/services/market';
 
 const cartStore = useCartStore();
 const toast = useToast();
-const store = useStore();
+const marketStore = useMarketStore();
+const { data: dataUserAuth } = useGetCurrentUser();
 
 const {
   mutateAsync: createOrder,
 } = useCreateOrderForBuyNow();
 
+const {
+  refetch: refetchGetExchangeRates,
+} = useGetExchangeRates({
+  enabled: false,
+});
+
 const onCreateOrder = async () => {
-  cartStore.stateCheckoutNow.currentStep++;
-  if (cartStore.stateCheckoutNow.currentStep !== CHECKOUT_NOW_STEPS.ORDER) {
-    return;
-  }
-  cartStore.stateCheckoutNow.loadingSubmit = true;
-
-  const addressId = cartStore.stateCheckoutNow.address?.id;
-  const product = cartStore.stateCheckoutNow.product;
-  if (!product.inventory || !addressId) {
-    consola.error('Some fields be undefined');
-    return;
-  }
-
-  const body: CreateOrderForBuyNowBody = {
-    payment_type: cartStore.stateCheckoutNow.payment_type,
-    address: addressId,
-    inventory: product.inventory,
-    quantity: product.quantity,
-    coupon_codes: product.coupon_codes,
-    note: product.note,
-  };
-
-  const currencySelected = parseJSON<User['market_preferences']>(
-    localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
-  )?.currency;
-  if (!currencySelected) {
-    toast.add({
-      ...toastCustom.error,
-      title: 'Oops',
-      description: 'Something wrong',
-    });
-    return;
-  }
-  body.currency = currencySelected;
-  if (currencySelected !== MARKET_CONFIG.BASE_CURRENCY) {
-    // validate currency
-    const exchangeRate = parseJSON<IExchangeRate>(localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]);
-    const prevRate = exchangeRate?.rates[currencySelected];
-    await store.getExchangeRates();
-    if (!store.rates) {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Oops',
-        description: 'Something wrong',
-      });
+  try {
+    cartStore.stateCheckoutNow.currentStep++;
+    if (cartStore.stateCheckoutNow.currentStep !== CHECKOUT_NOW_STEPS.ORDER) {
       return;
     }
-    const newRate = store.rates[currencySelected];
-    if (prevRate !== newRate) {
+    cartStore.stateCheckoutNow.isPendingCreateOrder = true;
+
+    const addressId = cartStore.stateCheckoutNow.address?.id;
+    const product = cartStore.stateCheckoutNow.product;
+    if (!product.inventory || !addressId) {
+      consola.error('addressId or inventoryId be undefined');
+      throw new Error();
+    }
+
+    const body: CreateOrderForBuyNowBody = {
+      payment_type: cartStore.stateCheckoutNow.payment_type,
+      address: addressId,
+      inventory: product.inventory,
+      quantity: product.quantity,
+      coupon_codes: product.coupon_codes,
+      note: product.note,
+    };
+
+    // region validate currency
+    const currencySelected = dataUserAuth?.value?.user?.market_preferences?.currency;
+    if (!currencySelected || !marketStore.exchangeRate?.rates) {
+      consola.error('currency or rates be undefined');
+      throw Error();
+    }
+    body.currency = currencySelected;
+
+    const ratePrev = marketStore.exchangeRate.rates[currencySelected];
+
+    const {
+      data: exchangeRates,
+    } = await refetchGetExchangeRates();
+
+    if (!exchangeRates?.rates) {
+      consola.error('new rates be undefined');
+      throw Error();
+    }
+    const rateNew = exchangeRates.rates[currencySelected];
+
+    if (ratePrev !== rateNew) {
       toast.add({
         ...toastCustom.info,
         title: 'Currency have a update, please recheck',
       });
-      cartStore.stateCheckoutNow.loadingSubmit = false;
+      cartStore.stateCheckoutNow.isPendingCreateOrder = false;
       cartStore.stateCheckoutNow.countRefreshConvertCurrency++;
       return;
     }
-  }
+    // endregion validate currency
 
-  try {
-    // const response: ResponseCreateOrderForBuyNow<typeof cartStore.stateCheckoutNow.payment_type> = await createOrder(body);
     if (body.payment_type === PAYMENT_TYPES.CARD) {
       const { checkoutSessionUrl } = await createOrder(body);
       if (!checkoutSessionUrl) {
         consola.error('checkoutSessionUrl be undefined', checkoutSessionUrl);
-        toast.add({
-          ...toastCustom.error,
-          title: 'Oops',
-          description: 'Something wrong',
-        });
-        return;
+        throw new Error();
       }
       navigateTo(checkoutSessionUrl, {
         external: true,
@@ -103,9 +97,10 @@ const onCreateOrder = async () => {
     }
   }
   catch (error) {
+    cartStore.stateCheckoutNow.isPendingCreateOrder = false;
     toast.add({
       ...toastCustom.error,
-      title: 'Order failed',
+      title: 'Create order failed',
     });
   }
 };
@@ -117,13 +112,15 @@ const onCreateOrder = async () => {
     block
     size="xl"
     :disabled="!cartStore.stateCheckoutNow.address"
-    :loading="cartStore.stateCheckoutNow.loadingSubmit"
+    :loading="cartStore.stateCheckoutNow.isPendingCreateOrder"
     :ui="{
       rounded: 'shadow-border',
     }"
     @click="onCreateOrder"
   >
-    {{ cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION ? 'Complete Order' : 'Continue' }}
+    {{
+      cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION ? 'Complete Order' : 'Continue'
+    }}
   </UButton>
 </template>
 

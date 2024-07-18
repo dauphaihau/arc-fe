@@ -23,5 +23,5 @@ export type StateCheckoutNow = {
   countRefreshConvertCurrency: number
   payment_type: PAYMENT_TYPES
   address: UserAddress | null
-  loadingSubmit: boolean
+  isPendingCreateOrder: boolean
 };

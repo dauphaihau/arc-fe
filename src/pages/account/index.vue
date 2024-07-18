@@ -1,7 +1,9 @@
 <script lang="ts" setup>
+import { useGetCurrentUser } from '~/services/user';
+
 definePageMeta({ layout: 'market', middleware: ['auth'] });
 
-const authStore = useAuthStore();
+const { data: dataUserAuth } = useGetCurrentUser();
 </script>
 
 <template>
@@ -15,7 +17,7 @@ const authStore = useAuthStore();
           Name
         </div>
         <div class="font-light text-zinc-600">
-          {{ authStore.user?.name }}
+          {{ dataUserAuth?.user?.name }}
         </div>
       </div>
       <div>
@@ -23,7 +25,7 @@ const authStore = useAuthStore();
           Email
         </div>
         <div class="font-light text-zinc-600">
-          {{ authStore.user?.email }}
+          {{ dataUserAuth?.user?.email }}
         </div>
       </div>
     </div>

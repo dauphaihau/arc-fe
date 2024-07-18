@@ -12,13 +12,15 @@ const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
 
+const params = computed(() => ({
+  page: page.value,
+}));
+
 const {
   isPending: isPendingShopGetProducts,
   data: dataShopGetProducts,
   refetch,
-} = useShopGetProducts({
-  page: page.value,
-});
+} = useShopGetProducts(params);
 
 const { mutateAsync: deleteProduct } = useShopDeleteProduct();
 
@@ -57,9 +59,8 @@ const rows = computed(() => {
     return dataShopGetProducts.value.results.map(product => ({
       id: product.id,
       title: product.title,
-      image: `domainAwsS3/${product?.images[0]?.relative_url}`,
-      variants: product.variant_type !== PRODUCT_VARIANT_TYPES.NONE ? product.variants : null,
-      inventory: product.variant_type === PRODUCT_VARIANT_TYPES.NONE ? product.inventory : null,
+      image_url: `domainAwsS3/${product?.image_relative_url}`,
+      inventories: product.inventories,
       variant_type: product.variant_type,
       price: { class: 'text-center' },
       stock: { class: 'text-center' },
@@ -163,13 +164,12 @@ async function removeProduct(id: Product['id']) {
         <template #title-data="{ row }">
           <div class="flex max-w-[200px] gap-2">
             <NuxtImg
-              :src="row.image"
+              :src="row.image_url"
               width="50"
               height="50"
               class="rounded"
               preload
             />
-            <!--          <div class="inline-block max-w-[150px] break-words"> -->
             <div class="truncate">
               {{ row.title }}
             </div>
@@ -177,28 +177,12 @@ async function removeProduct(id: Product['id']) {
         </template>
 
         <template #sku-data="{ row }">
-          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-            {{ row?.inventory?.sku || '-' }}
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div>
             <div
-              v-for="vari of row.variants"
-              :key="vari.id"
+              v-for="(inv, idx) of row.inventories"
+              :key="idx"
             >
-              {{ vari?.inventory?.sku || '-' }}
-            </div>
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div
-              v-for="vari of row.variants"
-              :key="vari.id"
-            >
-              <div
-                v-for="variOpt of vari.variant_options"
-                :key="variOpt.id"
-              >
-                {{ variOpt?.inventory?.sku || '-' }}
-              </div>
+              {{ inv?.sku || '-' }}
             </div>
           </div>
         </template>
@@ -207,77 +191,38 @@ async function removeProduct(id: Product['id']) {
           <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
             None
           </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div v-else>
             <div
-              v-for="vari of row.variants"
-              :key="vari.id"
+              v-for="(inv, index) of row.inventories"
+              :key="index"
             >
-              {{ vari.variant_name }}
-            </div>
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div
-              v-for="variant of row.variants"
-              :key="variant.id"
-            >
-              <div
-                v-for="variantOption of variant.variant_options"
-                :key="variantOption.id"
-              >
-                {{ variant?.variant_name }}, {{ variantOption?.variant?.variant_name }}
-              </div>
+              {{
+                row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE
+                  ? inv.variant.replaceAll('-', ', ')
+                  : inv.variant
+              }}
             </div>
           </div>
         </template>
+
         <template #price-data="{ row }">
-          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-            {{ formatCurrency(row?.inventory?.price) }}
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div>
             <div
-              v-for="vari of row.variants"
-              :key="vari.id"
+              v-for="(inv, idx) of row.inventories"
+              :key="idx"
             >
-              {{ formatCurrency(vari?.inventory?.price) }}
-            </div>
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div
-              v-for="vari of row.variants"
-              :key="vari.id"
-            >
-              <div
-                v-for="variOpt of vari.variant_options"
-                :key="variOpt.id"
-              >
-                {{ formatCurrency(variOpt.inventory.price) }}
-              </div>
+              {{ formatCurrency(inv.price) }}
             </div>
           </div>
         </template>
+
         <template #stock-data="{ row }">
-          <div v-if="row.variant_type === PRODUCT_VARIANT_TYPES.NONE">
-            {{ row?.inventory?.stock ?? 0 }}
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.SINGLE">
+          <div>
             <div
-              v-for="vari of row.variants"
-              :key="vari.id"
+              v-for="(inv, idx) of row.inventories"
+              :key="idx"
             >
-              {{ vari?.inventory?.stock }}
-            </div>
-          </div>
-          <div v-else-if="row.variant_type === PRODUCT_VARIANT_TYPES.COMBINE">
-            <div
-              v-for="vari of row.variants"
-              :key="vari.id"
-            >
-              <div
-                v-for="variOpt of vari.variant_options"
-                :key="variOpt.id"
-              >
-                {{ variOpt.inventory.stock }}
-              </div>
+              {{ inv.stock }}
             </div>
           </div>
         </template>

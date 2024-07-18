@@ -15,12 +15,13 @@ export function useGetCart(
   return useQuery({
     queryKey: ['get-cart'],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseGetCart>(
+      return useCustomFetch.get<ResponseGetCart>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         undefined,
         options
       );
     },
+    retry: 1,
   });
 }
 
@@ -31,7 +32,7 @@ export function useGetProductsRecentlyAdded(
     enabled: false,
     queryKey: ['get-products-recently-added'],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseGetProductsRecentlyAdded>(
+      return useCustomFetch.get<ResponseGetProductsRecentlyAdded>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         { type: 'header' },
         options
@@ -48,7 +49,7 @@ export function useAddProductToCart(
     ...options,
     mutationKey: ['add-to-cart'],
     mutationFn: (body: AddCartProduct) => {
-      return useCustomFetchTemp.post<{ summaryOrder: SummaryOrder }>(
+      return useCustomFetch.post<{ summaryOrder: SummaryOrder }>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         body
       );
@@ -70,7 +71,7 @@ export function useUpdateCartProduct(
     ...options,
     mutationKey: ['update-cart-product'],
     mutationFn: (body: UpdateCartProductBody) => {
-      return useCustomFetchTemp.patch<{ summaryOrder: SummaryOrder }>(
+      return useCustomFetch.patch<{ summaryOrder: SummaryOrder }>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         body
       );
@@ -92,7 +93,7 @@ export function useDeleteCartProduct(
   return useMutation({
     mutationKey: ['delete-cart-product'],
     mutationFn: () => {
-      return useCustomFetchTemp.delete<{ summaryOrder: SummaryOrder }>(
+      return useCustomFetch.delete<{ summaryOrder: SummaryOrder }>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         { inventory: id },
         undefined
@@ -114,7 +115,7 @@ export function useCalcSummaryOrder() {
   return useMutation({
     mutationKey: ['update-coupons-item'],
     mutationFn: (body: UpdateCouponsItem[]) => {
-      return useCustomFetchTemp.put<{ summaryOrder: SummaryOrder }>(
+      return useCustomFetch.put<{ summaryOrder: SummaryOrder }>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         body
       );

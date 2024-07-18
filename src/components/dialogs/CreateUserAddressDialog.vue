@@ -2,7 +2,7 @@
 import type { FormSubmitEvent } from '#ui/types';
 import type { CreateBodyUserAddressBody } from '~/types/user-address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
-import { createUserAddressSchema } from '~/schemas/userAddressSchema';
+import { createUserAddressSchema } from '~/schemas/user-address.schema';
 import { toastCustom } from '~/config/toast';
 import { useCreateUserAddress } from '~/services/user';
 import { useGetCountries, useGetStatesByCountry } from '~/services/address';
@@ -147,7 +147,7 @@ watch(() => stateSubmit.country, () => {
           <div class="mb-4 flex gap-3">
             <UFormGroup
               required
-              label="StateCheckoutNow/Province"
+              label="State/Province"
               name="state"
               class="w-1/2"
             >
@@ -168,9 +168,9 @@ watch(() => stateSubmit.country, () => {
             >
               <UInput
                 v-model="stateSubmit.zip"
+                v-numeric
                 :maxlength="ADDRESS_CONFIG.MAX_CHAR_ZIP"
                 size="xl"
-                @keypress="keyPressIsNumber($event)"
               />
             </UFormGroup>
           </div>
@@ -182,10 +182,10 @@ watch(() => stateSubmit.country, () => {
           >
             <UInput
               v-model="stateSubmit.phone"
+              v-numeric
               size="xl"
               :maxlength="ADDRESS_CONFIG.MAX_CHAR_PHONE"
               type="phone"
-              @keypress="keyPressIsNumber($event)"
             />
           </UFormGroup>
 

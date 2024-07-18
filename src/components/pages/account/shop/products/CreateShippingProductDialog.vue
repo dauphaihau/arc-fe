@@ -5,6 +5,7 @@ import { ADDRESS_CONFIG } from '~/config/enums/address';
 import type { CreateProductShipping, ProductShipping, ProductStandardShipping } from '~/types/product';
 import { PRODUCT_SHIPPING_CHARGE, PRODUCT_SHIPPING_SERVICES } from '~/config/enums/product';
 import { createProductShippingSchema } from '~/schemas/product-shipping.schema';
+import { useGetCurrentUser } from '~/services/user';
 
 type TStateSubmit = Partial<Pick<ProductShipping, 'country' | 'zip' | 'process_time'>> & {
   standard_shipping: Partial<ProductStandardShipping>[]
@@ -20,7 +21,7 @@ const props = defineProps<{
 
 const { data: dataGetCountries } = useGetCountries();
 const modal = useModal();
-const autoStore = useAuthStore();
+const { data: dataUserAuth } = useGetCurrentUser();
 
 const processTimeOptions = [
   {
@@ -54,8 +55,8 @@ onMounted(() => {
     Object.assign(stateSubmit, props.initData);
     return;
   }
-  if (autoStore?.user?.market_preferences?.region) {
-    stateSubmit.country = autoStore.user.market_preferences.region;
+  if (dataUserAuth.value?.user?.market_preferences?.region) {
+    stateSubmit.country = dataUserAuth.value.user.market_preferences.region;
     stateSubmit.standard_shipping.push({
       country: stateSubmit.country,
       service: PRODUCT_SHIPPING_SERVICES.OTHER,
@@ -141,9 +142,9 @@ const processTime = computed({
         >
           <UInput
             v-model="stateSubmit.zip"
+            v-numeric
             :maxlength="ADDRESS_CONFIG.MAX_CHAR_ZIP"
             size="xl"
-            @keypress="keyPressIsNumber($event)"
           />
         </UFormGroup>
         <UFormGroup

@@ -26,7 +26,7 @@ async function onSubmit(event: FormSubmitEvent<RegisterBody>) {
     return;
   }
 
-  const userPreferences = parseJSON<User['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]);
+  const userPreferences = parseJSON<User['market_preferences']>(localStorage[LOCAL_STORAGE_KEYS.GUEST_PREFERENCES]);
 
   try {
     await register({

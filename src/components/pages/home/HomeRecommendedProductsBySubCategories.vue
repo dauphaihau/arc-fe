@@ -1,20 +1,16 @@
 <script lang="ts" setup>
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { UserActivitiesSessionStorage } from '~/types/common';
-import { useGetMultiProductsLowestPrice } from '~/services/product';
+import { useGetProductsByMultiQueries } from '~/services/product';
 import type { Category } from '~/types/category';
 
 const groupSkeletons = 2;
 const limit = 7;
+const marketStore = useMarketStore();
 
 const categories = new Map<Category['id'], Category['name']>();
 
 const queries = computed(() => {
-  const userActivities = parseJSON<UserActivitiesSessionStorage>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES)
-  );
-  if (userActivities?.subCategories) {
-    return userActivities.subCategories.map((cg) => {
+  if (marketStore.userActivities?.subCategoriesLastVisit) {
+    return marketStore.userActivities.subCategoriesLastVisit.map((cg) => {
       categories.set(cg.id, cg.name);
       return {
         limit,
@@ -25,7 +21,7 @@ const queries = computed(() => {
   return undefined;
 });
 
-const result = useGetMultiProductsLowestPrice(queries.value);
+const result = useGetProductsByMultiQueries(queries.value);
 
 const subCategories = computed(() => {
   const filtered = result.value.filter(value => value.status === 'success');

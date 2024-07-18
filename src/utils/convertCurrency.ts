@@ -1,10 +1,7 @@
-import type { IExchangeRate } from '~/config/enums/local-storage-keys';
-import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
 import { MARKET_CONFIG } from '~/config/enums/market';
-import type { User } from '~/types/user';
+import { useGetCurrentUser } from '~/services/user';
 
-// default rates
-const ratesDefault = {
+const tempRates = {
   AUD: 1.534853,
   CAD: 1.354354,
   EUR: 0.926206,
@@ -22,15 +19,14 @@ export default function (amount: number | unknown) {
     return amount;
   }
 
-  const store = useStore();
+  const marketStore = useMarketStore();
+  const { data: dataUserAuth } = useGetCurrentUser();
 
-  const rates = parseJSON<IExchangeRate>(
-    localStorage[LOCAL_STORAGE_KEYS.EXCHANGE_RATE]
-  )?.rates || store.rates || ratesDefault;
+  const rates = marketStore.exchangeRate?.rates || tempRates;
 
-  const currency = parseJSON<User['market_preferences']>(
-    localStorage[LOCAL_STORAGE_KEYS.USER_PREFERENCES]
-  )?.currency || store.user_preferences?.currency || MARKET_CONFIG.BASE_CURRENCY;
+  const currency = dataUserAuth?.value?.user?.market_preferences?.currency ||
+    marketStore.guestPreferences?.currency ||
+    MARKET_CONFIG.BASE_CURRENCY;
 
   if (currency === MARKET_CONFIG.BASE_CURRENCY) {
     return formatCurrency(amount);

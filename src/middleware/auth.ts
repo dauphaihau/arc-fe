@@ -1,9 +1,10 @@
 import { ROUTES } from '~/config/enums/routes';
+import { useGetCurrentUser } from '~/services/user';
 
 export default defineNuxtRouteMiddleware(() => {
-  const authStore = useAuthStore();
+  const { data } = useGetCurrentUser();
 
-  if (!authStore.isLogged) {
+  if (!data.value?.user) {
     return navigateTo(ROUTES.HOME);
   }
 });

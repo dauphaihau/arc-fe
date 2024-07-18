@@ -20,6 +20,7 @@ onUnmounted(() => {
       v-model="cartStore.stateCheckoutNow.currentStep"
       class="mx-auto mb-24 max-w-[30rem]"
       :steps="steps"
+      :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
@@ -37,7 +38,6 @@ onUnmounted(() => {
             || cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.ORDER"
         >
           <CheckoutReviewShippingAndPayment class="mb-12" />
-
           <CheckoutOrderShop />
         </div>
       </div>

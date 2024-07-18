@@ -7,14 +7,14 @@ import type { UpdateCartProductBody, ProductCartPopulated, ResponseGetCart } fro
 import { useCartStore } from '~/stores/cart';
 import { useUpdateCartProduct } from '~/services/cart';
 
-const { data: { quantity, inventory } } = defineProps<{
+const props = defineProps<{
   data: ProductCartPopulated
 }>();
 
 const cartStore = useCartStore();
 const queryClient = useQueryClient();
 
-const stateInput = ref(quantity);
+const tempProductQty = ref(props.data.quantity);
 
 const {
   mutate: updateProductCart,
@@ -30,24 +30,16 @@ const {
 });
 
 const decreaseQty = () => {
-  if (stateInput.value === 1) {
-    return;
-  }
-  stateInput.value--;
+  if (tempProductQty.value === 1) return;
+  tempProductQty.value--;
 };
 
-watch(() => stateInput.value, () => {
-  if (stateInput.value > inventory.stock) {
-    stateInput.value = inventory.stock;
-  }
-}, { immediate: true });
-
 watchDebounced(
-  stateInput,
+  tempProductQty,
   async () => {
     const body: UpdateCartProductBody = {
-      inventory: inventory.id,
-      quantity: Number(stateInput.value),
+      inventory: props.data.inventory.id,
+      quantity: tempProductQty.value,
     };
     if (cartStore.additionInfoOrderShops) {
       body.additionInfoItems = Array
@@ -72,23 +64,23 @@ watchDebounced(
       icon="i-heroicons-minus"
       color="white"
       class="rounded-l-md rounded-r-none"
-      :disabled="isPendingUpdateProductCart"
+      :disabled="isPendingUpdateProductCart || cartStore.stateCheckoutNow.isPendingCreateOrder"
       @click="decreaseQty"
     />
     <UInput
-      v-model.number="stateInput"
+      v-model.number="tempProductQty"
+      v-numeric
+      v-max-number="props.data.inventory.stock"
       class="rounded-l-none"
-      :disabled="isPendingUpdateProductCart"
-      type="number"
+      :disabled="isPendingUpdateProductCart || cartStore.stateCheckoutNow.isPendingCreateOrder"
       :ui="{ base: 'text-center rounded-l-none' }"
-      @keypress="keyPressIsNumber($event)"
     />
     <UButton
       icon="i-heroicons-plus"
       color="white"
       class="rounded-l-none rounded-r-md"
-      :disabled="isPendingUpdateProductCart"
-      @click="() => stateInput++"
+      :disabled="isPendingUpdateProductCart || cartStore.stateCheckoutNow.isPendingCreateOrder"
+      @click="() => tempProductQty++"
     />
   </UButtonGroup>
 </template>

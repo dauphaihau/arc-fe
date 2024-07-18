@@ -57,6 +57,7 @@ watch(() => state.showNoteInput, () => {
       icon="i-heroicons-clipboard-document-list"
       color="gray"
       class="mb-1 w-fit"
+      :disabled="cartStore.stateCheckoutCart.isPendingCreateOrder"
       @click="state.showNoteInput = !state.showNoteInput"
     >
       Add a note to

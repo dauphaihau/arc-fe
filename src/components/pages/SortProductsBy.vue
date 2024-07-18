@@ -3,10 +3,10 @@ const router = useRouter();
 const route = useRoute();
 
 const options = [
-  { id: null, label: 'Default' },
-  { id: 'desc', label: 'Newest' },
-  { id: 'priceAsc', label: 'Price: Low to High' },
-  { id: 'priceDesc', label: 'Price: High to Low' },
+  { id: null, label: 'Relevancy' },
+  { id: 'newest', label: 'Newest' },
+  { id: 'price_asc', label: 'Price: Low to High' },
+  { id: 'price_desc', label: 'Price: High to Low' },
 ];
 
 const selected = ref(options[0]);
@@ -14,10 +14,10 @@ const selected = ref(options[0]);
 watch(selected, () => {
   const routeQuery = { ...route.query };
   if (selected.value.id) {
-    routeQuery.sortBy = selected.value.id;
+    routeQuery.order = selected.value.id;
   }
   else {
-    delete routeQuery.sortBy;
+    delete routeQuery.order;
   }
   router.push({ query: routeQuery });
 });
@@ -25,7 +25,7 @@ watch(selected, () => {
 
 <template>
   <div class="flex items-center gap-2">
-    <div>Sort By:</div>
+    <div>Sort by:</div>
     <USelectMenu
       v-model="selected"
       :options="options"

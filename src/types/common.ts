@@ -1,6 +1,6 @@
-import type { Category } from '~/types/category';
+import type { Ref } from 'vue';
 
-export interface GetListResponse<T> {
+export interface ResponseBaseGetList<T> {
   results: T[]
   page: number
   limit: number
@@ -16,14 +16,8 @@ export type RequestGetListParams = Partial<{
   sortBy: string
 }>;
 
-export interface UserActivitiesSessionStorage {
-  categoryProductVisited: Category['id']
-  rootCategoryVisited: Category
-  subCategories: Category[] & GetListResponse<Category>
-}
-
-export type ErrorServer = {
-  code: number
-  message: string
-  data: unknown
-};
+// export type ErrorServer = {
+//   code: number
+//   message: string
+//   data: unknown
+// };

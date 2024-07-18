@@ -4,14 +4,26 @@ import type {
 } from '~/types/category';
 import type { CategoryAttribute } from '~/types/category-attribute';
 
-export function useGetCategories(params?: GetCategoriesParams) {
-  return useQuery({
-    queryKey: ['get-categories'],
+export function useGetCategories(
+  params?: GetCategoriesParams
+) {
+  return useQuery<ResponseGetCategories>({
+    enabled: !!params,
+    queryKey: ['get-categories', params],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseGetCategories>(
+      return useCustomFetch.get<ResponseGetCategories>(
         RESOURCES.CATEGORIES,
-        params || undefined
+        params
       );
+    },
+  });
+}
+
+export function useGetRootCategories() {
+  return useQuery({
+    queryKey: ['get-root-categories'],
+    queryFn: () => {
+      return useCustomFetch.get<ResponseGetCategories>(RESOURCES.CATEGORIES);
     },
   });
 }
@@ -20,7 +32,7 @@ export function useGetSearchCategories() {
   return useMutation({
     mutationKey: ['get-search-categories'],
     mutationFn: (name: Category['name']) => {
-      return useCustomFetchTemp.delete<{ categories: CategorySearch[] }>(
+      return useCustomFetch.delete<{ categories: CategorySearch[] }>(
         RESOURCES.CATEGORIES,
         {
           name,
@@ -35,7 +47,7 @@ export function useGetAttributesByCategory(id?: Category['id']) {
     enabled: !!id,
     queryKey: ['get-attributes-by-category'],
     queryFn: () => {
-      return useCustomFetchTemp.get<{ attributes: CategoryAttribute[] }>(
+      return useCustomFetch.get<{ attributes: CategoryAttribute[] }>(
         `${RESOURCES.CATEGORIES}/${id}${RESOURCES.ATTRIBUTES}`
       );
     },

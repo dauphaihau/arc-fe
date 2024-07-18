@@ -23,15 +23,11 @@ const {
 async function onSubmit(event: FormSubmitEvent<{ shop_name: Shop['shop_name'] }>) {
   formRef.value.clear();
   try {
-    const res = await createShop(event.data);
+    await createShop(event.data);
     toast.add({
       ...toastCustom.success,
       title: 'Create shop success',
     });
-    const authStore = useAuthStore();
-    if (authStore?.user && res.shop) {
-      authStore.user.shop = res.shop;
-    }
     navigateTo(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.DASHBOARD}`);
   }
   catch (error) {

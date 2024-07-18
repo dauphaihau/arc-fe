@@ -1,30 +1,19 @@
 <script lang="ts" setup>
-import { useSessionStorage } from '@vueuse/core';
-import { StatusCodes } from 'http-status-codes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { UserActivitiesSessionStorage } from '~/types/common';
 import { useGetDetailProduct } from '~/services/product';
 
 definePageMeta({ layout: 'market' });
 
 const route = useRoute();
+const marketStore = useMarketStore();
 
 const {
   data,
   isPending: isPendingGetDetailProduct,
 } = useGetDetailProduct(route.params.id as string, {
   onResponse: ({ response }) => {
-    if (response.status === StatusCodes.OK && response._data?.product) {
-      const userActivities = parseJSON<UserActivitiesSessionStorage>(
-        sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
-        ));
-      sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
-
-      useSessionStorage(
-        SESSION_STORAGE_KEYS.USER_ACTIVITIES,
-        { ...userActivities, categoryProductVisited: response._data.product.category }
-      );
+    if (response.status === 200 && response._data?.product) {
+      marketStore.userActivities.categoryIdProductVisited = response._data.product.category;
     }
     else {
       throw showError({

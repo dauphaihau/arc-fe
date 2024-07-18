@@ -23,7 +23,7 @@ const {
   mutate: deleteCartProduct,
 } = useDeleteCartProduct(props.data.inventory.id, {
   onSuccess(data) {
-    cartStore.getCartHeader();
+    cartStore.getProductsRecentlyAdded();
     emit('onDeleteProduct');
     const cacheGetCart = queryClient.getQueryData<ResponseGetCart>(['get-cart']);
     if (cacheGetCart) {

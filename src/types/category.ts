@@ -10,10 +10,6 @@ export type ResponseGetCategories = {
   has_more: boolean
 };
 
-export interface CategorySessionStorage extends Category {
-  to?: string
-}
-
 export type CategorySearch = {
   id: Category['id']
   lastNameCategory: Category['name']

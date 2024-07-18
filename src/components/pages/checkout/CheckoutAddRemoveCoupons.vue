@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { StatusCodes } from 'http-status-codes';
 import { FetchError } from 'ofetch';
-import consola from 'consola';
+import { consola } from 'consola';
 import { useCartStore } from '~/stores/cart';
 import { toastCustom } from '~/config/toast';
 import { useMutateSummaryOder } from '~/services/order';
@@ -32,7 +32,6 @@ const {
 
 const addCoupon = async () => {
   state.errorMsg = '';
-  state.code = state.code.toUpperCase();
 
   const errorMsg = cartStore.stateCheckoutNow.invalidCodes.get(state.code);
   if (errorMsg) {
@@ -151,6 +150,7 @@ const disabledInput = computed(() => {
     icon="i-heroicons-ticket"
     color="gray"
     class="w-fit"
+    :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
     @click="toggleShowAddCouponInput"
   >
     Apply shop coupon codes
@@ -171,15 +171,13 @@ const disabledInput = computed(() => {
       >
         <UInput
           v-model="state.code"
-          :disabled="disabledInput"
-          :ui="{
-            base: 'uppercase',
-          }"
+          v-uppercase
+          :disabled="disabledInput || cartStore.stateCheckoutNow.isPendingCreateOrder"
         />
         <UButton
           color="gray"
           variant="solid"
-          :disabled="disabledAddBtn"
+          :disabled="disabledAddBtn || cartStore.stateCheckoutNow.isPendingCreateOrder"
           @click="addCoupon"
         >
           Add
@@ -207,7 +205,7 @@ const disabledInput = computed(() => {
             size="2xs"
             color="gray"
             variant="solid"
-            :disabled="isPendingMutateSummaryOder"
+            :disabled="isPendingMutateSummaryOder || cartStore.stateCheckoutNow.isPendingCreateOrder"
             icon="i-heroicons-x-mark-20-solid"
             :ui="{ rounded: 'rounded-full' }"
             @click="() => deleteCoupon(code)"

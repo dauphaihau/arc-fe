@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { ComputedRef } from 'vue';
 import type { Coupon } from './coupon';
 import type { Category } from './category';
 import type {
@@ -42,29 +43,26 @@ export type VariantOptionsCreate = z.infer<typeof variantOptionCreateSchema>;
 export type UpdateProductBody = z.infer<typeof updateProductSchema>;
 export type VariantOptionsUpdate = z.infer<typeof variantOptionsUpdateSchema>;
 
-export type ProductVirtualFields = {
-  summary_inventory: Record<'lowest_price' | 'highest_price' | 'stock', number>
+export type GetProductsParams = Partial<Pick<Product, 'category' | 'shop'> & RequestGetListParams>;
+
+export type ShopGetProductsQueryParams = Partial<Pick<Product, 'title' > & RequestGetListParams>;
+
+export type ResponseShopGetProducts = Pick<Product, 'id' | 'title' | 'variant_type'> & {
+  image_relative_url: ProductImage['relative_url']
+  inventories: Pick<ProductInventory, 'variant' | 'price' | 'stock' | 'sku'>[]
 };
 
-export type GetProductsLowestPriceQueries = Partial<Pick<Product, 'category' | 'shop'> & RequestGetListParams>;
-
-export type GetProductsQueryParams = Partial<Pick<Product, 'title' > & RequestGetListParams>;
-
-type IVariantGetProducts = Omit<ProductVariant, 'variant_options'> & {
-  variant_options: {
-    inventory: ProductInventory
-  }[]
-  inventory: ProductInventory
-};
-
-export type ResponseGetProducts = Override<Product, {
-  shop_name: Shop['shop_name']
-  variants?: IVariantGetProducts[]
-  image_relative_url: string
-  summary_inventory: Record<
-    'lowest_price' | 'highest_price' | 'stock' | 'sale_price' | 'percent_off'
-    , number> & { discount_types: Coupon['type'][] }
-}>;
+export type ResponseGetProducts = {
+  shop: Pick<Shop, 'id' | 'shop_name'>
+  inventory: Pick<ProductInventory, 'price' | 'stock' | 'sku'> & {
+    origin_price?: ProductInventory['price']
+  }
+  coupon?: {
+    types: Coupon['type'][]
+    percent_off: Coupon['percent_off']
+  }
+  image_relative_url: ProductImage['relative_url']
+} & Pick<Product, 'id' | 'title' | 'category' | 'variant_type'>;
 
 export type ResponseGetDetailProduct = {
   product: Omit<ProductPopulated, 'category'> & {

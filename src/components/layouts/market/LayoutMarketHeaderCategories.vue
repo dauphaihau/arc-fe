@@ -1,38 +1,24 @@
 <script setup lang="ts">
-import { useSessionStorage } from '@vueuse/core';
 import type { Category } from '~/types/category';
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { UserActivitiesSessionStorage } from '~/types/common';
 import { ROUTES } from '~/config/enums/routes';
+import { useGetRootCategories } from '~/services/category';
 
-const store = useStore();
+const { data: dataRootCategories } = useGetRootCategories();
+const marketStore = useMarketStore();
 
-const redirectByCategory = (category: Category) => {
-  const to = `${ROUTES.C}/${category.name.replaceAll(' ', '-').toLowerCase()}`;
-
-  sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORY);
-  useSessionStorage(SESSION_STORAGE_KEYS.CATEGORY, category);
-
-  sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORIES);
-  useSessionStorage(SESSION_STORAGE_KEYS.CATEGORIES, [{ ...category, to }]);
-
-  const userActivities = parseJSON<UserActivitiesSessionStorage>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES)
-  );
-  sessionStorage.removeItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES);
-  useSessionStorage(
-    SESSION_STORAGE_KEYS.USER_ACTIVITIES,
-    { ...userActivities, rootCategoryVisited: category }
-  );
+const redirectByCategory = (rootCategory: Category) => {
+  const to = `${ROUTES.C}/${rootCategory.name.replaceAll(' ', '-').toLowerCase()}`;
+  marketStore.categoriesBreadcrumb = [{ ...rootCategory, to }];
+  marketStore.userActivities.rootCategoryProductVisited = rootCategory;
   navigateTo(to);
 };
 </script>
 
 <template>
-  <div v-if="store.rootCategories.length > 0">
+  <div v-if="dataRootCategories?.categories && dataRootCategories.categories.length > 0">
     <div class="flex gap-3">
       <div
-        v-for="(cg, index) of store.rootCategories"
+        v-for="(cg, index) of dataRootCategories.categories"
         :key="index"
       >
         <UButton

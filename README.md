@@ -20,7 +20,7 @@ A ecommerce marketplace web application  where people come together to make, sel
 - [JSON Web Tokens](https://jwt.io/) - Authenticate
 - [Stripe](https://stripe.com/) - Payment
 - [Redis](https://redis.io/) - Distributed lock
-- [AWS S3](https://aws.amazon.com/pm/serv-s3/) - Store assets
+- [AWS S3](https://aws.amazon.com/pm/serv-s3/) - useMarketStore assets
 - [Typescript](https://www.typescriptlang.org/)
 - [Zod](https://zod.dev/)
 

@@ -7,7 +7,7 @@ export function useGetCountries(options?: Partial<UseQueryOptions<ResponseGetCou
     ...options,
     queryKey: ['get-countries'],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseGetCountries>(
+      return useCustomFetch.get<ResponseGetCountries>(
         'https://countriesnow.space/api/v0.1/countries/iso',
         undefined,
         {
@@ -24,7 +24,7 @@ export function useGetStatesByCountry(country: ComputedRef<string | undefined>) 
     enabled: false,
     queryKey: ['get-states-by-country', country],
     queryFn: () => {
-      return useCustomFetchTemp.post<ResponseGetStatesByCountry>(
+      return useCustomFetch.post<ResponseGetStatesByCountry>(
         'https://countriesnow.space/api/v0.1/countries/states',
         {
           country: country.value,

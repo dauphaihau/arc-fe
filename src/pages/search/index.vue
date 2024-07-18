@@ -1,20 +1,16 @@
 <script lang="ts" setup>
-import { useGetProductsLowestPrice } from '~/services/product';
+import { useGetProducts } from '~/services/product';
 
 definePageMeta({ layout: 'market' });
 
 const route = useRoute();
 
-const redirectErrorPage = () => {
-  throw createError({
+if (!route.query?.s) {
+  throw showError({
     statusCode: 404,
     statusMessage: 'Page Not Found',
     fatal: true,
   });
-};
-
-if (!route.query?.s) {
-  redirectErrorPage();
 }
 
 const limit = 30;
@@ -35,12 +31,8 @@ const queryParams = computed(() => {
 const {
   data,
   refetch,
-  isPending,
-} = useGetProductsLowestPrice(queryParams, {
-  onResponseError: () => {
-    redirectErrorPage();
-  },
-});
+  isPending: isPendingGetProducts,
+} = useGetProducts(queryParams);
 
 watch(() => route.query.s, () => {
   refetch();
@@ -58,8 +50,11 @@ watch(() => route.query.s, () => {
         <FilterProducts />
       </div>
 
-      <div v-if="isPending">
-        loading...
+      <div
+        v-if="isPendingGetProducts"
+        class="grid h-[80vh] w-full place-content-center"
+      >
+        <LoadingSvg :child-class="'!w-12 !h-12'" />
       </div>
       <div
         v-else

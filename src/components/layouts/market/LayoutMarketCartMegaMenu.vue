@@ -2,13 +2,14 @@
 import { ROUTES } from '~/config/enums/routes';
 import { RegisterLoginDialog } from '#components';
 import { useLogout } from '~/services/auth';
+import { useGetCurrentUser } from '~/services/user';
 
 const { show } = defineProps<{ show: boolean }>();
 
 const router = useRouter();
-const authStore = useAuthStore();
 const cartStore = useCartStore();
 const modal = useModal();
+const { data: dataUserAuth } = useGetCurrentUser();
 
 const {
   mutate: logout,
@@ -34,7 +35,7 @@ const handleLogout = () => {
             Cart
           </div>
           <UButton
-            v-if="authStore.isLogged"
+            v-if="dataUserAuth?.user"
             :to="ROUTES.CART"
             label="Review Cart"
           >
@@ -45,7 +46,7 @@ const handleLogout = () => {
         </div>
 
         <div class="mb-10">
-          <div v-if="authStore.isLogged">
+          <div v-if="dataUserAuth?.user">
             <div v-if="cartStore.cartHeader.products.length > 0">
               <div class="mb-6 space-y-8">
                 <div
@@ -107,7 +108,7 @@ const handleLogout = () => {
           </div>
         </div>
 
-        <div v-if="authStore.isLogged">
+        <div v-if="dataUserAuth?.user">
           <div class="mb-2 text-customGray-950">
             My Profile
           </div>
@@ -150,7 +151,7 @@ const handleLogout = () => {
                 name="i-heroicons-arrow-left-start-on-rectangle"
                 color="gray"
               />
-              Logout {{ authStore?.user?.name }}
+              Logout {{ dataUserAuth?.user?.name }}
             </div>
           </div>
         </div>

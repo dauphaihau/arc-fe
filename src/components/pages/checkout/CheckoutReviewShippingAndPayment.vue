@@ -44,6 +44,7 @@ const changePayment = () => {
           <UButton
             :padded="false"
             variant="link"
+            :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
             @click="changeUserAddress"
           >
             Change
@@ -63,6 +64,7 @@ const changePayment = () => {
           <UButton
             :padded="false"
             variant="link"
+            :disabled="cartStore.stateCheckoutNow.isPendingCreateOrder"
             @click="changePayment"
           >
             Change

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
+import { CREATE_COUPON_PAGE_TYPES } from '~/config/enums/shop';
 
 const {
   ACCOUNT, SHOP, PRODUCTS, COUPONS,
@@ -9,7 +10,7 @@ const {
 const itemsHeaderDropdown: DropdownItem[][] = [
   [
     {
-      label: 'Product',
+      label: 'Create Product',
       icon: 'i-heroicons-cube',
       shortcuts: ['P'],
       click: () => {
@@ -17,11 +18,19 @@ const itemsHeaderDropdown: DropdownItem[][] = [
       },
     },
     {
-      label: 'Coupon',
+      label: 'Create Coupon',
       icon: 'i-heroicons-ticket',
       shortcuts: ['C'],
       click: () => {
-        navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new`);
+        navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new?type=${CREATE_COUPON_PAGE_TYPES.PROMO_CODE}`);
+      },
+    },
+    {
+      label: 'Run Sale',
+      icon: 'i-hugeicons:sale-tag-01',
+      shortcuts: ['S'],
+      click: () => {
+        navigateTo(`${ACCOUNT}${SHOP}${COUPONS}/new?type=${CREATE_COUPON_PAGE_TYPES.SALE}`);
       },
     },
   ],

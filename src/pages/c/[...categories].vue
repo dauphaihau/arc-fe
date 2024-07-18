@@ -1,45 +1,21 @@
 <script lang="ts" setup>
-import { useSessionStorage } from '@vueuse/core';
-import type { CategorySessionStorage } from '~/types/category';
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import { useGetProductsLowestPrice } from '~/services/product';
+import { useGetProducts } from '~/services/product';
 
 definePageMeta({ layout: 'market' });
 
 const route = useRoute();
+const marketStore = useMarketStore();
 
 const limit = 20;
 const page = ref(1);
 
-const redirectErrorPage = () => {
-  throw createError({
-    statusCode: 404,
-    statusMessage: 'Page Not Found',
-    fatal: true,
-  });
-};
-
-const categoryId = computed(() => {
-  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
-
-  const categoryInSS = parseJSON<CategorySessionStorage>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORY));
-
-  if (!categoryInSS) {
-    return redirectErrorPage();
+const params = computed(() => {
+  const category = marketStore.categoriesBreadcrumb.find(c => c.to === route.path);
+  if (!category) {
+    return undefined;
   }
-
-  const categoryInSSByPath = categoriesInSS && categoriesInSS.find(c => c.to === route.fullPath);
-  if (categoryInSSByPath) {
-    return categoryInSSByPath.id;
-  }
-  return categoryInSS.id;
-});
-
-const queriesGetProducts = computed(() => {
   let defaultParams = {
-    category: categoryId.value,
+    category: category.id,
     page: page.value,
     limit,
   };
@@ -50,77 +26,15 @@ const queriesGetProducts = computed(() => {
 });
 
 const {
-  data,
+  data: dataGetProducts,
   isPending: isPendingGetProducts,
-} = useGetProductsLowestPrice(queriesGetProducts, {
-  onResponseError: () => {
-    redirectErrorPage();
-  },
-});
-
-const state = reactive({
-  currentCategory: computed(() => {
-    let str = route.params.categories[route.params.categories.length - 1];
-    if (str.includes('-')) {
-      str = str.replaceAll('-', ' ');
-    }
-    return str;
-  }),
-  categoriesBreadcrumb: computed(() => {
-    let categoriesInSS = parseJSON<CategorySessionStorage[]>(
-      sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES));
-
-    if (!categoriesInSS) {
-      return null;
-    }
-
-    // Clear tail breadcrumb by current path ( include case refresh page without click redirect )
-    const categoryInSSByPath = categoriesInSS.find(c => c.to === route.fullPath);
-    if (categoryInSSByPath) {
-      // Clear child's by parent
-      const newCategories = categoriesInSS.filter((c) => {
-        return c.parent !== categoryInSSByPath.id;
-      });
-      categoriesInSS = newCategories;
-      useSessionStorage(SESSION_STORAGE_KEYS.CATEGORIES, newCategories);
-    }
-
-    return categoriesInSS.map(c => ({ label: c.name, to: c.to }));
-  }),
-});
-
-// on root category change, reset categories in ss
-watch(() => route.fullPath, () => {
-  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES)
-  );
-
-  if (categoriesInSS) {
-    const root = categoriesInSS.find(c => !c.parent);
-
-    if (root && root.to === route.fullPath) {
-      sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORIES);
-      useSessionStorage(SESSION_STORAGE_KEYS.CATEGORIES, [root]);
-    }
-  }
-}, { immediate: true });
+} = useGetProducts(params);
 </script>
 
 <template>
   <div class="pt-12">
     <div class="mb-4 flex items-center justify-between">
-      <div>
-        <UBreadcrumb
-          v-if="state.categoriesBreadcrumb && route.params.categories.length > 1"
-          divider="i-heroicons-chevron-right-20-solid"
-          :links="state.categoriesBreadcrumb"
-          :ui="{ active: 'text-gray-700' }"
-        />
-        <div class="mb-2 text-2xl font-semibold capitalize">
-          {{ state.currentCategory }} ( {{ data?.totalResults || 0 }} )
-        </div>
-      </div>
-
+      <CategoriesBreadcrumb :total-products="dataGetProducts?.totalResults || 0" />
       <SortProductsBy />
     </div>
 
@@ -138,25 +52,25 @@ watch(() => route.fullPath, () => {
       </div>
       <div v-else>
         <div
-          v-if="data?.results"
+          v-if="dataGetProducts?.results"
           class="mb-16 grid grid-cols-4 gap-x-3 gap-y-8"
         >
           <div
-            v-for="(product, i) of data.results"
+            v-for="(product, i) of dataGetProducts.results"
             :key="i"
           >
             <ProductCard :product="product" />
           </div>
         </div>
         <div
-          v-if="data?.totalResults && data.totalResults > limit"
+          v-if="dataGetProducts?.totalResults && dataGetProducts.totalResults > limit"
           class="flex justify-center"
         >
           <UPagination
             v-model="page"
             size="xl"
             :page-count="limit"
-            :total="data?.totalResults ?? 0"
+            :total="dataGetProducts?.totalResults ?? 0"
             :inactive-button="{ color: 'gray' }"
           />
         </div>

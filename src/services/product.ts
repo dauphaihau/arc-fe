@@ -1,46 +1,32 @@
 import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
-import type { MutateOptions } from '@tanstack/vue-query';
+import type { UseQueryOptions } from '@tanstack/vue-query';
 import type { ComputedRef } from 'vue';
 import { RESOURCES } from '~/config/enums/resources';
 import type {
-  GetProductsLowestPriceQueries, GetProductsQueryParams,
+  GetProductsParams,
   Product,
   ResponseGetDetailProduct,
   ResponseGetProducts
 } from '~/types/product';
-import type { GetListResponse } from '~/types/common';
+import type { ResponseBaseGetList } from '~/types/common';
 
 export function useGetProducts(
-  queryParams?: GetProductsQueryParams,
-  options?: NitroFetchOptions<NitroFetchRequest>
+  params: ComputedRef<GetProductsParams | undefined>,
+  options?: Partial<UseQueryOptions<ResponseBaseGetList<ResponseGetProducts>>>
 ) {
-  return useQuery({
-    enabled: false,
-    queryKey: ['get-product', queryParams],
+  return useQuery<ResponseBaseGetList<ResponseGetProducts>>({
+    enabled: !!params,
+    ...options,
+    queryKey: ['get-products', params],
     queryFn: () => {
-      return useCustomFetchTemp.get<GetListResponse<ResponseGetProducts>>(
+      return useCustomFetch.get<ResponseBaseGetList<ResponseGetProducts>>(
         RESOURCES.PRODUCTS,
-        queryParams,
-        options
+        params.value
       );
     },
   });
 }
 
-export function useSearchProducts(
-  options: MutateOptions<GetListResponse<ResponseGetProducts>, unknown, GetProductsQueryParams, unknown>
-) {
-  return useMutation({
-    ...options,
-    mutationKey: ['get-search-product'],
-    mutationFn: (queryParams?: GetProductsQueryParams) => {
-      return useCustomFetchTemp.get<GetListResponse<ResponseGetProducts>>(
-        RESOURCES.PRODUCTS,
-        queryParams
-      );
-    },
-  });
-}
 
 export function useGetDetailProduct(
   id: Product['id'],
@@ -50,7 +36,7 @@ export function useGetDetailProduct(
     enabled: !!id,
     queryKey: ['get-detail-product', id],
     queryFn: () => {
-      return useCustomFetchTemp.get<ResponseGetDetailProduct>(
+      return useCustomFetch.get<ResponseGetDetailProduct>(
         `${RESOURCES.PRODUCTS}/${id}`,
         undefined,
         options
@@ -59,30 +45,12 @@ export function useGetDetailProduct(
   });
 }
 
-export function useGetProductsLowestPrice(
-  queryParams: ComputedRef<GetProductsLowestPriceQueries | undefined>,
-  options?: NitroFetchOptions<NitroFetchRequest>
-) {
-  return useQuery({
-    enabled: !!queryParams,
-    queryKey: ['get-product-lowest-price', queryParams],
-    queryFn: () => {
-      return useCustomFetchTemp.delete<GetListResponse<ResponseGetProducts>>(
-        RESOURCES.PRODUCTS,
-        queryParams.value,
-        options
-      );
-    },
-  });
-}
-
-
-export function useGetMultiProductsLowestPrice(queries?: GetProductsLowestPriceQueries[]) {
+export function useGetProductsByMultiQueries(queries?: GetProductsParams[]) {
   return useQueries({
     queries: queries?.map(qp => ({
       queryKey: [qp.category],
       queryFn: async () => {
-        const res = await useCustomFetchTemp.delete<GetListResponse<ResponseGetProducts>>(
+        const res = await useCustomFetch.get<ResponseBaseGetList<ResponseGetProducts>>(
           RESOURCES.PRODUCTS,
           qp
         );

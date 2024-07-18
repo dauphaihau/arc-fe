@@ -259,6 +259,7 @@ watch(() => [state.stock, state.price], () => {
             v-model="state.title"
             :disabled="loadingSubmit"
             size="lg"
+            @keydown.space.prevent="false"
           />
         </UFormGroup>
         <UFormGroup
@@ -444,11 +445,12 @@ watch(() => [state.stock, state.price], () => {
             >
               <UInput
                 v-model.number="state.price"
+                v-max-number="PRODUCT_CONFIG.MAX_PRICE"
+                v-numeric
                 :disabled="loadingSubmit"
                 size="lg"
                 type="number"
                 class="w-1/2"
-                @keypress="keyPressIsNumber($event)"
               >
                 <template #trailing>
                   <span class="text-xs text-gray-500">USD</span>
@@ -463,11 +465,12 @@ watch(() => [state.stock, state.price], () => {
             >
               <UInput
                 v-model.number="state.stock"
+                v-max-number="PRODUCT_CONFIG.MAX_STOCK"
+                v-numeric
                 :disabled="loadingSubmit"
                 size="lg"
                 type="number"
                 class="w-1/2"
-                @keypress="keyPressIsNumber($event)"
               />
             </UFormGroup>
             <UFormGroup
@@ -478,8 +481,12 @@ watch(() => [state.stock, state.price], () => {
             >
               <UInput
                 v-model="state.sku"
+                v-uppercase
+                v-alphanumeric
+                :maxlength="PRODUCT_CONFIG.MAX_CHAR_SKU"
                 :disabled="loadingSubmit"
                 size="lg"
+                :ui="{ base: 'uppercase' }"
                 class="w-1/2"
               />
             </UFormGroup>

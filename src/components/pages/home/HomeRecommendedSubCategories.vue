@@ -1,46 +1,42 @@
 <script setup lang="ts">
-import { SESSION_STORAGE_KEYS } from '~/config/enums/session-storage-keys';
-import type { CategorySessionStorage, Category } from '~/types/category';
-import type { UserActivitiesSessionStorage } from '~/types/common';
+import type { Category } from '~/types/category';
 import { useGetCategories } from '~/services/category';
+import { ROUTES } from '~/config/enums/routes';
 
-const state = reactive({
-  category: computed(() => {
-    const userActivities = parseJSON<UserActivitiesSessionStorage>(
-      sessionStorage.getItem(SESSION_STORAGE_KEYS.USER_ACTIVITIES
-      ));
-    return userActivities?.rootCategoryVisited || null;
-  }),
-  categories: [] as Category[],
-  loading: false,
+const marketStore = useMarketStore();
+
+const params = computed(() => {
+  if (marketStore.userActivities?.rootCategoryProductVisited?.id) {
+    return {
+      parent: marketStore.userActivities?.rootCategoryProductVisited.id,
+    };
+  }
+  return undefined;
 });
 
 const {
-  data,
+  data: dataGetCategories,
   isPending: isPendingGetCategories,
   isFetching: isFetchingGetCategories,
-} = useGetCategories(state.category?.id ? { parent: state.category.id } : undefined);
+} = useGetCategories(params.value);
 
-const redirectPage = (category: CategorySessionStorage) => {
-  sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORY);
-  useSessionStorage(SESSION_STORAGE_KEYS.CATEGORY, category);
-
-  const categoriesInSS = parseJSON<CategorySessionStorage[]>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.CATEGORIES)
-  );
-
-  if (categoriesInSS && state.category?.name) {
-    const newCategories = categoriesInSS.filter(c => c.parent !== category.parent);
-
+const redirectPage = (subCategory: Category) => {
+  if (marketStore.categoriesBreadcrumb && marketStore.userActivities?.rootCategoryProductVisited?.name) {
     const lower = (str: string) => str.replaceAll(' ', '-').toLowerCase();
-    const to = `c/${lower(state.category.name)}/${lower(category.name)}`;
+    const toRootCategory = `${ROUTES.C}/${lower(marketStore.userActivities.rootCategoryProductVisited.name)}`;
+    const toSubCategory = `${toRootCategory}/${lower(subCategory.name)}`;
 
-    newCategories.push({ ...category, to });
-
-    sessionStorage.removeItem(SESSION_STORAGE_KEYS.CATEGORIES);
-    useSessionStorage(SESSION_STORAGE_KEYS.CATEGORIES, newCategories);
-
-    navigateTo(to);
+    marketStore.categoriesBreadcrumb = [
+      {
+        ...marketStore.userActivities?.rootCategoryProductVisited,
+        to: toRootCategory,
+      },
+      {
+        ...subCategory,
+        to: toSubCategory,
+      },
+    ];
+    navigateTo(toSubCategory);
   }
 };
 </script>
@@ -61,7 +57,7 @@ const redirectPage = (category: CategorySessionStorage) => {
         />
       </div>
     </div>
-    <div v-else-if="data?.categories && data.categories.length > 0">
+    <div v-else-if="dataGetCategories?.categories && dataGetCategories.categories.length > 0">
       <div class="mb-6">
         <h3 class="text-lg font-medium">
           Recommended categories for you
@@ -72,7 +68,7 @@ const redirectPage = (category: CategorySessionStorage) => {
       </div>
       <div class="flex gap-16">
         <div
-          v-for="cg of data.categories"
+          v-for="cg of dataGetCategories.categories"
           :key="cg.id"
         >
           <div @click="() => redirectPage(cg)">

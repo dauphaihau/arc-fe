@@ -26,10 +26,10 @@ const router = useRouter();
         {{ product.title }}
       </h1>
       <p class="text-sm text-customGray-800">
-        {{ product?.shop_name }}
+        {{ product.shop.shop_name }}
       </p>
       <p class="text-base font-medium text-customGray-950">
-        {{ formatCurrency(product?.summary_inventory?.lowest_price) }}
+        {{ formatCurrency(product?.inventory?.price) }}
       </p>
     </div>
     <slot name="content" />

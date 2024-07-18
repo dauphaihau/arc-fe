@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { Category } from '~/types/category';
-import { useGetProductsLowestPrice } from '~/services/product';
+import { useGetProducts } from '~/services/product';
 
 const limit = 12;
 
@@ -13,7 +13,7 @@ const queryParams = computed(() => ({
   limit,
 }));
 
-const { data } = useGetProductsLowestPrice(queryParams);
+const { data } = useGetProducts(queryParams);
 </script>
 
 <template>

@@ -1,11 +1,18 @@
 <script lang="ts" setup>
+import { CREATE_COUPON_PAGE_TYPES } from '~/config/enums/shop';
+import { ROUTES } from '~/config/enums/routes';
+
 definePageMeta({ layout: 'shop', middleware: ['auth'] });
+const route = useRoute();
+if (!route.query?.type) {
+  navigateTo(`${ROUTES.ACCOUNT}${ROUTES.SHOP}`);
+}
 </script>
 
 <template>
-  <LayoutShopWrapperContent>
+  <LayoutShopWrapperContent v-if="route.query.type === CREATE_COUPON_PAGE_TYPES.PROMO_CODE">
     <template #title>
-      Create a coupon
+      Create a promo code
     </template>
     <template #description>
       A promo code is an easy way to share a discount with anyone you choose.
@@ -13,7 +20,23 @@ definePageMeta({ layout: 'shop', middleware: ['auth'] });
     </template>
     <template #content>
       <div class="mb-20">
-        <CreateCouponForm />
+        <CreatePromoCodeForm />
+      </div>
+    </template>
+  </LayoutShopWrapperContent>
+  <LayoutShopWrapperContent v-else-if="route.query.type === CREATE_COUPON_PAGE_TYPES.SALE">
+    <template #title>
+      Set up a sale
+    </template>
+    <template #description>
+      Basic info
+      Running a sale can help you clear out inventory,
+      attract new customers, and encourage shoppers to spend more.
+      The discount you offer is totally up to you.
+    </template>
+    <template #content>
+      <div class="mb-20">
+        <RunSaleForm />
       </div>
     </template>
   </LayoutShopWrapperContent>

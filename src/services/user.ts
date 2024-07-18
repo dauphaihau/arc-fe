@@ -1,17 +1,42 @@
 import type { MutationOptions } from '@tanstack/vue-query';
 import { RESOURCES } from '~/config/enums/resources';
 import type { User, UpdateUserBody } from '~/types/user';
-import type { GetListResponse, RequestGetListParams } from '~/types/common';
+import type { ResponseBaseGetList, RequestGetListParams } from '~/types/common';
 import type { CreateBodyUserAddressBody, UserAddress } from '~/types/user-address';
+import type { UserAuthenticated } from '~/types/auth';
+import { toastCustom } from '~/config/toast';
+
+export function useGetCurrentUser() {
+  return useQuery({
+    enabled: false,
+    queryKey: ['current-user'],
+    queryFn: () => {
+      return useCustomFetch.get<{ user: UserAuthenticated }>(RESOURCES.USER);
+    },
+  });
+}
 
 export function useUpdateUser() {
+  const queryClient = useQueryClient();
+  const toast = useToast();
   return useMutation({
     mutationKey: ['update-user'],
     mutationFn: async (body: UpdateUserBody) => {
-      return await useCustomFetchTemp.patch<{ user: User }>(
+      return await useCustomFetch.patch<{ user: User }>(
         RESOURCES.USER,
         body
       );
+    },
+    onSuccess: (data) => {
+      if (data?.user) {
+        queryClient.setQueryData(['current-user'], { user: data.user });
+      }
+    },
+    onError: () => {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Update user failed',
+      });
     },
   });
 }
@@ -21,7 +46,7 @@ export function useGetUserAddresses(queryParams?: RequestGetListParams) {
     enabled: !!queryParams,
     queryKey: ['get-user-addresses', queryParams],
     queryFn: () => {
-      return useCustomFetchTemp.get<GetListResponse<UserAddress>>(
+      return useCustomFetch.get<ResponseBaseGetList<UserAddress>>(
         `${RESOURCES.USER}${RESOURCES.ADDRESSES}`,
         queryParams || undefined
       );
@@ -33,7 +58,7 @@ export function useCreateUserAddress() {
   return useMutation({
     mutationKey: ['create-user-address'],
     mutationFn: async (body: CreateBodyUserAddressBody) => {
-      return await useCustomFetchTemp.post<{ address: UserAddress }>(
+      return await useCustomFetch.post<{ address: UserAddress }>(
         `${RESOURCES.USER}${RESOURCES.ADDRESSES}`,
         body
       );
@@ -46,7 +71,7 @@ export function useUpdateUserAddress() {
     mutationKey: ['update-user-address'],
     mutationFn: async (body: Partial<UserAddress>) => {
       const { id, ...resBody } = body;
-      return await useCustomFetchTemp.patch<{ address: UserAddress }>(
+      return await useCustomFetch.patch<{ address: UserAddress }>(
         `${RESOURCES.USER}${RESOURCES.ADDRESSES}/${id}`,
         resBody
       );
@@ -60,7 +85,7 @@ export function useDeleteUserAddress(
   return useMutation({
     mutationKey: ['delete-user-address'],
     mutationFn: async (id: UserAddress['id']) => {
-      return await useCustomFetchTemp.delete(
+      return await useCustomFetch.delete(
         `${RESOURCES.USER}${RESOURCES.ADDRESSES}/${id}`
       );
     },

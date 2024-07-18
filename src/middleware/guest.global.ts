@@ -1,19 +1,15 @@
 import { ROUTES } from '~/config/enums/routes';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import { useGetCurrentUser } from '~/services/user';
 
 export default defineNuxtRouteMiddleware(async (to, _from) => {
-  const authStore = useAuthStore();
-  const store = useStore();
+  const { refetch, data } = useGetCurrentUser();
 
-  if (!store.rootCategories.length) {
-    await store.getRootCategories();
+  if (!data.value?.user && localStorage[LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP]) {
+    await refetch();
   }
 
-  if (!authStore.isLogged && localStorage[LOCAL_STORAGE_KEYS.ACCESS_TOKEN_EXP]) {
-    await authStore.getCurrentUser();
-  }
-
-  if (authStore.isLogged && [ROUTES.RESET].includes(to.path as ROUTES)) {
+  if (data.value?.user && [ROUTES.RESET].includes(to.path as ROUTES)) {
     return navigateTo(ROUTES.HOME);
   }
 });

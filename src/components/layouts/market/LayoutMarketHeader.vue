@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
+import { useGetCurrentUser } from '~/services/user';
 
 const route = useRoute();
-const authStore = useAuthStore();
 const cartStore = useCartStore();
+const { data: dataUserAuth } = useGetCurrentUser();
 
 // const isDark = useDark();
 // const toggleDark = useToggle(isDark);
@@ -41,8 +42,8 @@ function onScroll() {
 }
 
 onMounted(async () => {
-  if (authStore.isLogged) {
-    await cartStore.getCartHeader();
+  if (dataUserAuth.value?.user) {
+    await cartStore.getProductsRecentlyAdded();
   }
   state.lastScrollPosition = window.pageYOffset;
   window.addEventListener('scroll', onScroll);
@@ -150,7 +151,7 @@ onMounted(async () => {
         <UTooltip text="Cart">
           <UChip
             :text="cartStore.getCountAllProducts"
-            :show="authStore.isLogged && cartStore.getCountAllProducts > 0"
+            :show="!!dataUserAuth?.user && cartStore.getCountAllProducts > 0"
             class="cursor-pointer"
             size="xl"
             position="bottom-right"
