@@ -3,10 +3,9 @@ import type { ComputedRef } from 'vue';
 import { RESOURCES } from '~/config/enums/resources';
 import type {
   CreateProductBody, ShopGetProductsQueryParams,
-  Product,
-  ResponseShopGetDetailProduct,
   UpdateProductBody, ResponseShopGetProducts
-} from '~/types/product';
+  , ResponseShopGetDetailProduct
+} from '~/types/request-api/shop-product';
 import type { Shop } from '~/types/shop';
 import type { ResponseBaseGetList } from '~/types/common';
 import type {
@@ -15,6 +14,7 @@ import type {
 import { toastCustom } from '~/config/toast';
 import type { UserAuthenticated } from '~/types/auth';
 import { useGetCurrentUser } from '~/services/user';
+import type { Product } from '~/types/product';
 
 export function useCreateShop() {
   const queryClient = useQueryClient();

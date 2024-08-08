@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import type { Product, ShopGetProductsQueryParams } from '~/types/product';
+import type { Product } from '~/types/product';
 import { useShopGetProducts } from '~/services/shop';
+import type { ShopGetProductsQueryParams } from '~/types/request-api/shop-product';
 
 const productIdsModel = defineModel<Product['id'][]>();
 

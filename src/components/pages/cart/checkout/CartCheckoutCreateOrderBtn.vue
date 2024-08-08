@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { consola } from 'consola';
 import { CHECKOUT_CART_STEPS } from '~/types/pages/cart/checkout';
-import type { CreateOrderFromCartBody } from '~/types/order';
 import { PAYMENT_TYPES } from '~/config/enums/order';
 import { toastCustom } from '~/config/toast';
 import { ROUTES } from '~/config/enums/routes';
@@ -9,11 +8,17 @@ import { useCreateOrderFromCart } from '~/services/order';
 import { useCartStore } from '~/stores/cart';
 import { useGetExchangeRates } from '~/services/market';
 import { useGetCurrentUser } from '~/services/user';
+import type { CreateOrderFromCartBody } from '~/types/request-api/order';
+import { useGetCart } from '~/services/cart';
 
 const marketStore = useMarketStore();
 const toast = useToast();
 const cartStore = useCartStore();
 const { data: dataUserAuth } = useGetCurrentUser();
+
+const {
+  refetch: getCart,
+} = useGetCart(undefined, { enabled: false });
 
 const {
   mutateAsync: createOrder,
@@ -42,13 +47,13 @@ const onCreateOrder = async () => {
 
     const body: CreateOrderFromCartBody = {
       payment_type: cartStore.stateCheckoutCart.payment_type,
-      address: addressId,
+      user_address_id: addressId,
     };
 
     // region validate currency
     const currencySelected = dataUserAuth?.value?.user?.market_preferences?.currency;
     if (!currencySelected || !marketStore.exchangeRate?.rates) {
-      consola.error('currency or rates be undefined');
+      consola.error('currency or rates be undefined', [currencySelected, marketStore.exchangeRate.rates]);
       throw Error();
     }
     body.currency = currencySelected;
@@ -75,29 +80,33 @@ const onCreateOrder = async () => {
     }
     // endregion validate currency
 
-    body.additionInfoItems = Array
-      .from(cartStore.additionInfoOrderShops)
+    body.addition_info_shop_carts = Array
+      .from(cartStore.additionInfoShopCarts)
       .map(([shopId, value]) => ({
-        shop: shopId,
-        coupon_codes: value.coupon_codes,
+        shop_id: shopId,
+        promo_codes: value.promo_codes,
         note: value.note,
       }));
 
+    body.addition_info_shop_carts = body.addition_info_shop_carts.filter((item) => {
+      return item.note || item.promo_codes.length > 0;
+    });
+
     if (body.payment_type === PAYMENT_TYPES.CARD) {
-      const { checkoutSessionUrl } = await createOrder(body);
-      if (!checkoutSessionUrl) {
-        consola.error('checkoutSessionUrl be undefined', checkoutSessionUrl);
+      const { checkout_session_url } = await createOrder(body);
+      if (!checkout_session_url) {
+        consola.error('checkout_session_url be undefined', checkout_session_url);
         throw Error();
       }
-      navigateTo(checkoutSessionUrl, {
+      navigateTo(checkout_session_url, {
         external: true,
       });
     }
     else {
-      const { orderShops } = await createOrder(body);
-      cartStore.orderShops = orderShops;
+      const { order_shops } = await createOrder(body);
+      cartStore.orderShops = order_shops;
       navigateTo(ROUTES.SUCCESS);
-      cartStore.getProductsRecentlyAdded();
+      getCart();
     }
   }
   catch (error) {

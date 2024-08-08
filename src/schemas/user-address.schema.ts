@@ -14,8 +14,8 @@ export const userAddressSchema = z.object({
   zip: z.string().max(ADDRESS_CONFIG.MAX_CHAR_ZIP),
   phone: z.string().max(ADDRESS_CONFIG.MAX_CHAR_PHONE),
   is_primary: z.boolean().optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  updated_at: z.date(),
+  created_at: z.date(),
 });
 
 export const createUserAddressSchema = userAddressSchema.pick({

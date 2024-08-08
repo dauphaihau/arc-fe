@@ -9,7 +9,7 @@ const {
   isPending: isPendingGetUserAddresses,
   data: dataUserAddress,
 } = useGetUserAddresses({
-  select: '-user,-createdAt,-updatedAt',
+  select: '-user,-created_at,-updated_at',
   sortBy: '-is_primary',
 });
 

@@ -8,7 +8,6 @@ import {
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
 import type {
-  UpdateProductBody,
   Product,
   ProductImage, ProductSingleVariant, ProductCombineVariant
 } from '~/types/product';
@@ -16,6 +15,7 @@ import type { Override } from '~/types/utils';
 import { toastCustom } from '~/config/toast';
 import { useGetPresignedUrl } from '~/services/upload';
 import { useShopGetDetailProduct, useShopUpdateProduct } from '~/services/shop';
+import type { UpdateProductBody } from '~/types/request-api/shop-product';
 
 type UpdateProductBodyOverride = Override<UpdateProductBody, {
   who_made: ComputedRef<UpdateProductBody['who_made']>

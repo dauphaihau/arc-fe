@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type {
-  ProductCombineVariant, ProductInventory, ProductVariant, VariantOptionsCreate
+  ProductCombineVariant, ProductInventory, ProductVariant
 } from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { IOnChangeCreateVariant } from '~/components/pages/account/shop/products/CreateProductForm.vue';
+import type { CreateVariantOptions } from '~/types/request-api/shop-product';
 
 const props = defineProps<{ countValidate: number }>();
 
@@ -351,7 +352,7 @@ watch(() => props.countValidate, () => {
 
 function emitData() {
   if (state.isActiveSubVariant) {
-    const combineVariants = Object.entries<VariantOptionsCreate[]>(
+    const combineVariants = Object.entries<CreateVariantOptions[]>(
       variantsTable.value.reduce((acc, variant) => {
         const {
           price, sku, stock, variant_name, sub_variant_name,
@@ -380,7 +381,7 @@ function emitData() {
     });
   }
   else {
-    const singleVariants = Object.entries<VariantOptionsCreate[]>(
+    const singleVariants = Object.entries<CreateVariantOptions[]>(
       variantsTable.value.reduce((acc, variant) => {
         const {
           price, sku, stock, variant_name,

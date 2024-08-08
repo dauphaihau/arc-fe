@@ -1,23 +1,30 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
-import { COUPON_TYPES } from '~/config/enums/coupon';
-import type { ResponseGetProducts } from '~/types/product';
+import type { ResponseGetProducts_Product } from '~/types/request-api/product';
 
-const { product } = defineProps<{
-  product: ResponseGetProducts
+const props = defineProps<{
+  product: ResponseGetProducts_Product
 }>();
 
 const router = useRouter();
 const lowStock = 5;
+
+const freeShipCoupon = computed(() => {
+  return props.product?.free_ship_coupon;
+});
+
+const salePercentCoupon = computed(() => {
+  return props.product?.percent_coupon;
+});
 </script>
 
 <template>
   <div
     class="flex cursor-pointer flex-col gap-2"
-    @click="() => router.push(`${ROUTES.PRODUCTS}/${product?.id}`)"
+    @click="() => router.push(`${ROUTES.PRODUCTS}/${props.product?.id}`)"
   >
     <NuxtImg
-      :src="`domainAwsS3/${product?.image_relative_url}`"
+      :src="`domainAwsS3/${props.product?.image_relative_url}`"
       width="200"
       height="200"
       class="size-full rounded"
@@ -25,40 +32,40 @@ const lowStock = 5;
 
     <div class="space-y-1">
       <h1 class="truncate text-xl font-semibold">
-        {{ product?.title }}
+        {{ props.product?.title }}
       </h1>
       <div class="flex flex-wrap items-center gap-2">
         <p class="text-base font-medium text-customGray-950">
-          {{ convertCurrency(product.inventory.price) }}
+          {{ convertCurrency(props.product.inventory?.sale_price || props.product.inventory?.price) }}
         </p>
         <p
-          v-if="product?.inventory?.origin_price"
+          v-if="salePercentCoupon"
           class="text-sm font-medium text-customGray-950 line-through decoration-1"
         >
-          {{ convertCurrency(product.inventory.origin_price) }}
+          {{ convertCurrency(props.product.inventory.price) }}
         </p>
         <p
-          v-if="product?.coupon?.percent_off"
+          v-if="salePercentCoupon"
           class="text-sm text-green-500"
         >
-          ({{ product?.coupon?.percent_off }}% off)
+          ({{ salePercentCoupon.percent_off }}% off)
         </p>
       </div>
       <p class="text-sm text-customGray-800">
-        {{ product?.shop.shop_name }}
+        {{ props.product?.shop.shop_name }}
       </p>
       <UBadge
-        v-if="product.coupon?.types.includes(COUPON_TYPES.FREE_SHIP)"
+        v-if="freeShipCoupon"
         color="green"
         variant="solid"
       >
-        Free delivery
+        Free shipping
       </UBadge>
       <p
-        v-if="product.inventory.stock < lowStock"
+        v-if="props.product.inventory.stock < lowStock"
         class="text-[13px] text-red-600"
       >
-        Only {{ product.inventory.stock }} left - order soon
+        Only {{ props.product.inventory.stock }} left - order soon
       </p>
     </div>
     <slot name="content" />

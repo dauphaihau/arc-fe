@@ -76,7 +76,7 @@ const subCategories = computed(() => {
         :key="i"
       >
         <div v-if="cg.results && cg.results.length > 0">
-          <div class="mb-6">
+          <div class="mb-3">
             <h3 class="text-lg font-medium">
               {{ cg.categoryName }}
             </h3>

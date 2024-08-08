@@ -1,91 +1,94 @@
 <script setup lang="ts">
 import type { FormError, FormSubmitEvent } from '#ui/types';
+import { consola } from 'consola';
 import { ROUTES } from '~/config/enums/routes';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import type { AddCartProduct } from '~/types/cart';
-import type { ResponseGetDetailProduct } from '~/types/product';
+import type { AddProductToCartBody, ResponseGetCart } from '~/types/request-api/cart';
+import type { ProductVariant } from '~/types/product';
 import { RegisterLoginDialog } from '#components';
 import { useAddProductToCart } from '~/services/cart';
 import { useGetCurrentUser } from '~/services/user';
+import type { ResponseGetDetailProduct, ResponseGetDetailProduct_Inventory } from '~/types/request-api/product';
+import { toastCustom } from '~/config/toast';
 
-interface StateSubmit extends AddCartProduct {
+interface StateSubmit {
+  quantity: number
   variantOption: string
   variantSubOption: string
 }
 
-// const { product } = defineProps<ResponseGetDetailProduct>();
+type Inventory = ResponseGetDetailProduct_Inventory;
+
 const props = defineProps<ResponseGetDetailProduct>();
 const { product } = props;
 
-const emit = defineEmits<{ (e: 'onChangeVariant', value: number): void }>();
+const inventorySelectedModel = defineModel<Inventory>('inventorySelected');
 
-const cartStore = useCartStore();
 const modal = useModal();
-const queryClient = useQueryClient();
 const { data: dataUserAuth } = useGetCurrentUser();
+const queryClient = useQueryClient();
+const toast = useToast();
 
 const {
-  mutate: addProductToCart,
+  mutateAsync: addProductToCart,
   isPending: isPendingAddProductToCart,
-} = useAddProductToCart({
-  onSuccess: () => {
-    cartStore.getProductsRecentlyAdded();
-    queryClient.removeQueries({ queryKey: ['get-cart'] });
-    navigateTo(ROUTES.CART);
-  },
-});
+} = useAddProductToCart();
 
 // ------------- States
 const formRef = ref();
 
 const state = reactive({
-  firstVariantOpts: [] as string[],
-  secondVariantOpts: [] as string[],
-  stockVariant: 1,
-  priceVariant: 0,
-  variantName1: '',
-  variantName2: '',
+  variantOpts: [] as ProductVariant['variant_name'][],
+  subVariantOpts: [] as ProductVariant['variant_name'][],
   isBuyNow: false,
 });
 
 const stateSubmit = reactive<StateSubmit>({
   quantity: 1,
-  inventory: '',
-  variant: '',
   variantOption: '',
   variantSubOption: '',
 });
 
 const maxQuantity = computed(() => {
-  // if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-  //   return (product.inventory && product.inventory.stock) || 1;
-  // }
-  if (props.product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-    return (props.product.inventory && props.product.inventory.stock) || 1;
+  if (inventorySelectedModel.value) {
+    return inventorySelectedModel.value.stock;
   }
-  else {
-    return state.stockVariant;
-  }
+  return product.inventories.reduce((acc, inv) => acc + inv.stock, 0);
 });
+
+const inventoriesMap = new Map<Inventory['variant'], Inventory>();
 
 // ------------- Lifecycle Hooks
 onMounted(() => {
   switch (product.variant_type) {
     case PRODUCT_VARIANT_TYPES.NONE:
-      stateSubmit.inventory = product.inventory.id;
+      inventorySelectedModel.value = props.product.inventories[0];
       break;
     case PRODUCT_VARIANT_TYPES.SINGLE:
-      state.firstVariantOpts = product.variants.map(val => val.variant_name);
+      props.product.inventories.forEach((inv) => {
+        inventoriesMap.set(inv.variant, inv);
+        if (inv.variant) {
+          state.variantOpts.push(inv.variant);
+        }
+      });
       break;
     case PRODUCT_VARIANT_TYPES.COMBINE: {
-      const variant = product.variants[0];
-      state.firstVariantOpts = product.variants.map(val => val.variant_name);
-      state.secondVariantOpts = variant.variant_options.map(val => val.variant.variant_name);
+      props.product.inventories.forEach((inv) => {
+        inventoriesMap.set(inv.variant, inv);
+        if (inv.variant) {
+          const [primaryVariantName, subVariantName] = inv.variant.split('-');
+          if (!state.variantOpts.includes(primaryVariantName)) {
+            state.variantOpts.push(primaryVariantName);
+          }
+          if (!state.subVariantOpts.includes(subVariantName)) {
+            state.subVariantOpts.push(subVariantName);
+          }
+        }
+      });
     }
       break;
   }
 });
-
 
 // ------------- Features
 const decreaseQty = () => {
@@ -121,84 +124,62 @@ async function onSubmit(event: FormSubmitEvent<StateSubmit>) {
   }
   formRef.value.clear();
 
-  if (state.isBuyNow) {
-    onBuyNow();
+  if (!inventorySelectedModel.value?.id) {
+    consola.error('inventory_id be undefined');
     return;
   }
 
-  const payload: AddCartProduct = {
-    inventory: stateSubmit.inventory,
-    quantity: Number(event.data.quantity),
+  const body: AddProductToCartBody = {
+    inventory_id: inventorySelectedModel.value.id,
+    quantity: event.data.quantity,
   };
-  if (stateSubmit.variant) {
-    payload.variant = stateSubmit.variant;
+  if (state.isBuyNow) {
+    body.is_temp = true;
+    const { cart, summary_order } = await addProductToCart(body);
+    if (cart === null || !cart?.cart_id) {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Checkout failed',
+      });
+      return;
+    }
+    queryClient.setQueryData<ResponseGetCart>(['get-cart', cart.cart_id], { cart, summary_order });
+    navigateTo(`${ROUTES.CHECKOUT}?c=${cart.cart_id}`);
+    return;
   }
-  addProductToCart(payload);
+
+  const response = await addProductToCart(body);
+  if (response.cart === null) {
+    toast.add({
+      ...toastCustom.error,
+      title: 'Add product to cart failed',
+    });
+    return;
+  }
+  queryClient.setQueryData<ResponseGetCart>(['get-cart', 'my-cart'], response);
+  navigateTo(ROUTES.CART);
 }
 
-const onBuyNow = () => {
-  const productCheckout = cartStore.stateCheckoutNow.product;
-
-  productCheckout.id = product.id;
-  productCheckout.inventory = stateSubmit.inventory;
-  productCheckout.quantity = stateSubmit.quantity;
-
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.NONE) {
-    productCheckout.price = product.inventory.price;
-    productCheckout.stock = product.inventory.stock;
-  }
-  else {
-    productCheckout.price = state.priceVariant;
-    productCheckout.stock = state.stockVariant;
-  }
-  productCheckout.variantName1 = state.variantName1;
-  productCheckout.variantName2 = state.variantName2;
-
-  navigateTo(ROUTES.CHECKOUT);
-};
-
-// ------------ Side effects
-watch(() => [stateSubmit.variantOption, stateSubmit.variantSubOption], () => {
-  stateSubmit.quantity = 1;
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
-    const foundVariant = product.variants.find((val) => {
-      return val.variant_name === stateSubmit.variantOption;
-    });
-    if (foundVariant) {
-      const { price, stock, id } = foundVariant.inventory;
-      emit('onChangeVariant', price);
-      state.stockVariant = stock;
-      state.priceVariant = price;
-      stateSubmit.inventory = id;
-      state.variantName1 = foundVariant.variant_name;
-      stateSubmit.variant = foundVariant.id;
+// ------ Side effects
+watch(
+  () => [stateSubmit.variantOption, stateSubmit.variantSubOption],
+  () => {
+    stateSubmit.quantity = 1;
+    if (product.variant_type === PRODUCT_VARIANT_TYPES.SINGLE) {
+      const foundInventory = inventoriesMap.get(stateSubmit.variantOption);
+      if (foundInventory) {
+        inventorySelectedModel.value = foundInventory;
+      }
     }
-  }
-
-  if (product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
-    const foundVariant = product.variants.find((val) => {
-      return val.variant_name === stateSubmit.variantOption;
-    });
-    const foundSubVariant = foundVariant?.variant_options?.find((val) => {
-      return val.variant.variant_name === stateSubmit.variantSubOption;
-    });
-    if (foundVariant && foundSubVariant) {
-      emit('onChangeVariant', foundSubVariant.inventory.price);
-      state.stockVariant = foundSubVariant.inventory.stock;
-      state.priceVariant = foundSubVariant.inventory.price;
-      state.variantName1 = foundVariant.variant_name;
-      state.variantName2 = foundSubVariant.variant.variant_name;
-      stateSubmit.inventory = foundSubVariant.inventory.id;
-      stateSubmit.variant = foundVariant.id;
+    if (product.variant_type === PRODUCT_VARIANT_TYPES.COMBINE) {
+      const foundInventory = inventoriesMap.get(`${stateSubmit.variantOption}-${stateSubmit.variantSubOption}`);
+      if (foundInventory) {
+        inventorySelectedModel.value = foundInventory;
+      }
     }
-  }
-}, { deep: true });
-
-watch(() => stateSubmit.quantity, () => {
-  if (maxQuantity.value && stateSubmit.quantity > maxQuantity.value) {
-    stateSubmit.quantity = maxQuantity.value;
-  }
-});
+  },
+  { deep: true }
+);
 </script>
 
 <template>
@@ -221,7 +202,7 @@ watch(() => stateSubmit.quantity, () => {
           v-model="stateSubmit.variantOption"
           :placeholder="`Select a ${product.variant_group_name}`"
           size="lg"
-          :options="state.firstVariantOpts"
+          :options="state.variantOpts"
         />
       </UFormGroup>
 
@@ -234,7 +215,7 @@ watch(() => stateSubmit.quantity, () => {
           v-model="stateSubmit.variantSubOption"
           :placeholder="`Select a ${product.variant_sub_group_name}`"
           size="lg"
-          :options="state.secondVariantOpts"
+          :options="state.subVariantOpts"
         />
       </UFormGroup>
 

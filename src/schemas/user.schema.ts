@@ -4,6 +4,7 @@ import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 import { MARKET_CURRENCIES, MARKET_LANGUAGES, MARKET_REGIONS } from '~/config/enums/market';
 
 export const userSchema = z.object({
+  id: objectIdSchema,
   name: z
     .string({
       required_error: 'Name is required',
@@ -36,6 +37,6 @@ export const userSchema = z.object({
     language: z.nativeEnum(MARKET_LANGUAGES).default(MARKET_LANGUAGES.EN),
     currency: z.nativeEnum(MARKET_CURRENCIES).default(MARKET_CURRENCIES.USD),
   }).optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  updated_at: z.date(),
+  created_at: z.date(),
 });

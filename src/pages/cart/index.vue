@@ -1,39 +1,29 @@
 <script lang="ts" setup>
-import { StatusCodes } from 'http-status-codes';
 import { useCartStore } from '~/stores/cart';
 import { useGetCart } from '~/services/cart';
-import type { ItemCartPopulated, ResponseGetCart } from '~/types/cart';
 
 definePageMeta({ layout: 'market', middleware: ['auth'] });
 
 const cartStore = useCartStore();
 
-const orderShops = ref<ItemCartPopulated[]>([]);
 const wrapperSummaryOrderRef = ref<HTMLDivElement | null>(null);
 const contentSummaryOrderRef = ref<HTMLDivElement | null>(null);
 
 const {
   isPending: isPendingGetCart,
   data: dataGetCart,
-} = useGetCart({
-  onResponse: ({ response }) => {
-    const responseGetCart: ResponseGetCart = response._data;
-    if (response.status === StatusCodes.OK && responseGetCart) {
-      responseGetCart.cart.items.forEach((item) => {
-        cartStore.additionInfoOrderShops.set(item.shop.id, {
-          coupon_codes: [],
-          note: '',
-        });
+} = useGetCart();
+
+watch(dataGetCart, () => {
+  if (cartStore.additionInfoShopCarts.size === 0 && dataGetCart.value?.cart?.shop_carts) {
+    dataGetCart.value.cart.shop_carts.forEach((item) => {
+      cartStore.additionInfoShopCarts.set(item.shop.id, {
+        promo_codes: [],
+        note: '',
       });
-
-      orderShops.value = responseGetCart.cart.items;
-    }
-  },
-});
-
-const onProductsEmpty = (index: number) => {
-  orderShops.value.splice(index, 1);
-};
+    });
+  }
+}, { immediate: true });
 
 function onScroll() {
   const scrollTop = window.scrollY;
@@ -60,7 +50,6 @@ onMounted(() => {
   window.addEventListener('scroll', onScroll);
 });
 
-
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll);
 });
@@ -74,19 +63,18 @@ onBeforeUnmount(() => {
     >
       <LoadingSvg :child-class="'!w-12 !h-12'" />
     </div>
-    <div v-else>
-      <div v-if="orderShops.length > 0">
+    <div v-else-if="dataGetCart?.cart && dataGetCart.cart.shop_carts?.length > 0">
+      <div>
         <h1 class="mb-4 text-2xl font-medium">
-          {{ dataGetCart?.totalProducts }} products in your cart
+          {{ dataGetCart?.cart?.summary_cart?.total_products }} products in your cart
         </h1>
 
         <div class="grid grid-cols-12 gap-16">
           <div class="col-span-8">
-            <CartOrderShop
-              v-for="(item, index) of orderShops"
-              :key="item.id"
-              :data="item"
-              @on-products-empty="() => onProductsEmpty(index)"
+            <CartShopCart
+              v-for="shopCart of dataGetCart.cart.shop_carts"
+              :key="shopCart.shop.id"
+              :shop-cart="shopCart"
             />
           </div>
 
@@ -95,20 +83,19 @@ onBeforeUnmount(() => {
               ref="contentSummaryOrderRef"
               class="w-[400px]"
             >
-              <CartSummaryOrder :key="cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp" />
+              <CartSummaryOrder />
             </div>
           </div>
         </div>
       </div>
-
-      <div
-        v-else
-        class="text-center"
-      >
-        <h3 class="text-3xl text-customGray-950">
-          Your cart is empty.
-        </h3>
-      </div>
+    </div>
+    <div
+      v-else
+      class="text-center"
+    >
+      <h3 class="text-3xl text-customGray-950">
+        Your cart is empty.
+      </h3>
     </div>
   </div>
 </template>

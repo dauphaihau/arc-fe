@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import type { ProductInventory } from '~/types/product';
-import { useCartStore } from '~/stores/cart';
 import type { Shop } from '~/types/shop';
-import { useUpdateCartProduct } from '~/services/cart';
-import type { ResponseGetCart } from '~/types/cart';
+import { useUpdateCart } from '~/services/cart';
+import type { ResponseGetCart } from '~/types/request-api/cart';
 
 const { checked, inventoryId, shopId } = defineProps<{
   checked: boolean
@@ -11,36 +10,54 @@ const { checked, inventoryId, shopId } = defineProps<{
   shopId: Shop['id']
 }>();
 
-const cartStore = useCartStore();
 const queryClient = useQueryClient();
 
 const selectedCheckbox = ref(checked);
 
 const {
   mutate: updateProductCart,
-  isPending: isPendingUpdateProductCart,
-} = useUpdateCartProduct({
+} = useUpdateCart({
   onSuccess(data) {
-    const cacheGetCart = queryClient.getQueryData<ResponseGetCart>(['get-cart']);
-    if (cacheGetCart) {
-      cacheGetCart.summaryOrder = data.summaryOrder;
-      cacheGetCart.cart.items.forEach((item) => {
-        if (item.shop.id === shopId) {
-          item.products.forEach((prod) => {
+    queryClient.setQueryData<ResponseGetCart>(['get-cart', 'my-cart'], (oldData) => {
+      if (!oldData || !oldData.cart) return oldData;
+      if (!data.cart) return { ...oldData, cart: data.cart };
+
+      const foundShopCart = data.cart.shop_carts.find(sc => sc.shop.id === shopId);
+      if (!foundShopCart) return oldData;
+
+      // update is_select_order, total_shipping_fee fields
+      const newShopCarts = oldData.cart.shop_carts.map((sc) => {
+        if (sc.shop.id === shopId) {
+          const newProducts = sc.products.map((prod) => {
             if (prod.inventory.id === inventoryId) {
-              prod.is_select_order = selectedCheckbox.value;
+              return { ...prod, is_select_order: selectedCheckbox.value };
             }
+            return prod;
           });
+          return {
+            ...sc,
+            products: newProducts,
+            total_shipping_fee: foundShopCart?.total_shipping_fee,
+          };
         }
+        return sc;
       });
-      cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp++;
-    }
+
+      return {
+        ...oldData,
+        cart: {
+          ...oldData.cart,
+          shop_carts: newShopCarts,
+        },
+        summary_order: data.summary_order,
+      };
+    });
   },
 });
 
 watch(() => selectedCheckbox.value, async () => {
   updateProductCart({
-    inventory: inventoryId,
+    inventory_id: inventoryId,
     is_select_order: selectedCheckbox.value,
   });
 });
@@ -49,7 +66,6 @@ watch(() => selectedCheckbox.value, async () => {
 <template>
   <UCheckbox
     v-model="selectedCheckbox"
-    :disabled="isPendingUpdateProductCart"
     class="mb-2"
   />
 </template>

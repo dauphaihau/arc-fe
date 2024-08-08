@@ -3,13 +3,12 @@ import type {
   ProductCombineVariant,
   ProductInventory,
   ProductPopulated,
-  ProductVariant,
-  UpdateProductBody,
-  VariantOptionsUpdate
+  ProductVariant
 } from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product-inventory.schema';
 import type { IOnChangeUpdateVariants } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
+import type { UpdateProductBody, UpdateVariantOptions } from '~/types/request-api/shop-product';
 
 type VariantOption = { id: ProductVariant['id'], variant_name: string, errorMsg: string };
 
@@ -460,7 +459,7 @@ function emitData() {
 
   // add new variant ( case combine variant )
   if (state.isActiveSubVariant) {
-    new_combine_variants = Object.entries<VariantOptionsUpdate[]>(
+    new_combine_variants = Object.entries<UpdateVariantOptions[]>(
       variantsTable.value
         .filter(variant => !variant.inventoryId)
         .reduce((acc, variant) => {

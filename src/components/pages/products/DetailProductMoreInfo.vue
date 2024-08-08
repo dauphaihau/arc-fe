@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ResponseGetDetailProduct } from '~/types/product';
+import type { ResponseGetDetailProduct } from '~/types/request-api/product';
 
 const { product } = defineProps<ResponseGetDetailProduct>();
 

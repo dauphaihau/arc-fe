@@ -9,7 +9,7 @@ const {
   isPending: isPendingGetUserAddresses,
   data: dataUserAddress,
 } = useGetUserAddresses({
-  select: '-user,-createdAt,-updatedAt',
+  select: '-user,-created_at,-updated_at',
   sortBy: '-is_primary',
 });
 
@@ -54,7 +54,7 @@ const showCreateDialog = () => {
     <div>
       <div class="mb-2 flex items-center justify-between">
         <legend class="mb-1 text-base font-bold text-gray-700">
-          Shipping UserAddress
+          Shipping Address
         </legend>
         <UButton
           color="primary"

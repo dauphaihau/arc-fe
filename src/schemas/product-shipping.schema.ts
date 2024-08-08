@@ -17,8 +17,8 @@ export const productShippingSchema = z.object({
   zip: z.string().max(10),
   process_time: z.string(),
   standard_shipping: z.array(productStandardShippingSchema),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 export const createProductShippingSchema = productShippingSchema.pick({

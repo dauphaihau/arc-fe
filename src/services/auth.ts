@@ -9,6 +9,7 @@ import type {
   LoginBody, RegisterBody, UserAuthenticated
 } from '~/types/auth';
 import { LOCAL_STORAGE_KEYS } from '~/config/enums/local-storage-keys';
+import { useGetCart } from '~/services/cart';
 
 export const setExpTokensToLS = () => {
   const config = useRuntimeConfig();
@@ -42,8 +43,8 @@ export function useRegister() {
 }
 
 export function useLogin() {
-  const cartStore = useCartStore();
   const queryClient = useQueryClient();
+  const { refetch: getCart } = useGetCart();
 
   return useMutation({
     mutationKey: ['login'],
@@ -57,7 +58,7 @@ export function useLogin() {
       if (data?.user) {
         queryClient.setQueryData(['current-user'], { user: data.user });
         setExpTokensToLS();
-        cartStore.getProductsRecentlyAdded();
+        getCart();
       }
     },
   });
@@ -121,8 +122,8 @@ export function useVerifyToken(
 
 export function useResetPassword(token: string) {
   const authStore = useAuthStore();
-  const cartStore = useCartStore();
   const queryClient = useQueryClient();
+  const { refetch: getCart } = useGetCart();
 
   return useMutation({
     mutationKey: ['reset-password'],
@@ -137,7 +138,7 @@ export function useResetPassword(token: string) {
         queryClient.setQueryData(['current-user'], { user: data.user });
         setExpTokensToLS();
         authStore.tokenResetPassword = '';
-        cartStore.getProductsRecentlyAdded();
+        getCart();
       }
     },
   });

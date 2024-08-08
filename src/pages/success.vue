@@ -7,7 +7,9 @@ definePageMeta({ layout: 'market' });
 const route = useRoute();
 const cartStore = useCartStore();
 
-if (!route.query['session_id'] && cartStore.orderShops.length === 0) {
+const session_id = route.query['session_id'] as string;
+
+if (!session_id && cartStore.orderShops.length === 0) {
   throw showError({
     statusCode: 404,
     statusMessage: 'Page Not Found',
@@ -18,7 +20,7 @@ if (!route.query['session_id'] && cartStore.orderShops.length === 0) {
 const {
   data: dataGetOrderShopsByCheckoutSession,
   isLoading: isLoadingGetOrderShopsByCheckoutSession,
-} = useGetOrderShopsByCheckoutSession(route.query['session_id'] as string, {
+} = useGetOrderShopsByCheckoutSession(session_id, {
   onResponseError: () => {
     throw showError({
       statusCode: 404,
@@ -29,10 +31,10 @@ const {
 });
 
 const orderShops = computed(() => {
-  if (dataGetOrderShopsByCheckoutSession.value?.orderShops) {
-    return dataGetOrderShopsByCheckoutSession.value.orderShops;
+  if (dataGetOrderShopsByCheckoutSession.value?.order_shops) {
+    return dataGetOrderShopsByCheckoutSession.value.order_shops;
   }
-  if (cartStore.orderShops.length > 0) {
+  else if (cartStore.orderShops.length > 0) {
     return cartStore.orderShops;
   }
   return [];
@@ -53,7 +55,7 @@ onUnmounted(() => {
     <LoadingSvg :child-class="'!w-12 !h-12'" />
   </div>
   <div
-    v-else-if="orderShops?.length > 0"
+    v-else-if="orderShops.length > 0"
     class="mt-20 grid place-content-center text-center"
   >
     <div class="mb-4 text-center text-3xl font-medium">

@@ -7,7 +7,6 @@ import {
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
 import type {
-  CreateProductBody,
   ProductCombineVariant,
   ProductSingleVariant
 } from '~/types/product';
@@ -15,6 +14,7 @@ import { toastCustom } from '~/config/toast';
 import { CreateShippingProductDialog } from '#components';
 import { useShopCreateProduct } from '~/services/shop';
 import { useGetPresignedUrl } from '~/services/upload';
+import type { CreateProductBody } from '~/types/request-api/shop-product';
 
 export type IOnChangeCreateVariant = Pick<CreateProductBody, 'variant_type' | 'new_variants'> &
   (Omit<ProductSingleVariant, 'variants'> | Omit<ProductCombineVariant, 'variants'>) | null;

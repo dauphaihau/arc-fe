@@ -1,105 +1,84 @@
-import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
-import type { MutationOptions } from '@tanstack/vue-query';
+import type { MutationOptions, UseQueryOptions } from '@tanstack/vue-query';
 import type { FetchError } from 'ofetch';
 import { RESOURCES } from '~/config/enums/resources';
 import type {
-  AddCartProduct, ResponseGetCart, ResponseGetProductsRecentlyAdded, UpdateCartProductBody, UpdateCouponsItem
-} from '~/types/cart';
-import type { SummaryOrder } from '~/types/order';
+  AddProductToCartBody, ResponseGetCart,
+  UpdateCartBody, ResponseUpdateCart,
+  ResponseAddProductToCartBody, ResponseDeleteProductCart
+} from '~/types/request-api/cart';
 import type { ProductInventory } from '~/types/product';
 import { toastCustom } from '~/config/toast';
+import { useGetCurrentUser } from '~/services/user';
+import type { Cart } from '~/types/cart';
 
 export function useGetCart(
-  options?: NitroFetchOptions<NitroFetchRequest>
+  params?: { cart_id: Cart['id'] },
+  queryOptions?: Partial<UseQueryOptions<ResponseGetCart>>
 ) {
-  return useQuery({
-    queryKey: ['get-cart'],
+  const { data: dataUserAuth } = useGetCurrentUser();
+  return useQuery<ResponseGetCart>({
+    ...queryOptions,
+    enabled: !!dataUserAuth.value?.user,
+    queryKey: ['get-cart', params?.cart_id ?? 'my-cart'],
     queryFn: () => {
       return useCustomFetch.get<ResponseGetCart>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
-        undefined,
-        options
+        params ?? undefined
       );
     },
     retry: 1,
   });
 }
 
-export function useGetProductsRecentlyAdded(
-  options?: NitroFetchOptions<NitroFetchRequest>
-) {
-  return useQuery({
-    enabled: false,
-    queryKey: ['get-products-recently-added'],
-    queryFn: () => {
-      return useCustomFetch.get<ResponseGetProductsRecentlyAdded>(
-        `${RESOURCES.USER}${RESOURCES.CART}`,
-        { type: 'header' },
-        options
-      );
-    },
-  });
-}
-
 export function useAddProductToCart(
-  options?: MutationOptions<{ summaryOrder: SummaryOrder }, FetchError, AddCartProduct>
+  options?: MutationOptions<ResponseAddProductToCartBody, FetchError, AddProductToCartBody>
 ) {
   const toast = useToast();
   return useMutation({
+    onError() {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Add product to cart failed',
+      });
+    },
     ...options,
     mutationKey: ['add-to-cart'],
-    mutationFn: (body: AddCartProduct) => {
-      return useCustomFetch.post<{ summaryOrder: SummaryOrder }>(
+    mutationFn: (body: AddProductToCartBody) => {
+      return useCustomFetch.post<ResponseAddProductToCartBody>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         body
       );
     },
-    onError() {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Add to cart failed',
-      });
-    },
   });
 }
 
-export function useUpdateCartProduct(
-  options?: MutationOptions<{ summaryOrder: SummaryOrder }, FetchError, UpdateCartProductBody>
+export function useUpdateCart(
+  options?: MutationOptions<ResponseUpdateCart, FetchError, UpdateCartBody>
 ) {
   const toast = useToast();
   return useMutation({
+    onError() {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Update cart failed',
+      });
+    },
     ...options,
-    mutationKey: ['update-cart-product'],
-    mutationFn: (body: UpdateCartProductBody) => {
-      return useCustomFetch.patch<{ summaryOrder: SummaryOrder }>(
+    mutationFn: (body: UpdateCartBody) => {
+      return useCustomFetch.patch<ResponseUpdateCart>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
         body
       );
     },
-    onError() {
-      toast.add({
-        ...toastCustom.error,
-        title: 'Update product cart failed',
-      });
-    },
   });
 }
 
-export function useDeleteCartProduct(
+export function useDeleteProductCart(
   id: ProductInventory['id'],
-  options?: MutationOptions<{ summaryOrder: SummaryOrder }>
+  options?: MutationOptions<ResponseDeleteProductCart>
 ) {
   const toast = useToast();
   return useMutation({
-    mutationKey: ['delete-cart-product'],
-    mutationFn: () => {
-      return useCustomFetch.delete<{ summaryOrder: SummaryOrder }>(
-        `${RESOURCES.USER}${RESOURCES.CART}`,
-        { inventory: id },
-        undefined
-        // options
-      );
-    },
     onError: () => {
       toast.add({
         ...toastCustom.error,
@@ -107,17 +86,11 @@ export function useDeleteCartProduct(
       });
     },
     ...options,
-  });
-}
-
-// calc summary order by item's addition info
-export function useCalcSummaryOrder() {
-  return useMutation({
-    mutationKey: ['update-coupons-item'],
-    mutationFn: (body: UpdateCouponsItem[]) => {
-      return useCustomFetch.put<{ summaryOrder: SummaryOrder }>(
+    mutationFn: () => {
+      return useCustomFetch.delete<ResponseDeleteProductCart>(
         `${RESOURCES.USER}${RESOURCES.CART}`,
-        body
+        { inventory_id: id },
+        undefined
       );
     },
   });

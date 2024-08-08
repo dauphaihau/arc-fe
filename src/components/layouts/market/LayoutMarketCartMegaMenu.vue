@@ -3,13 +3,17 @@ import { ROUTES } from '~/config/enums/routes';
 import { RegisterLoginDialog } from '#components';
 import { useLogout } from '~/services/auth';
 import { useGetCurrentUser } from '~/services/user';
+import { useGetCart } from '~/services/cart';
 
 const { show } = defineProps<{ show: boolean }>();
 
 const router = useRouter();
-const cartStore = useCartStore();
 const modal = useModal();
 const { data: dataUserAuth } = useGetCurrentUser();
+
+const {
+  data: dataGetCart,
+} = useGetCart();
 
 const {
   mutate: logout,
@@ -24,6 +28,13 @@ const handleLogout = () => {
   if (isPendingLogout.value) return;
   logout();
 };
+
+const remainProductCart = computed(() => {
+  if (dataGetCart.value?.cart) {
+    return dataGetCart.value.cart.summary_cart.total_products - dataGetCart.value.cart.products_recent_update.length;
+  }
+  return 0;
+});
 </script>
 
 <template>
@@ -47,33 +58,41 @@ const handleLogout = () => {
 
         <div class="mb-10">
           <div v-if="dataUserAuth?.user">
-            <div v-if="cartStore.cartHeader.products.length > 0">
+            <div v-if="dataGetCart?.cart && dataGetCart?.cart.products_recent_update.length > 0">
               <div class="mb-6 space-y-8">
                 <div
-                  v-for="(prod, index) in cartStore.cartHeader.products"
+                  v-for="(productCart, index) in dataGetCart.cart.products_recent_update"
                   :key="index"
                 >
                   <div
                     class="flex cursor-pointer items-center gap-6"
-                    @click="() => router.push(`${ROUTES.PRODUCTS}/${prod.id}`)"
+                    @click="() => router.push(`${ROUTES.PRODUCTS}/${productCart.product.id}`)"
                   >
                     <NuxtImg
-                      :src="prod.image_url"
-                      width="64"
-                      height="64"
+                      :src="`domainAwsS3/${productCart.product?.image.relative_url}`"
+                      width="70"
+                      height="70"
                       class="rounded"
                     />
-                    <div class="text-xl font-medium">
-                      {{ prod.title }}
+                    <div>
+                      <div class="text-xl font-medium">
+                        {{ productCart.product.title }}
+                      </div>
+                      <div class="text-[15px] text-zinc-500">
+                        {{ productCart.inventory.variant }}
+                      </div>
+                      <div class="text-[15px] tracking-wide text-zinc-500">
+                        x{{ productCart.quantity }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               <div
-                v-if="cartStore.cartHeader.restProducts > 0"
+                v-if="remainProductCart > 0"
                 class="text-customGray-950"
               >
-                {{ cartStore.cartHeader.restProducts }} more product in your Cart
+                {{ remainProductCart }} more product in your Cart
               </div>
             </div>
             <div

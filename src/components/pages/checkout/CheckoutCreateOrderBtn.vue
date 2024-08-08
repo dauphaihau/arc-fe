@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { consola } from 'consola';
-import type { CreateOrderForBuyNowBody } from '~/types/order';
 import { PAYMENT_TYPES } from '~/config/enums/order';
 import { toastCustom } from '~/config/toast';
 import { ROUTES } from '~/config/enums/routes';
@@ -9,11 +8,16 @@ import { useCreateOrderForBuyNow } from '~/services/order';
 import { CHECKOUT_NOW_STEPS } from '~/types/pages/checkout';
 import { useGetCurrentUser } from '~/services/user';
 import { useGetExchangeRates } from '~/services/market';
+import type { CreateOrderForBuyNowBody } from '~/types/request-api/order';
+import type { Cart } from '~/types/cart';
 
 const cartStore = useCartStore();
 const toast = useToast();
 const marketStore = useMarketStore();
 const { data: dataUserAuth } = useGetCurrentUser();
+
+const route = useRoute();
+const tempCartId = route.query['c'] as Cart['id'];
 
 const {
   mutateAsync: createOrder,
@@ -34,19 +38,18 @@ const onCreateOrder = async () => {
     cartStore.stateCheckoutNow.isPendingCreateOrder = true;
 
     const addressId = cartStore.stateCheckoutNow.address?.id;
-    const product = cartStore.stateCheckoutNow.product;
-    if (!product.inventory || !addressId) {
-      consola.error('addressId or inventoryId be undefined');
+
+    if (!addressId) {
+      consola.error('addressId be undefined');
       throw new Error();
     }
 
     const body: CreateOrderForBuyNowBody = {
+      cart_id: tempCartId,
       payment_type: cartStore.stateCheckoutNow.payment_type,
-      address: addressId,
-      inventory: product.inventory,
-      quantity: product.quantity,
-      coupon_codes: product.coupon_codes,
-      note: product.note,
+      user_address_id: addressId,
+      promo_codes: cartStore.stateCheckoutNow.promo_codes,
+      note: cartStore.stateCheckoutNow.note,
     };
 
     // region validate currency
@@ -81,18 +84,18 @@ const onCreateOrder = async () => {
     // endregion validate currency
 
     if (body.payment_type === PAYMENT_TYPES.CARD) {
-      const { checkoutSessionUrl } = await createOrder(body);
-      if (!checkoutSessionUrl) {
-        consola.error('checkoutSessionUrl be undefined', checkoutSessionUrl);
+      const { checkout_session_url } = await createOrder(body);
+      if (!checkout_session_url) {
+        consola.error('checkout_session_url be undefined', checkout_session_url);
         throw new Error();
       }
-      navigateTo(checkoutSessionUrl, {
+      navigateTo(checkout_session_url, {
         external: true,
       });
     }
     else {
-      const { orderShops } = await createOrder(body);
-      cartStore.orderShops = orderShops;
+      const { order_shops } = await createOrder(body);
+      cartStore.orderShops = order_shops;
       navigateTo(ROUTES.SUCCESS);
     }
   }

@@ -49,11 +49,11 @@ const {
             <LoadingSvg :child-class="'!w-12 !h-12'" />
           </div>
           <div
-            v-else-if="dataGetOrderShops?.results && dataGetOrderShops.results.length > 0"
+            v-else-if="dataGetOrderShops?.order_shops && dataGetOrderShops.order_shops.length > 0"
             class="ml-2 space-y-12"
           >
             <div
-              v-for="orderShop in dataGetOrderShops.results"
+              v-for="orderShop in dataGetOrderShops.order_shops"
               :key="orderShop.id"
             >
               <OrderShopItem :order-shop="orderShop" />

@@ -11,5 +11,4 @@ export type StateCheckoutCart = {
   payment_type: PAYMENT_TYPES
   address: UserAddress | null
   isPendingCreateOrder: boolean
-  keyRefreshCartSummaryOrderComp: number
 };

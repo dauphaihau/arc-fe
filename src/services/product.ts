@@ -2,24 +2,19 @@ import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
 import type { UseQueryOptions } from '@tanstack/vue-query';
 import type { ComputedRef } from 'vue';
 import { RESOURCES } from '~/config/enums/resources';
-import type {
-  GetProductsParams,
-  Product,
-  ResponseGetDetailProduct,
-  ResponseGetProducts
-} from '~/types/product';
-import type { ResponseBaseGetList } from '~/types/common';
+import type { Product } from '~/types/product';
+import type { GetProductsParams, ResponseGetDetailProduct, ResponseGetProducts } from '~/types/request-api/product';
 
 export function useGetProducts(
   params: ComputedRef<GetProductsParams | undefined>,
-  options?: Partial<UseQueryOptions<ResponseBaseGetList<ResponseGetProducts>>>
+  options?: Partial<UseQueryOptions<ResponseGetProducts>>
 ) {
-  return useQuery<ResponseBaseGetList<ResponseGetProducts>>({
+  return useQuery<ResponseGetProducts>({
     enabled: !!params,
     ...options,
     queryKey: ['get-products', params],
     queryFn: () => {
-      return useCustomFetch.get<ResponseBaseGetList<ResponseGetProducts>>(
+      return useCustomFetch.get<ResponseGetProducts>(
         RESOURCES.PRODUCTS,
         params.value
       );
@@ -50,7 +45,7 @@ export function useGetProductsByMultiQueries(queries?: GetProductsParams[]) {
     queries: queries?.map(qp => ({
       queryKey: [qp.category],
       queryFn: async () => {
-        const res = await useCustomFetch.get<ResponseBaseGetList<ResponseGetProducts>>(
+        const res = await useCustomFetch.get<ResponseGetProducts>(
           RESOURCES.PRODUCTS,
           qp
         );

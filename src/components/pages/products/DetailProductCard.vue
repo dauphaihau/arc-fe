@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { ResponseGetProducts } from '~/types/product';
 import { ROUTES } from '~/config/enums/routes';
+import type { ResponseGetProducts_Product } from '~/types/request-api/product';
 
 const { product } = defineProps<{
-  product: ResponseGetProducts
+  product: ResponseGetProducts_Product
 }>();
 
 const router = useRouter();

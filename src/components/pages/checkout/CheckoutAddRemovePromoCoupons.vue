@@ -1,36 +1,34 @@
 <script setup lang="ts">
 import { StatusCodes } from 'http-status-codes';
 import { FetchError } from 'ofetch';
-import { consola } from 'consola';
 import { useCartStore } from '~/stores/cart';
 import { toastCustom } from '~/config/toast';
-import { useMutateSummaryOder } from '~/services/order';
 import { COUPON_CONFIG } from '~/config/enums/coupon';
 import type { Coupon } from '~/types/coupon';
+import { useUpdateCart } from '~/services/cart';
+import type { ResponseGetCart } from '~/types/request-api/cart';
 
 const toast = useToast();
 const cartStore = useCartStore();
 const queryClient = useQueryClient();
+const route = useRoute();
 
-const getSummaryOrderBody = computed(() => {
-  return {
-    inventory: cartStore.stateCheckoutNow.product.inventory,
-    quantity: cartStore.stateCheckoutNow.product.quantity,
-  };
-});
+const tempCartId = route.query['c'] as string;
 
 const state = reactive({
-  showAddCouponInput: cartStore.stateCheckoutNow.product.coupon_codes.length > 0,
+  showAddCouponInput: cartStore.stateCheckoutNow.promo_codes.length > 0,
   code: '',
   errorMsg: '',
 });
 
 const {
-  isPending: isPendingMutateSummaryOder,
-  mutateAsync: mutateSummaryOder,
-} = useMutateSummaryOder();
+  mutateAsync: updateCart,
+  isPending: isPendingUpdateCart,
+} = useUpdateCart({
+  onError: undefined,
+});
 
-const addCoupon = async () => {
+async function addCoupon() {
   state.errorMsg = '';
 
   const errorMsg = cartStore.stateCheckoutNow.invalidCodes.get(state.code);
@@ -38,23 +36,18 @@ const addCoupon = async () => {
     state.errorMsg = errorMsg;
     return;
   }
-  const product = cartStore.stateCheckoutNow.product;
-  if (!product?.inventory) {
-    return;
-  }
-  const tempCodes = [...product.coupon_codes, state.code];
+  const tempCodes = [...cartStore.stateCheckoutNow.promo_codes, state.code];
+
   try {
-    const { summaryOrder } = await mutateSummaryOder({
-      inventory: product.inventory,
-      quantity: product.quantity,
-      coupon_codes: tempCodes,
+    const { summary_order } = await updateCart({
+      cart_id: tempCartId,
+      addition_info_temp_cart: {
+        promo_codes: tempCodes,
+      },
     });
+    updateCacheSummaryOrder(summary_order);
     state.code = '';
-    product.coupon_codes = tempCodes;
-    queryClient.setQueryData(
-      ['get-summary-oder', getSummaryOrderBody.value],
-      { summaryOrder }
-    );
+    cartStore.stateCheckoutNow.promo_codes = tempCodes;
   }
   catch (error) {
     if (error instanceof FetchError) {
@@ -77,25 +70,21 @@ const addCoupon = async () => {
       }
     }
   }
-};
+}
 
-const deleteCoupon = async (code: Coupon['code']) => {
-  const product = cartStore.stateCheckoutNow.product;
-  if (!product?.inventory) {
-    consola.error('inventory is null');
-    return;
-  }
-  const filtered = product.coupon_codes.filter(c => c !== code);
+async function deleteCoupon(code: Coupon['code']) {
+  const product = cartStore.stateCheckoutNow;
+  const newPromoCodes = product.promo_codes.filter(c => c !== code);
+
   try {
-    const { summaryOrder } = await mutateSummaryOder({
-      inventory: product.inventory,
-      quantity: product.quantity,
-      coupon_codes: filtered,
+    const { summary_order } = await updateCart({
+      cart_id: tempCartId,
+      addition_info_temp_cart: {
+        promo_codes: newPromoCodes,
+      },
     });
-    queryClient.setQueryData(['get-summary-oder', getSummaryOrderBody.value], {
-      summaryOrder,
-    });
-    product.coupon_codes = filtered;
+    updateCacheSummaryOrder(summary_order);
+    product.promo_codes = newPromoCodes;
   }
   catch (error) {
     toast.add({
@@ -103,26 +92,22 @@ const deleteCoupon = async (code: Coupon['code']) => {
       title: 'Delete coupon failed',
     });
   }
-};
+}
 
-const toggleShowAddCouponInput = async () => {
+async function toggleShowAddCouponInput() {
   state.showAddCouponInput = !state.showAddCouponInput;
   if (!state.showAddCouponInput) {
-    const product = cartStore.stateCheckoutNow.product;
-    if (!product?.inventory) {
-      consola.error('inventory is null');
-      return;
-    }
+    const product = cartStore.stateCheckoutNow;
+
     try {
-      const { summaryOrder } = await mutateSummaryOder({
-        inventory: product.inventory,
-        quantity: product.quantity,
-        coupon_codes: [],
+      const { summary_order } = await updateCart({
+        cart_id: tempCartId,
+        addition_info_temp_cart: {
+          promo_codes: [],
+        },
       });
-      queryClient.setQueryData(['get-summary-oder', getSummaryOrderBody], {
-        summaryOrder,
-      });
-      product.coupon_codes = [];
+      updateCacheSummaryOrder(summary_order);
+      product.promo_codes = [];
     }
     catch (error) {
       toast.add({
@@ -131,16 +116,23 @@ const toggleShowAddCouponInput = async () => {
       });
     }
   }
-};
+}
+
+function updateCacheSummaryOrder(summary_order: ResponseGetCart['summary_order']) {
+  queryClient.setQueryData<ResponseGetCart>(['get-cart', tempCartId], (oldData) => {
+    if (!oldData) return oldData;
+    return { ...oldData, summary_order };
+  });
+}
 
 const disabledAddBtn = computed(() => {
-  return isPendingMutateSummaryOder.value ||
-    cartStore.stateCheckoutNow.product.coupon_codes.includes(state.code) ||
+  return isPendingUpdateCart.value ||
+    cartStore.stateCheckoutNow.promo_codes.includes(state.code) ||
     !state.code;
 });
 
 const disabledInput = computed(() => {
-  return cartStore.stateCheckoutNow.product.coupon_codes.length === COUPON_CONFIG.MAX_USE_PER_ORDER;
+  return cartStore.stateCheckoutNow.promo_codes.length === COUPON_CONFIG.MAX_USE_PER_ORDER;
 });
 </script>
 
@@ -186,11 +178,11 @@ const disabledInput = computed(() => {
     </UFormGroup>
 
     <div
-      v-if="cartStore.stateCheckoutNow.product.coupon_codes.length > 0"
+      v-if="cartStore.stateCheckoutNow.promo_codes.length > 0"
       class="flex gap-3"
     >
       <div
-        v-for="(code, index) of cartStore.stateCheckoutNow.product.coupon_codes"
+        v-for="(code, index) of cartStore.stateCheckoutNow.promo_codes"
         :key="index"
       >
         <div class="relative">
@@ -205,7 +197,7 @@ const disabledInput = computed(() => {
             size="2xs"
             color="gray"
             variant="solid"
-            :disabled="isPendingMutateSummaryOder || cartStore.stateCheckoutNow.isPendingCreateOrder"
+            :disabled="isPendingUpdateCart || cartStore.stateCheckoutNow.isPendingCreateOrder"
             icon="i-heroicons-x-mark-20-solid"
             :ui="{ rounded: 'rounded-full' }"
             @click="() => deleteCoupon(code)"

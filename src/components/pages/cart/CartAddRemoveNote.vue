@@ -1,12 +1,12 @@
 <script setup lang="ts">
 /*
-  use in 2 cart, cart/checkout page
+  use in cart page, cart/checkout page
  */
-import type { ItemCartPopulated } from '~/types/cart';
 import { ORDER_CONFIG } from '~/config/enums/order';
+import type { ResponseGetCart_ShopCart } from '~/types/request-api/cart';
 
-const { data } = defineProps<{
-  data: ItemCartPopulated
+const props = defineProps<{
+  shopCart: ResponseGetCart_ShopCart
 }>();
 
 const cartStore = useCartStore();
@@ -17,7 +17,7 @@ const state = reactive({
 });
 
 onMounted(() => {
-  const orderShop = cartStore.additionInfoOrderShops.get(data.shop.id);
+  const orderShop = cartStore.additionInfoShopCarts.get(props.shopCart.shop.id);
   if (orderShop && orderShop.note) {
     state.showNoteInput = true;
     state.note = orderShop.note;
@@ -27,11 +27,11 @@ onMounted(() => {
 watchDebounced(
   () => state.note,
   () => {
-    if (data?.shop?.id) {
-      const orderShop = cartStore.additionInfoOrderShops.get(data.shop.id);
+    if (props.shopCart?.shop?.id) {
+      const orderShop = cartStore.additionInfoShopCarts.get(props.shopCart.shop.id);
       if (orderShop) {
         orderShop.note = state.note;
-        cartStore.additionInfoOrderShops.set(data.shop.id, orderShop);
+        cartStore.additionInfoShopCarts.set(props.shopCart.shop.id, orderShop);
       }
     }
   },
@@ -39,9 +39,9 @@ watchDebounced(
 );
 
 watch(() => state.showNoteInput, () => {
-  const additionInfoOrderShop = cartStore.additionInfoOrderShops.get(data.shop.id);
+  const additionInfoOrderShop = cartStore.additionInfoShopCarts.get(props.shopCart.shop.id);
   if (!state.showNoteInput && additionInfoOrderShop) {
-    cartStore.additionInfoOrderShops.set(data.shop.id, {
+    cartStore.additionInfoShopCarts.set(props.shopCart.shop.id, {
       ...additionInfoOrderShop,
       note: '',
     });
@@ -61,7 +61,7 @@ watch(() => state.showNoteInput, () => {
       @click="state.showNoteInput = !state.showNoteInput"
     >
       Add a note to
-      {{ data.shop?.shop_name }}
+      {{ props?.shopCart.shop?.shop_name }}
     </UButton>
 
     <UFormGroup

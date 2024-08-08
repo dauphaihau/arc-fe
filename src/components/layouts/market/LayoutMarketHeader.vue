@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
-import { useGetCurrentUser } from '~/services/user';
+import { useGetCart } from '~/services/cart';
 
 const route = useRoute();
-const cartStore = useCartStore();
-const { data: dataUserAuth } = useGetCurrentUser();
 
 // const isDark = useDark();
 // const toggleDark = useToggle(isDark);
+
+const {
+  data: dataGetCart,
+} = useGetCart();
 
 const isShowCart = ref(false);
 const isShowSearch = ref(false);
@@ -42,15 +44,21 @@ function onScroll() {
 }
 
 onMounted(async () => {
-  if (dataUserAuth.value?.user) {
-    await cartStore.getProductsRecentlyAdded();
-  }
   state.lastScrollPosition = window.pageYOffset;
   window.addEventListener('scroll', onScroll);
   const viewportMeta = document.createElement('meta');
   viewportMeta.name = 'viewport';
   viewportMeta.content = 'width=device-width, initial-scale=1';
   document.head.appendChild(viewportMeta);
+});
+
+const totalProductCarts = computed(() => {
+  if (
+    dataGetCart.value?.cart && dataGetCart.value.cart?.summary_cart?.total_products > 0
+  ) {
+    return dataGetCart.value.cart.summary_cart.total_products;
+  }
+  return 0;
 });
 </script>
 
@@ -150,8 +158,8 @@ onMounted(async () => {
 
         <UTooltip text="Cart">
           <UChip
-            :text="cartStore.getCountAllProducts"
-            :show="!!dataUserAuth?.user && cartStore.getCountAllProducts > 0"
+            :text="totalProductCarts"
+            :show="totalProductCarts > 0"
             class="cursor-pointer"
             size="xl"
             position="bottom-right"

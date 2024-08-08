@@ -6,6 +6,6 @@ export const categoryAttributeSchema = z.object({
   category: objectIdSchema,
   name: z.string(),
   options: z.array(z.string()).optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  updated_at: z.date(),
+  created_at: z.date(),
 });

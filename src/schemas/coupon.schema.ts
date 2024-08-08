@@ -85,8 +85,8 @@ export const couponSchema = z.object({
     .boolean()
     .default(false)
     .optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  created_at: z.date(),
+  updated_at: z.date(),
 });
 
 export const createPromoCodeBodySchema = couponSchema.omit({
@@ -95,8 +95,8 @@ export const createPromoCodeBodySchema = couponSchema.omit({
   users_used: true,
   uses_count: true,
   is_active: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 });
 
 export const createSaleBodySchema = couponSchema.omit({
@@ -105,8 +105,8 @@ export const createSaleBodySchema = couponSchema.omit({
   users_used: true,
   uses_count: true,
   is_active: true,
-  createdAt: true,
-  updatedAt: true,
+  created_at: true,
+  updated_at: true,
 }).merge(z.object({
   type: z.union([z.literal(COUPON_TYPES.PERCENTAGE), z.literal(COUPON_TYPES.FREE_SHIP)]),
 }));

@@ -86,8 +86,10 @@ export const baseProductSchema = z.object({
     .max(5, 'Rating must be equal or less than 5.0')
     .default(0)
     .optional(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  // createdAt: z.date(),
+  // updatedAt: z.date(),
+  updated_at: z.date(),
+  created_at: z.date(),
 });
 
 const baseProductPopulatedSchema = baseProductSchema.merge(z.object({
@@ -174,7 +176,7 @@ export const productStateUserCanModify = z.union([
   z.literal(PRODUCT_STATES.DRAFT),
 ]).default(PRODUCT_STATES.ACTIVE);
 
-export const variantOptionCreateSchema = productInventorySchema
+export const createVariantOptionSchema = productInventorySchema
   .pick({ price: true, sku: true, stock: true })
   .merge(productVariantSchema.pick({ variant_name: true }));
 
@@ -186,8 +188,8 @@ export const createProductSchema = baseProductSchema
     views: true,
     variants: true,
     shipping: true,
-    createdAt: true,
-    updatedAt: true,
+    created_at: true,
+    updated_at: true,
   }).merge(
     z.object({
       state: productStateUserCanModify,
@@ -204,7 +206,7 @@ export const createProductSchema = baseProductSchema
         productVariantSchema
           .pick({ variant_name: true })
           .merge(z.object({
-            variant_options: z.array(variantOptionCreateSchema),
+            variant_options: z.array(createVariantOptionSchema),
           }))
           .merge(createProductInventorySchema).partial()
       ).optional(),
@@ -215,7 +217,7 @@ export const createProductSchema = baseProductSchema
     createProductInventorySchema
   );
 
-export const variantOptionsUpdateSchema = createProductInventorySchema.merge(
+export const updateVariantOptionsSchema = createProductInventorySchema.merge(
   productVariantSchema.pick({ variant_name: true }).merge(
     productVariantOptSchema.pick({ variant: true })
   )
@@ -254,7 +256,7 @@ export const updateProductSchema = baseProductSchema
           .pick({ variant_name: true })
           .merge(
             z.object({
-              variant_options: z.array(variantOptionsUpdateSchema),
+              variant_options: z.array(updateVariantOptionsSchema),
             })
           )),
     })

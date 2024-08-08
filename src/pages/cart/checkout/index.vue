@@ -8,13 +8,14 @@ definePageMeta({ layout: 'market', middleware: ['auth'] });
 const cartStore = useCartStore();
 
 const {
+  isPending: isPendingGetCart,
   data: dataGetCart,
 } = useGetCart();
 
 onBeforeUnmount(() => {
   cartStore.resetStateCheckoutCart();
-  if (cartStore.additionInfoOrderShops.size) {
-    cartStore.additionInfoOrderShops.clear();
+  if (cartStore.additionInfoShopCarts.size) {
+    cartStore.additionInfoShopCarts.clear();
   }
 });
 
@@ -22,7 +23,16 @@ const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
 </script>
 
 <template>
-  <div class="py-16">
+  <div
+    v-if="isPendingGetCart"
+    class="grid h-[80vh] w-full place-content-center"
+  >
+    <LoadingSvg :child-class="'!w-12 !h-12'" />
+  </div>
+  <div
+    v-else-if="dataGetCart?.cart && dataGetCart.cart.shop_carts?.length > 0"
+    class="py-16"
+  >
     <CheckoutStepper
       v-model="cartStore.stateCheckoutCart.currentStep"
       class="mx-auto mb-24 max-w-[30rem]"
@@ -31,7 +41,7 @@ const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
     />
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
-        <CartCheckoutAddressShipping
+        <CartCheckoutUserAddressShipping
           v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ADDRESS_SHIPPING"
           class="mb-10"
         />
@@ -45,16 +55,16 @@ const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
         >
           <CartCheckoutReviewShippingAndPayment class="mb-12" />
           <div
-            v-for="item of dataGetCart?.cart.items"
-            :key="item.id"
+            v-for="shopCart of dataGetCart.cart.shop_carts"
+            :key="shopCart.shop.id"
           >
-            <CartCheckoutOrderShop :data="item" />
+            <CartCheckoutShopCart :shop-cart="shopCart" />
           </div>
         </div>
       </div>
 
       <div class="col-span-4">
-        <CartCheckoutSummaryOrder :key="cartStore.stateCheckoutCart.keyRefreshCartSummaryOrderComp" />
+        <CartCheckoutSummaryOrder />
         <CartCheckoutCreateOrderBtn />
       </div>
     </div>

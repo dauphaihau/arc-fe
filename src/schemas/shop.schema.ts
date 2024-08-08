@@ -12,6 +12,6 @@ export const shopSchema = z.object({
     .trim()
     .min(6, 'must be at least 6 characters')
     .max(20, 'must be no longer than 20 characters'),
-  createdAt: z.date(),
-  updatedAt: z.date(),
+  updated_at: z.date(),
+  created_at: z.date(),
 });

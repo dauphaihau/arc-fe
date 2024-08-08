@@ -2,10 +2,11 @@
 import type { FormSubmitEvent } from '#ui/types';
 import { useGetCountries } from '~/services/address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
-import type { CreateProductShipping, ProductShipping, ProductStandardShipping } from '~/types/product';
+import type { ProductShipping, ProductStandardShipping } from '~/types/product';
 import { PRODUCT_SHIPPING_CHARGE, PRODUCT_SHIPPING_SERVICES } from '~/config/enums/product';
 import { createProductShippingSchema } from '~/schemas/product-shipping.schema';
 import { useGetCurrentUser } from '~/services/user';
+import type { CreateProductShipping } from '~/types/request-api/shop-product';
 
 type TStateSubmit = Partial<Pick<ProductShipping, 'country' | 'zip' | 'process_time'>> & {
   standard_shipping: Partial<ProductStandardShipping>[]
