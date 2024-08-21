@@ -6,7 +6,7 @@ definePageMeta({ layout: 'market' });
 const route = useRoute();
 const marketStore = useMarketStore();
 
-const limit = 20;
+const limit = 10;
 const page = ref(1);
 
 const params = computed(() => {
@@ -15,7 +15,7 @@ const params = computed(() => {
     return undefined;
   }
   let defaultParams = {
-    category: category.id,
+    category_id: category.id,
     page: page.value,
     limit,
   };
@@ -29,12 +29,16 @@ const {
   data: dataGetProducts,
   isPending: isPendingGetProducts,
 } = useGetProducts(params);
+
+watch(() => page.value, () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, { immediate: true });
 </script>
 
 <template>
   <div class="pt-12">
     <div class="mb-4 flex items-center justify-between">
-      <CategoriesBreadcrumb :total-products="dataGetProducts?.totalResults || 0" />
+      <CategoriesBreadcrumb :total-products="dataGetProducts?.total_results || 0" />
       <SortProductsBy />
     </div>
 
@@ -43,12 +47,22 @@ const {
         <CategoriesSubCategories />
         <FilterProducts />
       </div>
-
-      <div
-        v-if="isPendingGetProducts"
-        class="grid h-[80vh] w-full place-content-center"
-      >
-        <LoadingSvg :child-class="'!w-12 !h-12'" />
+      <div v-if="isPendingGetProducts">
+        <div class="mb-16 grid grid-cols-4 gap-x-3 gap-y-8">
+          <div
+            v-for="i in limit"
+            :key="i"
+          >
+            <div>
+              <USkeleton class="size-[254px]" />
+              <div class="mt-3 space-y-3">
+                <USkeleton class="h-5 w-[190px] " />
+                <USkeleton class="h-5 w-[150px] " />
+                <USkeleton class="h-5 w-[120px] " />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
       <div v-else>
         <div
@@ -56,21 +70,21 @@ const {
           class="mb-16 grid grid-cols-4 gap-x-3 gap-y-8"
         >
           <div
-            v-for="(product, i) of dataGetProducts.results"
-            :key="i"
+            v-for="product of dataGetProducts.results"
+            :key="product.id"
           >
             <ProductCard :product="product" />
           </div>
         </div>
         <div
-          v-if="dataGetProducts?.totalResults && dataGetProducts.totalResults > limit"
+          v-if="dataGetProducts?.total_results && dataGetProducts.total_results > limit"
           class="flex justify-center"
         >
           <UPagination
             v-model="page"
             size="xl"
             :page-count="limit"
-            :total="dataGetProducts?.totalResults ?? 0"
+            :total="dataGetProducts?.total_results ?? 0"
             :inactive-button="{ color: 'gray' }"
           />
         </div>

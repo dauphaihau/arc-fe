@@ -22,13 +22,13 @@ const {
 type CreateSaleBody = z.infer<typeof createSaleBodySchema>;
 
 type InitState = UndefinableFields<CreateSaleBody,
-  | 'percent_off'
-  | 'min_order_value'
-  | 'min_products'
-  | 'max_uses_per_user'
-  | 'max_uses'
-  | 'start_date'
-  | 'end_date'
+| 'percent_off'
+| 'min_order_value'
+| 'min_products'
+| 'max_uses_per_user'
+| 'max_uses'
+| 'start_date'
+| 'end_date'
 >;
 
 const couponTypeOptions = [

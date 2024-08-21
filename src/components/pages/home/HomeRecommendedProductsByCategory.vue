@@ -7,7 +7,7 @@ const marketStore = useMarketStore();
 const params = computed(() => {
   if (marketStore.userActivities.categoryIdProductVisited) {
     return {
-      category: marketStore.userActivities.categoryIdProductVisited,
+      category_id: marketStore.userActivities.categoryIdProductVisited,
       limit,
     };
   }

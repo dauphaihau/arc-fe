@@ -53,11 +53,11 @@ export type CreateOrderFromCartBody = {
 
 export type CreateOrderForBuyNowBody = {
   cart_id: Cart['id']
-  promo_codes: Coupon['code'][]
-  note: string
   payment_type: Payment['type']
   user_address_id: UserAddress['id']
   currency?: MARKET_CURRENCIES
+  note?: Order['note']
+  promo_codes?: Coupon['code'][]
 };
 
 export type ResponseCreateOrder = {

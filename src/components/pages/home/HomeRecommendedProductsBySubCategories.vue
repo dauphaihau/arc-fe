@@ -14,7 +14,7 @@ const queries = computed(() => {
       categories.set(cg.id, cg.name);
       return {
         limit,
-        category: cg.id,
+        category_id: cg.id,
       };
     });
   }

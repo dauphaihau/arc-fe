@@ -10,8 +10,9 @@ const model = defineModel<Product['category'] | undefined>({
 });
 
 const selected = ref();
-const query = ref(props.category?.name ?? '');
+const querySearch = ref(props.category?.name ?? '');
 const placeholder = ref('');
+const hideOptions = ref(false);
 
 const {
   isPending: isPendingGetSearchCategories,
@@ -23,6 +24,7 @@ async function search(q: Category['name']) {
 
   try {
     const response = await searchCategories(q);
+    hideOptions.value = false;
     return response.categories;
   }
   catch (error) {
@@ -49,6 +51,12 @@ watchDebounced(
   },
   { debounce: 500, maxWait: 1000 }
 );
+
+watch(querySearch, () => {
+  if (!hideOptions.value) {
+    hideOptions.value = true;
+  }
+});
 </script>
 
 <template>
@@ -62,7 +70,7 @@ watchDebounced(
   >
     <UInputMenu
       v-model="selected"
-      v-model:query="query"
+      v-model:query="querySearch"
       :search="search"
       :loading="isPendingGetSearchCategories"
       :placeholder="placeholder"
@@ -71,11 +79,14 @@ watchDebounced(
       trailing
       by="id"
       size="lg"
+      :ui-menu="{
+        base: hideOptions ? 'hidden' : 'relative focus:outline-none overflow-y-auto scroll-py-1',
+      }"
     >
       <template #option="{ option: categoryData }">
         <div class="space-y-1 py-1">
           <div class="flex gap-1">
-            <p>{{ query }} in</p>
+            <p>{{ querySearch }} in</p>
             <p class="truncate font-bold">
               {{ categoryData.lastNameCategory }}
             </p>
@@ -98,10 +109,10 @@ watchDebounced(
           </div>
         </div>
       </template>
-      <template #option-empty="{ querySearch }">
+      <template #option-empty="{ query }">
         <div class="text-zinc-500">
           <div class="">
-            <q>{{ querySearch }}</q> not found
+            <q>{{ query }}</q> not found
           </div>
         <!--        <UDivider class="my-3" /> -->
         <!--        <div class="space-y-3"> -->

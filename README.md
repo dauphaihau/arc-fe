@@ -27,7 +27,7 @@ A ecommerce marketplace web application  where people come together to make, sel
 ## Features
 - Log in, register, log out, reset password
 - Create shop
-- CRUD product, coupon by shop
+- Create, get list, delete product, coupon by shop
 - Search, filter products by category
 - CRUD products on cart
 - Checkout now or checkout with multiple products in cart

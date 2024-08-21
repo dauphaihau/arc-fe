@@ -2,7 +2,6 @@
 import { PRODUCT_CONFIG } from '~/config/enums/product';
 import type { Product, ProductImage } from '~/types/product';
 import { toastCustom } from '~/config/toast';
-import type { IOnChangeUpdateImages } from '~/components/pages/account/shop/products/UpdateProductForm.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -15,20 +14,24 @@ const props = withDefaults(
   }
 );
 
+const fileImages = defineModel<File[]>('newFileImages', {
+  default: [],
+});
+
+const idsImageForDelete = defineModel<Pick<ProductImage, 'id'>[]>('idsImageDelete', {
+  default: [],
+});
+
 const toast = useToast();
 
 const fileInputRef = ref<HTMLInputElement | null>(null);
 
 const state = reactive({
-  fileImages: [] as File[],
   urlImages: [] as string[],
   imagesInDB: [...props.images],
-  idsImagesForDelete: [] as ProductImage['id'][],
+  // fileImages: [] as File[],
+  // idsImagesForDelete: [] as ProductImage['id'][],
 });
-
-const emit = defineEmits<{
-  (e: 'onChange', value: IOnChangeUpdateImages): void
-}>();
 
 const onPickFile = () => {
   fileInputRef?.value?.click();
@@ -50,7 +53,8 @@ function onFilePicked(event: Event) {
     return;
   }
   for (let i = 0; i < files.length; i++) {
-    state.fileImages.push(files[i]);
+    // state.fileImages.push(files[i]);
+    fileImages.value = [...fileImages.value, files[i]];
     const reader = new FileReader();
     reader.addEventListener('load', () => {
       state.urlImages.push(reader.result as string);
@@ -60,21 +64,23 @@ function onFilePicked(event: Event) {
 }
 
 const removeImage = (index: number) => {
-  state.fileImages.splice(index, 1);
+  fileImages.value = fileImages.value.toSpliced(index, 1);
   state.urlImages.splice(index, 1);
+  // state.fileImages.splice(index, 1);
 };
 
 const removeImageInDB = (id: ProductImage['id'], index: number) => {
   state.imagesInDB.splice(index, 1);
-  state.idsImagesForDelete.push(id);
+  // state.idsImagesForDelete.push(id);
+  idsImageForDelete.value = [...idsImageForDelete.value, { id }];
 };
 
-watch(state, () => {
-  emit('onChange', {
-    fileImages: state.fileImages,
-    idsImagesForDelete: state.idsImagesForDelete,
-  });
-});
+// watch(state, () => {
+//   emit('onChange', {
+//     fileImages: state.fileImages,
+//     idsImagesForDelete: state.idsImagesForDelete,
+//   });
+// });
 </script>
 
 <template>

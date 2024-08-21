@@ -8,7 +8,7 @@ export function useGetPresignedUrl() {
     mutationKey: ['get-presigned-url'],
     mutationFn: () => {
       return useCustomFetch.get<ResponseGetPresignedUrlData>(
-        `${RESOURCES.UPLOAD}?shop=${dataUserAuth.value?.user?.shop?.id}`
+        `${RESOURCES.UPLOAD}?shop_id=${dataUserAuth.value?.user?.shop?.id}`
       );
     },
   });

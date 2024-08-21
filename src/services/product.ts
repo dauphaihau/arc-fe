@@ -22,7 +22,6 @@ export function useGetProducts(
   });
 }
 
-
 export function useGetDetailProduct(
   id: Product['id'],
   options?: NitroFetchOptions<NitroFetchRequest>
@@ -43,7 +42,7 @@ export function useGetDetailProduct(
 export function useGetProductsByMultiQueries(queries?: GetProductsParams[]) {
   return useQueries({
     queries: queries?.map(qp => ({
-      queryKey: [qp.category],
+      queryKey: [qp.category_id],
       queryFn: async () => {
         const res = await useCustomFetch.get<ResponseGetProducts>(
           RESOURCES.PRODUCTS,
@@ -51,7 +50,7 @@ export function useGetProductsByMultiQueries(queries?: GetProductsParams[]) {
         );
         return {
           ...res,
-          categoryId: qp.category,
+          categoryId: qp.category_id,
         };
       },
     })) ?? [],

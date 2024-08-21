@@ -52,18 +52,18 @@ const addCoupon = async () => {
   }
 
   // clone additionInfoShopCarts, if request 200 assign clone to additionInfoShopCarts
-  const tempAdditionInfoOrderShops = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
+  const tempAdditionInfoShopCarts = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
     JSON.parse(JSON.stringify([...cartStore.additionInfoShopCarts]))
   );
 
-  const tempAdditionInfoOrderShop = tempAdditionInfoOrderShops.get(shopId);
+  const tempAdditionInfoOrderShop = tempAdditionInfoShopCarts.get(shopId);
   if (!tempAdditionInfoOrderShop) {
     consola.error('tempAdditionInfoOrderShop be undefined');
     return;
   }
   tempAdditionInfoOrderShop.promo_codes.push(state.code);
 
-  const addition_info_shop_carts = Array.from(tempAdditionInfoOrderShops)
+  const addition_info_shop_carts = Array.from(tempAdditionInfoShopCarts)
     .map(([keyShopId, value]) => ({
       shop_id: keyShopId,
       promo_codes: value.promo_codes,
@@ -128,10 +128,10 @@ const addCoupon = async () => {
 };
 
 const deleteCoupon = async (code: Coupon['code']) => {
-  const tempAdditionInfoOrderShops = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
+  const tempAdditionInfoShopCarts = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
     JSON.parse(JSON.stringify([...cartStore.additionInfoShopCarts]))
   );
-  const tempAdditionInfoOrderShop = tempAdditionInfoOrderShops.get(shopId);
+  const tempAdditionInfoOrderShop = tempAdditionInfoShopCarts.get(shopId);
 
   if (!tempAdditionInfoOrderShop) {
     consola.error('tempAdditionInfoOrderShop be undefined');
@@ -139,7 +139,7 @@ const deleteCoupon = async (code: Coupon['code']) => {
   }
   tempAdditionInfoOrderShop.promo_codes = tempAdditionInfoOrderShop.promo_codes.filter(c => c !== code);
 
-  const addition_info_shop_carts = Array.from(tempAdditionInfoOrderShops).map(([keyShopId, value]) => ({
+  const addition_info_shop_carts = Array.from(tempAdditionInfoShopCarts).map(([keyShopId, value]) => ({
     shop_id: keyShopId,
     promo_codes: value.promo_codes,
   }));
@@ -176,7 +176,7 @@ const deleteCoupon = async (code: Coupon['code']) => {
       };
     });
 
-    const additionInfoOrderShop = tempAdditionInfoOrderShops.get(shopId);
+    const additionInfoOrderShop = tempAdditionInfoShopCarts.get(shopId);
     if (!additionInfoOrderShop) {
       consola.error('additionInfoOrderShop be undefined', additionInfoOrderShop);
       throw new Error();
@@ -195,10 +195,10 @@ const deleteCoupon = async (code: Coupon['code']) => {
 const toggleShowAddCouponInput = async () => {
   state.showAddCouponCodeInput = !state.showAddCouponCodeInput;
   if (!state.showAddCouponCodeInput) {
-    const tempAdditionInfoOrderShops = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
+    const tempAdditionInfoShopCarts = new Map<AdditionInfoShopCarts['key'], AdditionInfoShopCarts['value']>(
       JSON.parse(JSON.stringify([...cartStore.additionInfoShopCarts]))
     );
-    const tempAdditionInfoOrderShop = tempAdditionInfoOrderShops.get(shopId);
+    const tempAdditionInfoOrderShop = tempAdditionInfoShopCarts.get(shopId);
 
     if (!tempAdditionInfoOrderShop) {
       consola.error('tempAdditionInfoOrderShop be undefined');
@@ -209,7 +209,7 @@ const toggleShowAddCouponInput = async () => {
     }
     tempAdditionInfoOrderShop.promo_codes = [];
 
-    const addition_info_shop_carts = Array.from(tempAdditionInfoOrderShops).map(([keyShopId, value]) => ({
+    const addition_info_shop_carts = Array.from(tempAdditionInfoShopCarts).map(([keyShopId, value]) => ({
       shop_id: keyShopId,
       promo_codes: value.promo_codes,
     }));
@@ -245,7 +245,7 @@ const toggleShowAddCouponInput = async () => {
           summary_order: data.summary_order,
         };
       });
-      const additionInfoOrderShop = tempAdditionInfoOrderShops.get(shopId);
+      const additionInfoOrderShop = tempAdditionInfoShopCarts.get(shopId);
       if (!additionInfoOrderShop) {
         consola.error('additionInfoOrderShop be undefined', additionInfoOrderShop);
         throw new Error();

@@ -5,9 +5,13 @@ import type {
 } from '~/types/product';
 import type { Coupon } from '~/types/coupon';
 import type { RequestGetListParams, ResponseBaseGetList } from '~/types/common';
+import type { Category } from '~/types/category';
 
 // region get products
-export type GetProductsParams = Partial<Pick<Product, 'category' | 'shop'> & RequestGetListParams>;
+// export type GetProductsParams = Partial<Pick<Product, 'category' | 'shop'> & RequestGetListParams>;
+export type GetProductsParams = Partial<{
+  category_id: Category['id']
+}> & RequestGetListParams;
 
 export type ResponseGetProducts_Product = {
   shop: Pick<Shop, 'id' | 'shop_name'>
@@ -17,7 +21,8 @@ export type ResponseGetProducts_Product = {
   image_relative_url: ProductImage['relative_url']
   percent_coupon?: Pick<Coupon, 'percent_off' | 'start_date' | 'end_date'>
   free_ship_coupon?: Pick<Coupon, 'start_date' | 'end_date'>
-} & Pick<Product, 'id' | 'title' | 'category' | 'variant_type'>;
+  category_id: Category['id']
+} & Pick<Product, 'id' | 'title' | 'variant_type'>;
 
 export type ResponseGetProducts = ResponseBaseGetList<ResponseGetProducts_Product>;
 // endregion

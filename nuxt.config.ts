@@ -17,9 +17,20 @@ export default defineNuxtConfig({
     },
     pageTransition: { name: 'page', mode: 'out-in' },
   },
+
+  vite: {
+    vue: {
+      script: {
+        defineModel: true,
+        propsDestructure: true,
+      },
+    },
+  },
+
   srcDir: 'src/',
   ssr: false,
   devtools: { enabled: true },
+
   modules: [
     '@nuxt/eslint',
     '@nuxt/devtools',
@@ -33,20 +44,24 @@ export default defineNuxtConfig({
     '@samk-dev/nuxt-vcalendar',
     '@hebilicious/vue-query-nuxt',
   ],
+
   eslint: {
     config: {
       stylistic: true,
     },
   },
+
   typescript: {
     strict: true,
     typeCheck: true,
   },
+
   security: {
     headers: {
       crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
     },
   },
+
   runtimeConfig: {
     ipDataKey: process.env.IP_DATA_KEY,
     public: {
@@ -57,15 +72,18 @@ export default defineNuxtConfig({
       refreshTokenExpirationDays: process.env.REFRESH_TOKEN_EXPIRATION_DAYS,
     },
   },
+
   pinia: {
     storesDirs: ['./src/stores/**'],
   },
+
   components: [
     {
       path: '~/components',
       pathPrefix: false,
     },
   ],
+
   i18n: {
     locales: [
       {
@@ -85,10 +103,13 @@ export default defineNuxtConfig({
     langDir: 'locales',
     defaultLocale: 'en',
   },
+
   colorMode: {
     preference: 'light',
   },
+
   css: ['~/assets/css/main.css'],
+
   image: {
     provider: 'ipx',
     ipx: {
@@ -99,4 +120,5 @@ export default defineNuxtConfig({
       domainAwsS3: process.env.AWS_S3_HOST_BUCKET as string
     }
   },
+
 })

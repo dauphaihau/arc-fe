@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type {
-  ProductCombineVariant, ProductInventory, ProductVariant
-} from '~/types/product';
+import type { ProductCombineVariant, ProductInventory, ProductVariant } from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { productInventorySchema } from '~/schemas/product-inventory.schema';
-import type { IOnChangeCreateVariant } from '~/components/pages/account/shop/products/CreateProductForm.vue';
-import type { CreateVariantOptions } from '~/types/request-api/shop-product';
+import type {
+  StateCombineVariant,
+  StateSingleVariant
+} from '~/types/request-api/shop-product';
+import type { NoUndefinedField } from '~/types/utils';
 
 const props = defineProps<{ countValidate: number }>();
 
@@ -33,9 +34,17 @@ type VariantTable = {
 } & Pick<ProductVariant, 'variant_name'> &
 Pick<ProductInventory, | 'stock' | 'sku'>;
 
-const emit = defineEmits<{
-  (e: 'onChange', value: IOnChangeCreateVariant | null): void
-}>();
+const singleVariantModel = defineModel<StateSingleVariant>('singleVariant', {
+  default: {},
+});
+
+const combineVariantModel = defineModel<StateCombineVariant>('combineVariant', {
+  default: {},
+});
+
+const variantTypeModel = defineModel<PRODUCT_VARIANT_TYPES>('variantType', {
+  default: PRODUCT_VARIANT_TYPES.SINGLE,
+});
 
 const state = reactive<State>({
   variant_group_name: '',
@@ -71,7 +80,7 @@ function mixVariantsTable() {
       id++;
       const result = variantsTable.value.find(
         variant => variant.variant_name === stateVariant.variant_name &&
-        variant.sub_variant_name === stateSubVariant.variant_name
+          variant.sub_variant_name === stateSubVariant.variant_name
       );
       newVariantsTable.push({
         id,
@@ -224,8 +233,8 @@ const columns = computed({
 
 const onChangeInputTable = (event: Event, row: VariantTable) => {
   const target = event.target as HTMLInputElement;
-  const name = target.name;
-  let value: string | number = target.value;
+  const name = target?.name;
+  let value: string | number = target?.value;
 
   if (name === 'price' || name === 'stock') {
     value = Number(value);
@@ -237,6 +246,7 @@ const onChangeInputTable = (event: Event, row: VariantTable) => {
 
 const openSubVariant = () => {
   state.isActiveSubVariant = true;
+  variantTypeModel.value = PRODUCT_VARIANT_TYPES.COMBINE;
 
   columns.value = insert(columns.value, {
     key: 'sub_variant_name',
@@ -255,6 +265,7 @@ const openSubVariant = () => {
 
 const closeSubVariant = () => {
   state.isActiveSubVariant = false;
+  variantTypeModel.value = PRODUCT_VARIANT_TYPES.SINGLE;
 
   columns.value = columns.value.filter(col => col.key !== 'sub_variant_name');
 
@@ -346,63 +357,49 @@ watch(() => props.countValidate, () => {
     emitData();
   }
   else {
-    emit('onChange', null);
+    singleVariantModel.value.variant_options = undefined;
+    combineVariantModel.value.variant_options = undefined;
   }
 });
 
 function emitData() {
   if (state.isActiveSubVariant) {
-    const combineVariants = Object.entries<CreateVariantOptions[]>(
-      variantsTable.value.reduce((acc, variant) => {
-        const {
-          price, sku, stock, variant_name, sub_variant_name,
-        } = variant;
+    const variantsTableAsObj = variantsTable.value.reduce((acc, variant) => {
+      const {
+        price, sku, stock, variant_name, sub_variant_name,
+      } = variant as NoUndefinedField<VariantTable>;
+      if (!acc[variant_name]) {
+        acc[variant_name] = [];
+      }
+      acc[variant_name].push({
+        price,
+        sku,
+        stock,
+        variant_name: sub_variant_name,
+      });
+      return acc;
+    }, {} as Record<ProductVariant['variant_name'], Pick<NoUndefinedField<VariantTable>, 'price' | 'sku' | 'stock' | 'variant_name'>[]>);
 
-        if (!acc[variant_name]) {
-          acc[variant_name] = [];
-        }
-        acc[variant_name].push({
-          price,
-          sku,
-          stock,
-          variant_name: sub_variant_name,
-        });
-        return acc;
-      }, {})
-    ).map(([variant_name, variant_options]) => ({
+    const combineVariants = Object.entries(variantsTableAsObj).map(([variant_name, variant_options]) => ({
       variant_name,
       variant_options,
     }));
-    emit('onChange', {
-      variant_type: PRODUCT_VARIANT_TYPES.COMBINE,
-      variant_sub_group_name: state.variant_sub_group_name,
-      variant_group_name: state.variant_group_name,
-      new_variants: combineVariants,
-    });
+
+    combineVariantModel.value.variant_group_name = state.variant_group_name;
+    combineVariantModel.value.variant_sub_group_name = state.variant_sub_group_name;
+    combineVariantModel.value.variant_options = combineVariants;
   }
   else {
-    const singleVariants = Object.entries<CreateVariantOptions[]>(
-      variantsTable.value.reduce((acc, variant) => {
-        const {
-          price, sku, stock, variant_name,
-        } = variant;
-        if (!acc[variant_name]) {
-          acc[variant_name] = {};
-        }
-        acc[variant_name] = {
-          price, sku, stock, variant_name,
-        };
-        return acc;
-      }, {})
-    ).map(([variant_name, resValuesVariant]) => ({
-      ...resValuesVariant,
-      variant_name,
-    }));
-    emit('onChange', {
-      variant_type: PRODUCT_VARIANT_TYPES.SINGLE,
-      variant_group_name: state.variant_group_name,
-      new_variants: singleVariants,
+    const variantOptions = variantsTable.value.map((vb) => {
+      const {
+        price, sku, stock, variant_name,
+      } = vb as NoUndefinedField<VariantTable>;
+      return {
+        price, sku, stock, variant_name,
+      };
     });
+    singleVariantModel.value.variant_group_name = state.variant_group_name;
+    singleVariantModel.value.variant_options = variantOptions;
   }
 }
 

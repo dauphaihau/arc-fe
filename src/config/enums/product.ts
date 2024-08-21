@@ -21,6 +21,10 @@ export const PRODUCT_SHIPPING_CONFIG = {
   MAX_DAYS_DELIVERY: 45,
 };
 
+export enum PRODUCT_SHIPPING_OTHER_COUNTRIES_OPTIONS {
+  EVERYWHERE = 'everywhere'
+}
+
 export enum PRODUCT_STATES {
   ACTIVE = 'active', // currently for sale.
   INACTIVE = 'inactive', // When updating a product
@@ -62,8 +66,8 @@ export const productWhoMadeOpts = [
 ];
 
 export const isDigitalOpts = [
-  { value: false, label: 'Physical', help: 'A tangible product that you will ship to buyers.' },
-  { value: true, label: 'Digital', help: 'A digital file that buyers will download.' },
+  { value: 'false', label: 'Physical', help: 'A tangible product that you will ship to buyers.' },
+  { value: 'true', label: 'Digital', help: 'A digital file that buyers will download.' },
 ];
 
 export enum PRODUCT_SHIPPING_CHARGE {

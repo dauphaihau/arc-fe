@@ -29,7 +29,7 @@ const queryParams = computed(() => {
 });
 
 const {
-  data,
+  data: dataGetProducts,
   refetch,
   isPending: isPendingGetProducts,
 } = useGetProducts(queryParams);
@@ -60,10 +60,10 @@ watch(() => route.query.s, () => {
         v-else
         class="pb-20"
       >
-        <div v-if="data?.results">
+        <div v-if="dataGetProducts?.results">
           <div class="mb-6 grid grid-cols-5 gap-3">
             <div
-              v-for="product of data.results"
+              v-for="product of dataGetProducts.results"
               :key="product.id"
             >
               <ProductCard :product="product" />
@@ -71,14 +71,14 @@ watch(() => route.query.s, () => {
           </div>
         </div>
         <div
-          v-if="data?.totalResults"
+          v-if="dataGetProducts?.total_results && dataGetProducts.total_results > limit"
           class="flex justify-center"
         >
           <UPagination
             v-model="page"
-            size="xl"
             :page-count="limit"
-            :total="data?.totalResults ?? 0"
+            size="xl"
+            :total="dataGetProducts?.total_results ?? 0"
             :inactive-button="{ color: 'gray' }"
           />
         </div>

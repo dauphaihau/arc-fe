@@ -54,7 +54,10 @@ export const useCartStore = defineStore('cart', () => {
   const orderShops = ref<ResponseCreateOrder['order_shops']>([]);
 
   watch(router.currentRoute, () => {
-    if (additionInfoShopCarts.value.size && router.currentRoute.value.path !== `${ROUTES.CART}${ROUTES.CHECKOUT}`) {
+    if (
+      additionInfoShopCarts.value.size &&
+      ![`${ROUTES.CART}${ROUTES.CHECKOUT}`, ROUTES.CART].includes(router.currentRoute.value.path)
+    ) {
       additionInfoShopCarts.value.clear();
     }
   });

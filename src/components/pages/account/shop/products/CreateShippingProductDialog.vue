@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '#ui/types';
+import type { FormErrorEvent, FormSubmitEvent } from '#ui/types';
 import { useGetCountries } from '~/services/address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
 import type { ProductShipping, ProductStandardShipping } from '~/types/product';
 import { PRODUCT_SHIPPING_CHARGE, PRODUCT_SHIPPING_SERVICES } from '~/config/enums/product';
-import { createProductShippingSchema } from '~/schemas/product-shipping.schema';
+import { createProductShippingSchema } from '~/schemas/request/product.schema';
 import { useGetCurrentUser } from '~/services/user';
 import type { CreateProductShipping } from '~/types/request-api/shop-product';
 
@@ -20,8 +20,8 @@ const props = defineProps<{
   initData?: CreateProductShipping
 }>();
 
-const { data: dataGetCountries } = useGetCountries();
 const modal = useModal();
+const { data: dataGetCountries } = useGetCountries();
 const { data: dataUserAuth } = useGetCurrentUser();
 
 const processTimeOptions = [
@@ -31,7 +31,11 @@ const processTimeOptions = [
   },
   {
     id: '1-2d',
-    label: '1-2 days',
+    label: '1-2 days (Recommended)',
+  },
+  {
+    id: '1-3d',
+    label: '1-3 days',
   },
 ];
 
@@ -42,8 +46,10 @@ const countriesOptions = computed(() => {
   return [];
 });
 
+const processTimeIdSelected = ref(processTimeOptions[0].id);
+
 const stateSubmit = reactive<TStateSubmit>({
-  process_time: processTimeOptions[0].id,
+  process_time: processTimeIdSelected.value,
   standard_shipping: [],
 });
 
@@ -83,14 +89,15 @@ function onSubmit(event: FormSubmitEvent<CreateProductShipping>) {
   modal.close();
 }
 
-const processTime = computed({
-  get() {
-    return processTimeOptions[0];
-  },
-  set(newValue) {
-    stateSubmit.process_time = newValue.id;
-  },
+watch(() => stateSubmit.country, () => {
+  stateSubmit.standard_shipping[0].country = stateSubmit.country;
 });
+
+async function onError(event: FormErrorEvent) {
+  const element = document.getElementById(event.errors[0].id);
+  element?.focus();
+  element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
 
 <template>
@@ -107,7 +114,6 @@ const processTime = computed({
         </h1>
         <div>
           We use these settings to calculate shipping costs and estimated delivery dates for buyers.
-          Learn about shipping settings and estimated delivery dates.
         </div>
       </div>
 
@@ -117,6 +123,7 @@ const processTime = computed({
         :state="stateSubmit"
         class="space-y-4"
         :schema="createProductShippingSchema"
+        @error="onError"
         @submit="onSubmit"
       >
         <UFormGroup
@@ -157,9 +164,10 @@ const processTime = computed({
           :ui="{ container: 'w-1/3', description: 'w-36 text-xs' }"
         >
           <USelectMenu
-            v-model="processTime"
+            v-model="processTimeIdSelected"
             :options="processTimeOptions"
             size="xl"
+            value-attribute="id"
           />
         </UFormGroup>
 

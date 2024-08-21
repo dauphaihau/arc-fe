@@ -15,13 +15,13 @@ import { PRODUCT_CONFIG } from '~/config/enums/product';
 type CreatePromoCodeBody = z.infer<typeof createPromoCodeBodySchema>;
 
 type InitState = UndefinableFields<CreatePromoCodeBody, 'amount_off'
-  | 'percent_off'
-  | 'min_order_value'
-  | 'min_products'
-  | 'max_uses_per_user'
-  | 'max_uses'
-  | 'start_date'
-  | 'end_date'
+| 'percent_off'
+| 'min_order_value'
+| 'min_products'
+| 'max_uses_per_user'
+| 'max_uses'
+| 'start_date'
+| 'end_date'
 >;
 
 const router = useRouter();

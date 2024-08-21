@@ -1,4 +1,4 @@
 export type ResponseGetPresignedUrlData = {
   key: string
-  presignedUrl: string
+  presigned_url: string
 };

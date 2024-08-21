@@ -2,37 +2,30 @@
 import { PRODUCT_CONFIG } from '~/config/enums/product';
 import type { Product } from '~/types/product';
 
-const props = defineProps<{ countValidate: number }>();
-
-const model = defineModel<Product['tags'] | undefined>({
-  required: true,
+const tagsModel = defineModel<Product['tags']>({
   default: [],
+  required: true,
 });
 
 const state = reactive({
   input: '',
-  tags: model.value || [],
   errorMsgInput: '',
 });
 
 const addTag = () => {
-  state.tags.push(state.input);
+  tagsModel.value = [...tagsModel.value, state.input];
   state.input = '';
 };
 
 const removeTag = (index: number) => {
-  state.tags.splice(index, 1);
+  tagsModel.value = tagsModel.value.toSpliced(index, 1);
 };
-
-watch(() => props.countValidate, () => {
-  model.value = state.tags;
-});
 
 watchDebounced(
   () => state.input,
   () => {
     state.errorMsgInput = '';
-    if (state.tags.includes(state.input)) {
+    if (tagsModel.value.includes(state.input)) {
       state.errorMsgInput = 'Duplicate';
     }
   },
@@ -41,7 +34,7 @@ watchDebounced(
 </script>
 
 <template>
-  <div>
+  <div v-if="tagsModel">
     <UFormGroup
       class="mb-4 max-w-[20%]"
       label="Tags"
@@ -55,7 +48,7 @@ watchDebounced(
         <UInput
           v-model="state.input"
           :maxlength="PRODUCT_CONFIG.MAX_CHAR_TAG"
-          :disabled="state.tags.length === PRODUCT_CONFIG.MAX_TAGS"
+          :disabled="tagsModel.length === PRODUCT_CONFIG.MAX_TAGS"
         />
         <UButton
           :disabled=" !state.input || Boolean(state.errorMsgInput)"
@@ -67,13 +60,12 @@ watchDebounced(
         </UButton>
       </UButtonGroup>
     </UFormGroup>
-
     <div
-      v-if="state.tags.length > 0"
+      v-if="tagsModel.length > 0"
       class="flex w-full flex-wrap gap-x-4"
     >
       <div
-        v-for="(tag, index) of state.tags"
+        v-for="(tag, index) of tagsModel"
         :key="tag"
       >
         <UFormGroup class="mb-4">

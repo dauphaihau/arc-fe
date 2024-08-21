@@ -24,9 +24,3 @@ export const productInventorySchema = z.object({
   updated_at: z.date(),
   created_at: z.date(),
 });
-
-export const createProductInventorySchema = productInventorySchema.pick({
-  price: true,
-  sku: true,
-  stock: true,
-});

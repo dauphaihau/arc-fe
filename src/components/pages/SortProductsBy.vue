@@ -5,11 +5,20 @@ const route = useRoute();
 const options = [
   { id: null, label: 'Relevancy' },
   { id: 'newest', label: 'Newest' },
-  { id: 'price_asc', label: 'Price: Low to High' },
-  { id: 'price_desc', label: 'Price: High to Low' },
+  { id: 'price_asc', label: 'Lowest Price' },
+  { id: 'price_desc', label: 'Highest Price' },
 ];
 
-const selected = ref(options[0]);
+const defaultValue = computed(() => {
+  const order = route.query['order'];
+  if (order) {
+    const foundOption = options.find(opt => opt.id === order);
+    if (foundOption) return foundOption;
+  }
+  return options[0];
+});
+
+const selected = ref(defaultValue.value);
 
 watch(selected, () => {
   const routeQuery = { ...route.query };

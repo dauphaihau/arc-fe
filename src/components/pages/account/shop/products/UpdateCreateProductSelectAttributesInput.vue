@@ -1,61 +1,73 @@
 <script setup lang="ts">
 import type { Category } from '~/types/category';
-import type { ProductAttribute } from '~/types/product';
 import { useGetAttributesByCategory } from '~/services/category';
+import type { ProductAttribute } from '~/types/product';
+
+type AttributeOption = {
+  attribute_id: string
+  selected: string
+};
 
 const { categoryId, attributesSelected } = defineProps<{
   categoryId?: Category['id']
-  attributesSelected?: ProductAttribute[] }
+  attributesSelected?: ProductAttribute[]
+}
 >();
 
-const model = defineModel<ProductAttribute[] | undefined>({
-  required: true,
+const attributesModel = defineModel<AttributeOption[] | undefined>({
   default: [],
+  required: true,
 });
 
-const { data } = useGetAttributesByCategory(categoryId);
+const {
+  data: dataGetAttributesByCategory,
+} = useGetAttributesByCategory(categoryId);
 
 const state = reactive({});
 
-onMounted(() => {
-  const mapAttrSelected = new Map();
-  if (attributesSelected) {
+watch(() => dataGetAttributesByCategory.value, () => {
+  // reset each change category
+  Object.keys(state).forEach((key) => {
+    state[key] = '';
+  });
+
+  // case update, init data
+  if (dataGetAttributesByCategory.value?.attributes && attributesSelected) {
+    const attrSelectedMap = new Map();
     attributesSelected.forEach((attr) => {
-      mapAttrSelected.set(attr.attribute, attr.selected);
+      attrSelectedMap.set(attr.attribute, attr.selected);
     });
-  }
-  if (data.value?.attributes) {
-    data.value.attributes.forEach((attr) => {
-      if (attributesSelected && mapAttrSelected.has(attr.id)) {
-        state[attr.id] = mapAttrSelected.get(attr.id);
+    dataGetAttributesByCategory.value.attributes.forEach((attr) => {
+      if (attributesSelected && attrSelectedMap.has(attr.id)) {
+        state[attr.id] = attrSelectedMap.get(attr.id);
         return;
       }
       state[attr.id] = '';
     });
   }
-});
+}, { immediate: true });
 
 watch(() => state, () => {
-  const attrsValid: ProductAttribute[] = [];
+  const attrsValid: AttributeOption[] = [];
   Object.keys(state).forEach((key) => {
     if (state[key]) {
       attrsValid.push({
-        attribute: key,
+        attribute_id: key,
         selected: state[key],
       });
     }
   });
-  model.value = attrsValid;
-}, { deep: true });
+  attributesModel.value = attrsValid;
+}, { deep: true, immediate: true });
 </script>
 
 <template>
   <div
-    v-if="data?.attributes && data.attributes.length > 0"
+    v-if="dataGetAttributesByCategory?.attributes && dataGetAttributesByCategory.attributes.length > 0"
     class="flex gap-4"
   >
     <div
-      v-for="attr of data.attributes"
+      v-for="attr of dataGetAttributesByCategory.attributes"
       :key="attr.id"
     >
       <UFormGroup

@@ -88,9 +88,12 @@ const onCreateOrder = async () => {
         note: value.note,
       }));
 
-    body.addition_info_shop_carts = body.addition_info_shop_carts.filter((item) => {
+    const addition_info_shop_carts = body.addition_info_shop_carts.filter((item) => {
       return item.note || item.promo_codes.length > 0;
     });
+    if (addition_info_shop_carts.length > 0) {
+      body.addition_info_shop_carts = addition_info_shop_carts;
+    }
 
     if (body.payment_type === PAYMENT_TYPES.CARD) {
       const { checkout_session_url } = await createOrder(body);

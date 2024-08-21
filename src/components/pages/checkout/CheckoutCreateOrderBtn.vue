@@ -48,9 +48,13 @@ const onCreateOrder = async () => {
       cart_id: tempCartId,
       payment_type: cartStore.stateCheckoutNow.payment_type,
       user_address_id: addressId,
-      promo_codes: cartStore.stateCheckoutNow.promo_codes,
-      note: cartStore.stateCheckoutNow.note,
     };
+    if (cartStore.stateCheckoutNow.promo_codes.length > 0) {
+      body.promo_codes = cartStore.stateCheckoutNow.promo_codes;
+    }
+    if (cartStore.stateCheckoutNow.note) {
+      body.note = cartStore.stateCheckoutNow.note;
+    }
 
     // region validate currency
     const currencySelected = dataUserAuth?.value?.user?.market_preferences?.currency;

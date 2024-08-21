@@ -9,7 +9,7 @@ const { categoryId } = defineProps<{
 }>();
 
 const queryParams = computed(() => ({
-  category: categoryId,
+  category_id: categoryId,
   limit,
 }));
 

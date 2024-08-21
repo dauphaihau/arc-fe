@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
 import { useGetCart } from '~/services/cart';
+import { useGetCurrentUser } from '~/services/user';
 
 const route = useRoute();
 
@@ -10,6 +11,8 @@ const route = useRoute();
 const {
   data: dataGetCart,
 } = useGetCart();
+
+const { data: dataUserAuth } = useGetCurrentUser();
 
 const isShowCart = ref(false);
 const isShowSearch = ref(false);
@@ -54,6 +57,7 @@ onMounted(async () => {
 
 const totalProductCarts = computed(() => {
   if (
+    dataUserAuth.value?.user &&
     dataGetCart.value?.cart && dataGetCart.value.cart?.summary_cart?.total_products > 0
   ) {
     return dataGetCart.value.cart.summary_cart.total_products;

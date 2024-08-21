@@ -15,10 +15,15 @@ const props = defineProps<{
     class="mb-10"
   >
     <div class="flex flex-col">
-      <h3 class="mb-3 text-lg font-medium">
-        {{ props.shopCart.shop?.shop_name }}
-      </h3>
-
+      <div class="-ml-1 mb-4 flex items-center gap-3">
+        <UIcon
+          name="i-solar:shop-bold-duotone"
+          class="size-8"
+        />
+        <h3 class="text-lg font-medium">
+          {{ props.shopCart.shop?.shop_name }}
+        </h3>
+      </div>
       <div>
         <div
           v-for="(productCart) of props.shopCart.products"

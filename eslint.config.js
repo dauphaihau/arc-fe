@@ -1,17 +1,20 @@
-// @ts-check
+// @ts-nocheck
 
 import importX from 'eslint-plugin-import-x';
 import { FlatCompat } from '@eslint/eslintrc';
 import parserVue from 'vue-eslint-parser';
+import tailwind from 'eslint-plugin-tailwindcss';
 
 // eslint-disable-next-line import-x/no-named-as-default
 import withNuxt from './.nuxt/eslint.config.mjs';
+
 
 const compat = new FlatCompat();
 
 export default withNuxt(
   ...compat.config(importX.configs.recommended),
   importX.configs.typescript,
+  ...tailwind.configs['flat/recommended'],
   {
     files: [
       '**/*.vue',
@@ -133,15 +136,10 @@ export default withNuxt(
       'no-undef': 'off', // tsconfig noUnusedLocals handle this
       'no-debugger': 'error',
       'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
-    },
-  },
-  ...compat.config({
-    // https://github.com/francoismassart/eslint-plugin-tailwindcss
-    extends: ['plugin:tailwindcss/recommended'],
-    rules: {
+
       'tailwindcss/no-custom-classname': 'off',
     },
-  }),
+  },
   {
     ignores: [
       '**/*.config.js',

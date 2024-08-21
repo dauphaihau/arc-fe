@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useGetCountries } from '~/services/address';
 import type { ProductStandardShipping } from '~/types/product';
-import { PRODUCT_SHIPPING_CHARGE, PRODUCT_SHIPPING_CONFIG, PRODUCT_SHIPPING_SERVICES } from '~/config/enums/product';
+import {
+  PRODUCT_SHIPPING_CHARGE,
+  PRODUCT_SHIPPING_CONFIG,
+  PRODUCT_SHIPPING_OTHER_COUNTRIES_OPTIONS,
+  PRODUCT_SHIPPING_SERVICES
+} from '~/config/enums/product';
 
 const emit = defineEmits<{
   delete: []
@@ -19,16 +24,6 @@ const model = defineModel<Partial<ProductStandardShipping>>({
 
 const { data: dataGetCountries } = useGetCountries();
 
-// ------------------ Computed ref ( Select Options )
-const countriesOptions = computed(() => {
-  if (dataGetCountries.value) {
-    const result = ['Everywhere else'];
-    const mapData = dataGetCountries.value.data.map(co => co.name);
-    return [...result, ...mapData];
-  }
-  return [];
-});
-
 const chargeOptions = [
   { id: PRODUCT_SHIPPING_CHARGE.FREE_SHIPPING, label: 'Free shipping' },
   { id: PRODUCT_SHIPPING_CHARGE.FIXED_PRICE, label: 'Fixed price', disabled: true },
@@ -36,17 +31,34 @@ const chargeOptions = [
 
 const shippingServiceOptions = [PRODUCT_SHIPPING_SERVICES.OTHER];
 
-const deliveryTimeOptions = new Array(PRODUCT_SHIPPING_CONFIG.MAX_DAYS_DELIVERY).fill('').map((_, idx) => (idx + 1).toString());
-
-const deliveryTimeToOptions = computed(() => {
-  const result = [];
-  for (let i = stateDeliveryTime.from + 1; i < PRODUCT_SHIPPING_CONFIG.MAX_DAYS_DELIVERY; i++) {
-    result.push(i.toString());
-  }
-  return result;
-});
+const deliveryTimeOptions = new Array(PRODUCT_SHIPPING_CONFIG.MAX_DAYS_DELIVERY)
+  .fill('')
+  .map((_, idx) => (idx + 1)
+    .toString());
 
 // ------------------ Models
+const stateDeliveryTime = reactive({
+  from: 0,
+  to: 0,
+});
+
+// ------------------ Computed ref
+const countriesOptions = computed(() => {
+  if (dataGetCountries.value) {
+    const otherOptions = [PRODUCT_SHIPPING_OTHER_COUNTRIES_OPTIONS.EVERYWHERE];
+    const countriesNames = dataGetCountries.value.data.map(co => co.name);
+    return [...otherOptions, ...countriesNames];
+  }
+  return [];
+});
+
+const deliveryTimeToOptions = computed(() => {
+  if (stateDeliveryTime.from) {
+    return deliveryTimeOptions.slice(stateDeliveryTime.from);
+  }
+  return deliveryTimeOptions.slice(1);
+});
+
 const charge = computed({
   get() {
     return (model.value?.charge && chargeOptions.find(opt => opt.id === model.value.charge)) || chargeOptions[0];
@@ -54,11 +66,6 @@ const charge = computed({
   set(newValue) {
     model.value.charge = newValue.id;
   },
-});
-
-const stateDeliveryTime = reactive({
-  from: 0,
-  to: 0,
 });
 
 // ----------------- Lifecycle Hooks
@@ -72,8 +79,11 @@ onMounted(() => {
 
 // ----------------- Side effects
 watch(stateDeliveryTime, () => {
-  if (stateDeliveryTime.from && stateDeliveryTime.to) {
-    model.value.delivery_time = `${stateDeliveryTime.from}-${stateDeliveryTime.to}`;
+  if (stateDeliveryTime.from && stateDeliveryTime.to && stateDeliveryTime.from < stateDeliveryTime.to) {
+    model.value.delivery_time = `${stateDeliveryTime.from}-${stateDeliveryTime.to}d`;
+  }
+  else if (stateDeliveryTime.from >= stateDeliveryTime.to) {
+    stateDeliveryTime.to = 0;
   }
 });
 </script>

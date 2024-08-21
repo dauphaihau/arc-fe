@@ -20,10 +20,3 @@ export const productShippingSchema = z.object({
   created_at: z.date(),
   updated_at: z.date(),
 });
-
-export const createProductShippingSchema = productShippingSchema.pick({
-  country: true,
-  zip: true,
-  process_time: true,
-  standard_shipping: true,
-});

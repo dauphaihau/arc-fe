@@ -229,9 +229,9 @@ async function removeProduct(id: Product['id']) {
 
         <template #actions-data="{ row }">
           <div class="flex items-center justify-end">
-            <UTooltip text="Edit">
+            <UTooltip text="Feature not available">
+              <!-- :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}/${row.id}`" -->
               <UButton
-                :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}/${row.id}`"
                 color="gray"
                 variant="ghost"
                 class="p-1.5"
@@ -255,7 +255,7 @@ async function removeProduct(id: Product['id']) {
       <FixedPagination
         :page="page"
         :page-count="pageCount"
-        :total="dataShopGetProducts?.totalResults"
+        :total="dataShopGetProducts?.total_results"
         @on-change-page="(val) => page = val"
       />
     </template>

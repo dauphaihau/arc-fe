@@ -4,8 +4,8 @@ export interface ResponseBaseGetList<T> {
   results: T[]
   page: number
   limit: number
-  totalPages: number
-  totalResults: number
+  total_pages: number
+  total_results: number
 }
 
 export type RequestGetListParams = Partial<{
@@ -15,9 +15,3 @@ export type RequestGetListParams = Partial<{
   select: string
   sortBy: string
 }>;
-
-// export type ErrorServer = {
-//   code: number
-//   message: string
-//   data: unknown
-// };

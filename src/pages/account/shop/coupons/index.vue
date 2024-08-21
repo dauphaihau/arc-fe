@@ -213,7 +213,7 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
       <FixedPagination
         :page="page"
         :page-count="pageCount"
-        :total="dataShopGetCoupons?.totalResults"
+        :total="dataShopGetCoupons?.total_results"
         @on-change-page="(val) => page = val"
       />
     </template>

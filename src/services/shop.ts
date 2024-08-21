@@ -2,9 +2,9 @@ import type { NitroFetchOptions, NitroFetchRequest } from 'nitropack';
 import type { ComputedRef } from 'vue';
 import { RESOURCES } from '~/config/enums/resources';
 import type {
-  CreateProductBody, ShopGetProductsQueryParams,
-  UpdateProductBody, ResponseShopGetProducts
-  , ResponseShopGetDetailProduct
+  ShopGetProductsQueryParams,
+  ResponseShopGetProducts,
+  ResponseShopGetDetailProduct, RequestCreateProductBody, RequestUpdateProductBody
 } from '~/types/request-api/shop-product';
 import type { Shop } from '~/types/shop';
 import type { ResponseBaseGetList } from '~/types/common';
@@ -56,7 +56,7 @@ export function useShopCreateProduct() {
   const { data } = useGetCurrentUser();
   return useMutation({
     mutationKey: ['shop-create-product'],
-    mutationFn: (body: CreateProductBody) => {
+    mutationFn: (body: RequestCreateProductBody) => {
       return useCustomFetch.post<{ product: Product }>(
         `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}`,
         body
@@ -69,7 +69,7 @@ export function useShopUpdateProduct() {
   const { data } = useGetCurrentUser();
   return useMutation({
     mutationKey: ['shop-update-product'],
-    mutationFn: (body: UpdateProductBody) => {
+    mutationFn: (body: RequestUpdateProductBody & { id: Product['id'] }) => {
       const { id, ...resBody } = body;
       return useCustomFetch.patch<{ product: Product }>(
         `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,

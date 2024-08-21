@@ -156,7 +156,7 @@ function mixVariantsTable() {
       id++;
       const result = variantsTable.value.find(
         variant => variant.variant_name === stateVariant.variant_name &&
-        variant.sub_variant_name === stateSubVariant.variant_name
+          variant.sub_variant_name === stateSubVariant.variant_name
       );
       newVariantsTable.push({
         id,
