@@ -158,6 +158,7 @@ const totalProductCarts = computed(() => {
               <Icon
                 name="i-uil:search"
                 mode="svg"
+                class="size-5"
               />
             </UButton>
           </UTooltip>
@@ -186,6 +187,7 @@ const totalProductCarts = computed(() => {
               <Icon
                 name="i-uil:cart"
                 mode="svg"
+                class="size-5"
               />
             </UButton>
           </UChip>
