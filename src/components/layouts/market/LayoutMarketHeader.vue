@@ -155,7 +155,7 @@ const totalProductCarts = computed(() => {
               @click="isShowSearch = !isShowSearch"
               @mouseover="isShowCart = false"
             >
-              <Icon name="i-uil:search" />
+              <Icon name="search" />
             </UButton>
           </UTooltip>
         </div>
