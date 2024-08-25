@@ -155,7 +155,10 @@ const totalProductCarts = computed(() => {
               @click="isShowSearch = !isShowSearch"
               @mouseover="isShowCart = false"
             >
-              <Icon name="search" />
+              <Icon
+                name="i-uil:search"
+                mode="svg"
+              />
             </UButton>
           </UTooltip>
         </div>
@@ -180,7 +183,10 @@ const totalProductCarts = computed(() => {
               variant="ghost"
               color="gray"
             >
-              <Icon name="i-uil:cart" />
+              <Icon
+                name="i-uil:cart"
+                mode="svg"
+              />
             </UButton>
           </UChip>
         </UTooltip>

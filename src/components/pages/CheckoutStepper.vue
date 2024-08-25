@@ -63,6 +63,7 @@ const clickStepDone = (index: number) => {
               <Icon
                 name="i-material-symbols:check-circle-rounded"
                 class="done"
+                mode="svg"
                 @click="() => clickStepDone(index)"
               />
             </div>
@@ -113,7 +114,7 @@ const clickStepDone = (index: number) => {
 }
 
 .done {
- @apply text-primary bg-white w-6 h-6 cursor-pointer;
+ @apply text-primary bg-white size-6 cursor-pointer;
 }
 
 .active {
