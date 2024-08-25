@@ -40,9 +40,9 @@ export default defineAppConfig({
         loadingIcon: 'i-eos-icons:loading',
       },
     },
-    icons: {
-      dynamic: true,
-    },
+    // icons: {
+    //   dynamic: true,
+    // },
   },
   nuxtIcon: {
     size: '20px', // default <Icon> size applied
