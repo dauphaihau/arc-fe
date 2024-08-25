@@ -61,7 +61,7 @@ const clickStepDone = (index: number) => {
           >
             <div v-if="(percent > (widthPerStep + widthAddition) * (index)) || currentStep === index + 1">
               <Icon
-                name="material-symbols:check-circle-rounded"
+                name="i-material-symbols:check-circle-rounded"
                 class="done"
                 @click="() => clickStepDone(index)"
               />
