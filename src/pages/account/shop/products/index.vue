@@ -40,17 +40,14 @@ const columns = [
   {
     key: 'price',
     label: 'Price',
-    class: 'text-center',
   },
   {
     key: 'stock',
     label: 'Stock',
-    class: 'text-center',
   },
   {
-    label: 'Actions',
     key: 'actions',
-    class: 'text-right',
+    class: 'text-center',
   },
 ];
 
@@ -62,9 +59,6 @@ const rows = computed(() => {
       image_url: `domainAwsS3/${product?.image_relative_url}`,
       inventories: product.inventories,
       variant_type: product.variant_type,
-      price: { class: 'text-center' },
-      stock: { class: 'text-center' },
-      actions: { class: 'text-right' },
     }));
   }
   return [];
@@ -159,7 +153,6 @@ async function removeProduct(id: Product['id']) {
         :empty-state="{ icon: 'i-heroicons-archive-box-20-solid', label: 'No products.' }"
         :columns="columns"
         :loading="isPendingShopGetProducts"
-        :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #title-data="{ row }">
           <div class="flex max-w-[200px] gap-2">
@@ -228,7 +221,7 @@ async function removeProduct(id: Product['id']) {
         </template>
 
         <template #actions-data="{ row }">
-          <div class="flex items-center justify-end">
+          <div class="flex items-center justify-center">
             <UTooltip text="Feature not available">
               <!-- :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}/${row.id}`" -->
               <UButton
@@ -251,7 +244,14 @@ async function removeProduct(id: Product['id']) {
             </UDropdown>
           </div>
         </template>
+
+        <template #loading-state>
+          <div class="grid h-[80vh] w-full place-content-center">
+            <LoadingSvg :child-class="'!w-12 !h-12'" />
+          </div>
+        </template>
       </UTable>
+
       <FixedPagination
         :page="page"
         :page-count="pageCount"

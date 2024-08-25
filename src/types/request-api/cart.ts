@@ -4,7 +4,7 @@ import type {
   ProductInventory, ProductSingleVariant,
   ProductVariant
 } from '~/types/product';
-import type { Coupon } from '~/types/coupon';
+import type { Coupon, PercentOff } from '~/types/coupon';
 import type { Shop } from '~/types/shop';
 import type { Cart, ProductCart } from '~/types/cart';
 import type { User } from '~/types/user';
@@ -22,7 +22,7 @@ export type ResponseGetCart_ProductCart = Pick<ProductCart, 'quantity' | 'is_sel
   inventory: Pick<ProductInventory, 'id' | 'price' | 'stock' | 'sku' | 'variant'> & {
     sale_price?: ProductInventory['price']
   }
-  percent_coupon?: Pick<Coupon, 'id' | 'percent_off' | 'start_date' | 'end_date'>
+  percent_coupon?: Pick<Coupon, 'id' | 'start_date' | 'end_date'> & Pick<PercentOff, 'percent_off'>
   freeship_coupon?: Pick<Coupon, 'id' | 'start_date' | 'end_date'>
 };
 

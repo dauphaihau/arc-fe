@@ -4,7 +4,7 @@ import { useGetCountries } from '~/services/address';
 import { ADDRESS_CONFIG } from '~/config/enums/address';
 import type { ProductShipping, ProductStandardShipping } from '~/types/product';
 import { PRODUCT_SHIPPING_CHARGE, PRODUCT_SHIPPING_SERVICES } from '~/config/enums/product';
-import { createProductShippingSchema } from '~/schemas/request/product.schema';
+import { createProductShippingSchema } from '~/schemas/request/shop-product.schema';
 import { useGetCurrentUser } from '~/services/user';
 import type { CreateProductShipping } from '~/types/request-api/shop-product';
 

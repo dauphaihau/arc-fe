@@ -17,12 +17,9 @@ const paymentOptions = [
       <legend class="mb-1 text-xl font-bold text-gray-700 dark:text-gray-200">
         Payment options
       </legend>
-      <URadioGroup
+      <RadioGroupInput
         v-model="cartStore.stateCheckoutNow.payment_type"
         :options="paymentOptions"
-        :ui="{
-          legend: 'text-base font-bold',
-        }"
       >
         <template #label="{ option }">
           <div class="mb-6 flex w-full flex-col gap-1">
@@ -34,7 +31,7 @@ const paymentOptions = [
             </div>
           </div>
         </template>
-      </URadioGroup>
+      </RadioGroupInput>
     </div>
   </UCard>
 </template>

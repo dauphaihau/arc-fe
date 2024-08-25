@@ -15,21 +15,16 @@ const {
 
 const addressRadioOptions = computed(() => {
   if (dataUserAddress.value?.results && dataUserAddress.value.results.length > 0) {
-    return dataUserAddress.value.results.map(address => ({
-      ...address,
-      value: address.id,
-    }));
+    return dataUserAddress.value.results;
   }
-  return [];
+  return null;
 });
-
 
 const addressIdSelected = ref();
 
 watch(addressRadioOptions, () => {
-  if (addressRadioOptions.value.length > 0) {
-    addressIdSelected.value = addressRadioOptions.value[0].value;
-    cartStore.stateCheckoutCart.address = addressRadioOptions.value[0];
+  if (addressRadioOptions.value && !cartStore.stateCheckoutCart.address) {
+    addressIdSelected.value = addressRadioOptions.value[0].id;
   }
 }, { immediate: true });
 
@@ -42,7 +37,7 @@ watch(() => addressIdSelected.value, () => {
       cartStore.stateCheckoutCart.address = address;
     }
   }
-});
+}, { immediate: true });
 
 const showCreateDialog = () => {
   dialog.open(CreateUserAddressDialog);
@@ -73,25 +68,26 @@ const showCreateDialog = () => {
         <LoadingSvg :child-class="'!w-10 !h-10'" />
       </div>
       <div
-        v-else
+        v-else-if="addressRadioOptions"
         class="mt-8 gap-x-56 gap-y-16"
       >
-        <URadioGroup
+        <RadioGroupInput
           v-model="addressIdSelected"
           :options="addressRadioOptions"
+          value-attribute="id"
         >
           <template #label="{ option }">
             <div class="mb-6 flex w-full flex-col gap-1 text-customGray-950">
-              <div class="">
+              <div class="text-sm font-medium text-gray-700">
                 {{ option.full_name }} |
                 <span class="font-normal">{{ option.phone }}</span>
               </div>
-              <div class="">
+              <div class="text-sm text-gray-500">
                 {{ option.address1 }}, {{ option.city }}, {{ option.zip }}, {{ option.country }}
               </div>
             </div>
           </template>
-        </URadioGroup>
+        </RadioGroupInput>
       </div>
     </div>
   </UCard>

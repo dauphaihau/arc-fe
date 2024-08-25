@@ -2,10 +2,10 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import { updateProductSchema } from '~/schemas/request/product.schema';
+import { updateProductSchema } from '~/schemas/request/shop-product.schema';
 import {
   PRODUCT_VARIANT_TYPES, PRODUCT_CONFIG,
-  productWhoMadeOpts, isDigitalOpts
+  productWhoMadeOpts
 } from '~/config/enums/product';
 import { ROUTES } from '~/config/enums/routes';
 import type {
@@ -372,20 +372,20 @@ watchDebounced(
         to expect.
       </template>
       <template #content>
-        <UFormGroup
-          label="Type"
-          name="is_digital"
-          class="mb-4"
-        >
-          <div class="flex gap-16">
-            <URadio
-              v-for="options of isDigitalOpts"
-              :key="options.value.toString()"
-              v-model="stateSubmit.is_digital"
-              v-bind="options"
-            />
-          </div>
-        </UFormGroup>
+        <!--        <UFormGroup -->
+        <!--          label="Type" -->
+        <!--          name="is_digital" -->
+        <!--          class="mb-4" -->
+        <!--        > -->
+        <!--          <div class="flex gap-16"> -->
+        <!--            <URadio -->
+        <!--              v-for="options of isDigitalOpts" -->
+        <!--              :key="options.value.toString()" -->
+        <!--              v-model="stateSubmit.is_digital" -->
+        <!--              v-bind="options" -->
+        <!--            /> -->
+        <!--          </div> -->
+        <!--        </UFormGroup> -->
 
         <div class="grid grid-cols-4 gap-4">
           <UFormGroup

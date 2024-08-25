@@ -44,16 +44,16 @@ onUnmounted(() => {
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
         <CheckoutUserAddressShipping
-          v-if="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.ADDRESS_SHIPPING"
+          v-show="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.ADDRESS_SHIPPING"
           class="mb-10"
         />
 
         <CheckoutPaymentOptions
-          v-if="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.PAYMENT"
+          v-show="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.PAYMENT"
         />
 
         <div
-          v-if="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION
+          v-show="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION
             || cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.ORDER"
         >
           <CheckoutReviewShippingAndPayment class="mb-12" />

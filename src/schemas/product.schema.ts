@@ -8,11 +8,6 @@ import {
   PRODUCT_VARIANT_TYPES
 } from '~/config/enums/product';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
-import { shopSchema } from '~/schemas/shop.schema';
-import { categorySchema } from '~/schemas/category.schema';
-import { productShippingSchema } from '~/schemas/product-shipping.schema';
-import { productInventorySchema } from '~/schemas/product-inventory.schema';
-import { productVariantSchema } from '~/schemas/product-variant.schema';
 
 export const productImageSchema = z.object({
   id: objectIdSchema,
@@ -90,20 +85,10 @@ export const baseProductSchema = z.object({
   created_at: z.date(),
 });
 
-const baseProductPopulatedSchema = baseProductSchema.merge(z.object({
-  shop: shopSchema,
-  category: categorySchema,
-  shipping: productShippingSchema,
-}));
-
 const noneVariantSchema = z.object({
   variant_type: z.literal(PRODUCT_VARIANT_TYPES.NONE),
   inventory: objectIdSchema,
 });
-
-const noneVariantPopulatedSchema = noneVariantSchema.merge(z.object({
-  inventory: productInventorySchema,
-}));
 
 export const singleVariantSchema = z.object({
   variant_type: z.literal(PRODUCT_VARIANT_TYPES.SINGLE),
@@ -113,14 +98,6 @@ export const singleVariantSchema = z.object({
     .min(1)
     .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME),
 });
-
-const singleVariantPopulatedSchema = singleVariantSchema.merge(z.object({
-  variants: z.array(
-    productVariantSchema.merge(z.object({
-      inventory: productInventorySchema,
-    }))
-  ),
-}));
 
 export const combineVariantSchema = z.object({
   variant_type: z.literal(PRODUCT_VARIANT_TYPES.COMBINE),
@@ -135,17 +112,6 @@ export const combineVariantSchema = z.object({
     .max(PRODUCT_CONFIG.MAX_CHAR_VARIANT_GROUP_NAME),
 });
 
-const combineVariantPopulatedSchema = combineVariantSchema.merge(z.object({
-  variants: z.array(
-    productVariantSchema.merge(z.object({
-      variant_options: z.array(z.object({
-        variant: productVariantSchema,
-        inventory: productInventorySchema,
-      })),
-    }))
-  ),
-}));
-
 const conditionVariantTypeSchema = z.discriminatedUnion(
   'variant_type', [
     noneVariantSchema,
@@ -154,17 +120,7 @@ const conditionVariantTypeSchema = z.discriminatedUnion(
   ]
 );
 
-const conditionVariantTypePopulatedSchema = z.discriminatedUnion(
-  'variant_type', [
-    noneVariantPopulatedSchema,
-    singleVariantPopulatedSchema,
-    combineVariantPopulatedSchema,
-  ]
-);
-
 export const productSchema = z.intersection(conditionVariantTypeSchema, baseProductSchema);
-
-export const productPopulateSchema = z.intersection(conditionVariantTypePopulatedSchema, baseProductPopulatedSchema);
 
 export const productStateUserCanModify = z.union([
   z.literal(PRODUCT_STATES.ACTIVE),

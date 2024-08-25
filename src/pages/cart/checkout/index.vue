@@ -42,15 +42,15 @@ const steps = ['Billing Address', 'Payment', 'Review & Confirmation'];
     <div class="grid grid-cols-12 gap-16">
       <div class="col-span-8">
         <CartCheckoutUserAddressShipping
-          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ADDRESS_SHIPPING"
+          v-show="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ADDRESS_SHIPPING"
           class="mb-10"
         />
         <CartCheckoutPaymentOptions
-          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.PAYMENT"
+          v-show="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.PAYMENT"
         />
 
         <div
-          v-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.REVIEW_CONFIRMATION
+          v-show="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.REVIEW_CONFIRMATION
             || cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ORDER"
         >
           <CartCheckoutReviewShippingAndPayment class="mb-12" />

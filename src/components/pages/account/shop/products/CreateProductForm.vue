@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { consola } from 'consola';
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import { createProductBodySchema, createProductInventorySchema } from '~/schemas/request/product.schema';
+import { createProductBodySchema, createProductInventorySchema } from '~/schemas/request/shop-product.schema';
 import {
   isDigitalOpts,
   PRODUCT_CONFIG,
@@ -60,7 +60,6 @@ const stateSubmit = reactive<StateSubmit>({
 
 const {
   mutateAsync: createProduct,
-  isPending: isPendingCreateProduct,
 } = useShopCreateProduct();
 
 const {
@@ -192,6 +191,8 @@ async function onSubmit(event: FormSubmitEvent<CreateProductBody>) {
       title: 'Create product failed',
     });
   }
+
+  loadingSubmit.value = false;
 }
 
 function onErrorFrom(event: FormErrorEvent) {
@@ -299,15 +300,12 @@ watch(isProductHaveVariants, () => {
             name="is_digital"
             class="mb-4"
           >
-            <div class="flex gap-16">
-              <URadio
-                v-for="type of isDigitalOpts"
-                :key="type.value.toString()"
-                v-model="stateSubmit.is_digital"
-                :disabled="loadingSubmit"
-                v-bind="type"
-              />
-            </div>
+            <RadioGroupInput
+              v-model="stateSubmit.is_digital"
+              :options="isDigitalOpts"
+              :disabled="loadingSubmit"
+              row
+            />
           </UFormGroup>
 
           <div class="grid grid-cols-4">
@@ -423,13 +421,13 @@ watch(isProductHaveVariants, () => {
       :disabled="loadingSubmit"
       size="md"
       color="gray"
-      :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}`"
+      @click="router.push(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.PRODUCTS}`)"
     >
       Cancel
     </UButton>
     <UButton
-      :disabled="!enabledButtonSubmit"
-      :loading="isPendingCreateProduct"
+      :disabled="!enabledButtonSubmit || loadingSubmit"
+      :loading="loadingSubmit && stateSubmit.state === PRODUCT_STATES.DRAFT"
       size="md"
       type="submit"
       variant="soft"
@@ -441,8 +439,8 @@ watch(isProductHaveVariants, () => {
       Save
     </UButton>
     <UButton
-      :disabled="!enabledButtonSubmit"
-      :loading="isPendingCreateProduct"
+      :disabled="!enabledButtonSubmit || loadingSubmit"
+      :loading="loadingSubmit && stateSubmit.state === PRODUCT_STATES.ACTIVE"
       size="md"
       type="submit"
       @click="() => btnSubmitRef.click()"

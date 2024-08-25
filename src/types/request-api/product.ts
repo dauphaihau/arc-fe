@@ -3,7 +3,7 @@ import type {
   Product,
   ProductImage, ProductInventory, ProductShipping
 } from '~/types/product';
-import type { Coupon } from '~/types/coupon';
+import type { Coupon, PercentOff } from '~/types/coupon';
 import type { RequestGetListParams, ResponseBaseGetList } from '~/types/common';
 import type { Category } from '~/types/category';
 
@@ -19,7 +19,7 @@ export type ResponseGetProducts_Product = {
     sale_price?: ProductInventory['price']
   }
   image_relative_url: ProductImage['relative_url']
-  percent_coupon?: Pick<Coupon, 'percent_off' | 'start_date' | 'end_date'>
+  percent_coupon?: Pick<Coupon, 'start_date' | 'end_date'> & Pick<PercentOff, 'percent_off'>
   free_ship_coupon?: Pick<Coupon, 'start_date' | 'end_date'>
   category_id: Category['id']
 } & Pick<Product, 'id' | 'title' | 'variant_type'>;
@@ -42,7 +42,7 @@ type DetailProduct = {
 
 export type ResponseGetDetailProduct = {
   product: DetailProduct
-  percent_coupon?: Pick<Coupon, 'percent_off' | 'start_date' | 'end_date'>
+  percent_coupon?: Pick<Coupon, 'start_date' | 'end_date'> & Pick<PercentOff, 'percent_off'>
   free_ship_coupon?: Pick<Coupon, 'start_date' | 'end_date'>
 };
 // endregion

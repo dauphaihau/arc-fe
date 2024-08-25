@@ -6,8 +6,8 @@ const router = useRouter();
 
 const isDigitalOpts = [
   { value: 'all', label: 'All' },
-  { value: true, label: 'Digital' },
-  { value: false, label: 'Physical' },
+  { value: 'true', label: 'Digital' },
+  { value: 'false', label: 'Physical' },
 ];
 
 // const priceOpts = [
@@ -34,9 +34,9 @@ const productWhoMadeOpts = [
   // },
 ];
 
-const defaultValues = computed(() => {
+const defaultValuesState = computed(() => {
   const base = {
-    is_digital: 'all' as boolean | string,
+    is_digital: 'all',
     price: 'all',
     who_made: 'all',
   };
@@ -60,22 +60,19 @@ const defaultValues = computed(() => {
   return base;
 });
 
-// const state = reactive({
-//   is_digital: 'all',
-//   price: 'all',
-//   who_made: 'all',
-// });
-const state = reactive(defaultValues.value);
+const state = reactive(defaultValuesState.value);
+
+type StateKeys = keyof typeof defaultValuesState.value;
 
 watch(state, () => {
-  const routeQuery = { ...route.query };
+  const routeQuery = { ...route.query } as typeof defaultValuesState.value;
   Object.keys(state).forEach((key) => {
-    if (state[key] !== 'all') {
-      routeQuery[key] = state[key];
+    if (state[key as StateKeys] !== 'all') {
+      routeQuery[key as StateKeys] = state[key as StateKeys];
     }
     else {
       // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-      delete routeQuery[key];
+      delete routeQuery[key as StateKeys];
     }
   });
   router.push({ query: routeQuery });
@@ -83,54 +80,29 @@ watch(state, () => {
 </script>
 
 <template>
-  <UFormGroup
-    label="Item format"
-    name="is_digital"
-    class="mb-4"
-  >
-    <URadio
-      v-for="opt of isDigitalOpts"
-      :key="opt.value.toString()"
-      v-model="state.is_digital"
-      v-bind="opt"
-    />
-  </UFormGroup>
+  <div>
+    <UFormGroup
+      label="Item format"
+      name="is_digital"
+      class="mb-4"
+    >
+      <RadioGroupInput
+        v-model="state.is_digital"
+        :options="isDigitalOpts"
+      />
+    </UFormGroup>
 
-  <!--  <div class="mb-4"> -->
-  <!--    <UFormGroup label="Price" name="price" class="mb-2"> -->
-  <!--      <URadio -->
-  <!--        v-for="opt of priceOpts" -->
-  <!--        :key="opt.value" -->
-  <!--        v-model="state.price" -->
-  <!--        v-bind="opt" -->
-  <!--      /> -->
-  <!--    </UFormGroup> -->
-
-  <!--    <div v-if="state.price !== 'all'" class="flex items-center gap-3"> -->
-  <!--      <UFormGroup name="email" class=""> -->
-  <!--        <UInput v-model="state.email" placeholder="Low" size="md" /> -->
-  <!--      </UFormGroup> -->
-
-  <!--      <div>to</div> -->
-
-  <!--      <UFormGroup name="password" class=""> -->
-  <!--        <UInput v-model="state.password" placeholder="High" size="md" /> -->
-  <!--      </UFormGroup> -->
-  <!--    </div> -->
-  <!--  </div> -->
-
-  <UFormGroup
-    label="Item type"
-    name="who_made"
-    class="mb-4"
-  >
-    <URadio
-      v-for="type of productWhoMadeOpts"
-      :key="type.value"
-      v-model="state.who_made"
-      v-bind="type"
-    />
-  </UFormGroup>
+    <UFormGroup
+      label="Item type"
+      name="who_made"
+      class="mb-4"
+    >
+      <RadioGroupInput
+        v-model="state.who_made"
+        :options="productWhoMadeOpts"
+      />
+    </UFormGroup>
+  </div>
 </template>
 
 <style scoped>

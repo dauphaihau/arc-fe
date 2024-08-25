@@ -231,19 +231,6 @@ const columns = computed({
   },
 });
 
-const onChangeInputTable = (event: Event, row: VariantTable) => {
-  const target = event.target as HTMLInputElement;
-  const name = target?.name;
-  let value: string | number = target?.value;
-
-  if (name === 'price' || name === 'stock') {
-    value = Number(value);
-  }
-  if (row.id) {
-    variantsTable.value[row.id - 1][name] = value;
-  }
-};
-
 const openSubVariant = () => {
   state.isActiveSubVariant = true;
   variantTypeModel.value = PRODUCT_VARIANT_TYPES.COMBINE;
@@ -337,7 +324,7 @@ watch(() => props.countValidate, () => {
 
   if (!parsedVariantsTable.success) {
     parsedVariantsTable.error.issues.forEach((detail) => {
-      const index = detail.path[0];
+      const index = detail.path[0] as number;
       const name = detail.path[1];
       if (name === 'price') {
         variantsTable.value[index].errorPrice = detail.message;
@@ -668,7 +655,6 @@ watchDebounced(
             v-numeric
             size="lg"
             name="price"
-            @change="(e: Event) => onChangeInputTable(e, row)"
           >
             <template #trailing>
               <span class="text-xs text-gray-500 dark:text-gray-400">USD</span>
@@ -693,7 +679,6 @@ watchDebounced(
             v-numeric
             name="stock"
             size="lg"
-            @change="(e: Event) => onChangeInputTable(e, row)"
           />
           <template #error="{ error }">
             <p class="error-message">
@@ -712,7 +697,6 @@ watchDebounced(
             name="sku"
             size="lg"
             :ui="{ base: 'uppercase' }"
-            @change="(e: Event) => onChangeInputTable(e, row)"
           />
           <template #error="{ error }">
             <p class="error-message">

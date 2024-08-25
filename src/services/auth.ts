@@ -78,6 +78,7 @@ export function useLogout() {
     },
     onSuccess() {
       queryClient.setQueryData(['current-user'], { user: null });
+      queryClient.setQueryData(['get-cart', 'my-cart'], null);
       clearExpTokensInLS();
       navigateTo(ROUTES.HOME);
     },

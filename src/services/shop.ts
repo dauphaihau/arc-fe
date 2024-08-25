@@ -4,7 +4,7 @@ import { RESOURCES } from '~/config/enums/resources';
 import type {
   ShopGetProductsQueryParams,
   ResponseShopGetProducts,
-  ResponseShopGetDetailProduct, RequestCreateProductBody, RequestUpdateProductBody
+  RequestCreateProductBody, RequestUpdateProductBody
 } from '~/types/request-api/shop-product';
 import type { Shop } from '~/types/shop';
 import type { ResponseBaseGetList } from '~/types/common';
@@ -43,7 +43,8 @@ export function useShopGetDetailProduct(
   return useQuery({
     queryKey: ['shop-get-detail-product', id],
     queryFn: () => {
-      return useCustomFetch.get<ResponseShopGetDetailProduct>(
+      // return useCustomFetch.get<ResponseShopGetDetailProduct>(
+      return useCustomFetch.get(
         `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.PRODUCTS}/${id}`,
         undefined,
         options
@@ -132,14 +133,39 @@ export function useShopCreateCoupon() {
   });
 }
 
-export function useShopGetCoupons(queryParams: GetCouponsParams) {
+export function useShopDeleteCoupon() {
+  const { data } = useGetCurrentUser();
+  const toast = useToast();
+  return useMutation({
+    mutationKey: ['shop-delete-coupon'],
+    mutationFn: (id: Product['id']) => {
+      return useCustomFetch.delete(
+        `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.COUPONS}/${id}`
+      );
+    },
+    onSuccess() {
+      toast.add({
+        ...toastCustom.success,
+        title: 'Delete coupon success',
+      });
+    },
+    onError() {
+      toast.add({
+        ...toastCustom.error,
+        title: 'Delete coupon failed',
+      });
+    },
+  });
+}
+
+export function useShopGetCoupons(queryParams: ComputedRef<GetCouponsParams>) {
   const { data } = useGetCurrentUser();
   return useQuery({
-    queryKey: ['shop-get-coupons'],
+    queryKey: ['shop-get-coupons', queryParams],
     queryFn: () => {
       return useCustomFetch.get<ResponseBaseGetList<Coupon>>(
         `${RESOURCES.SHOPS}/${data.value?.user?.shop?.id}${RESOURCES.COUPONS}`,
-        queryParams
+        queryParams.value
       );
     },
   });

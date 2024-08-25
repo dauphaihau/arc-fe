@@ -86,7 +86,3 @@ export type RequestUpdateProductBody = UpdateProductBody & {
   // shipping: CreateProductShipping
 };
 // endregion
-
-// export type ResponseShopGetDetailProduct = {
-//   product: ProductPopulated
-// };

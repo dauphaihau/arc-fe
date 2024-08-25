@@ -18,15 +18,6 @@ export default defineNuxtConfig({
     pageTransition: { name: 'page', mode: 'out-in' },
   },
 
-  vite: {
-    vue: {
-      script: {
-        defineModel: true,
-        propsDestructure: true,
-      },
-    },
-  },
-
   srcDir: 'src/',
   ssr: false,
   devtools: { enabled: true },
@@ -58,6 +49,7 @@ export default defineNuxtConfig({
 
   security: {
     headers: {
+      contentSecurityPolicy: false,
       crossOriginEmbedderPolicy: process.env.NODE_ENV === 'development' ? 'unsafe-none' : 'require-corp',
     },
   },
@@ -121,4 +113,5 @@ export default defineNuxtConfig({
     }
   },
 
+  compatibilityDate: '2024-08-21',
 })

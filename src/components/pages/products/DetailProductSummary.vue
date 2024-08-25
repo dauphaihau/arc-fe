@@ -4,7 +4,6 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import type { ResponseGetDetailProduct } from '~/types/request-api/product';
 import { useGetDetailProduct } from '~/services/product';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
-import { COUPON_CONFIG } from '~/config/enums/coupon';
 import type { ElementType } from '~/types/utils';
 
 dayjs.extend(relativeTime);
@@ -107,12 +106,12 @@ const originPrice = computed(() => {
           </UBadge>
         </div>
       </div>
-      <div
-        v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE"
-        class="mt-1 font-medium text-green-700"
-      >
-        Sale ends in {{ percentCoupon.endInDays }} days
-      </div>
+      <!--      <div -->
+      <!--        v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE" -->
+      <!--        class="mt-1 font-medium text-green-700" -->
+      <!--      > -->
+      <!--        Sale ends in {{ percentCoupon.endInDays }} days -->
+      <!--      </div> -->
     </div>
 
     <!--    <div class="text-sm font-light text-zinc-500"> -->

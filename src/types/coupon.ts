@@ -1,8 +1,11 @@
 import type { z } from 'zod';
-import type { couponSchema, createPromoCodeBodySchema, createSaleBodySchema } from '~/schemas/coupon.schema';
+import type { couponSchema, percentOffSchema } from '~/schemas/coupon.schema';
 import type { RequestGetListParams } from '~/types/common';
+import type { createSaleBodySchema, createPromoCodeBodySchema } from '~/schemas/request/shop-coupon.schema';
 
 export type Coupon = z.infer<typeof couponSchema>;
+
+export type PercentOff = z.infer<typeof percentOffSchema>;
 
 export type CreateSaleBody = z.infer<typeof createSaleBodySchema>;
 

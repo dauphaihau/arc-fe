@@ -4,7 +4,7 @@ import localizedFormat from 'dayjs/plugin/localizedFormat';
 import type { DropdownItem } from '#ui/types';
 import { ROUTES } from '~/config/enums/routes';
 import { COUPON_APPLIES_TO, COUPON_TYPES } from '~/config/enums/coupon';
-import { useShopGetCoupons } from '~/services/shop';
+import { useShopDeleteCoupon, useShopGetCoupons } from '~/services/shop';
 import { CREATE_COUPON_PAGE_TYPES } from '~/config/enums/shop';
 
 dayjs.extend(localizedFormat);
@@ -15,12 +15,17 @@ const selected = ref([]);
 const pageCount = 10;
 const page = ref(1);
 
+const params = computed(() => ({
+  page: page.value,
+}));
+
 const {
   isPending: isPendingShopGetCoupons,
   data: dataShopGetCoupons,
-} = useShopGetCoupons({
-  page: page.value,
-});
+  refetch: refetchShopGetCoupons,
+} = useShopGetCoupons(params);
+
+const { mutateAsync: deleteCoupon } = useShopDeleteCoupon();
 
 const columns = [
   {
@@ -44,7 +49,7 @@ const columns = [
   },
   {
     key: 'status',
-    label: 'Status | Date',
+    label: 'Start - end date',
     class: 'text-center',
   },
   {
@@ -56,8 +61,8 @@ const rows = computed(() => {
   if (dataShopGetCoupons.value?.results && dataShopGetCoupons.value.results.length > 0) {
     return dataShopGetCoupons.value.results.map(coupon => ({
       ...coupon,
-      start_date: dayjs(coupon.start_date).format('hh:mm - L'),
-      end_date: dayjs(coupon.end_date).format('hh:mm - L'),
+      start_date: dayjs(coupon.start_date).format('HH:mm L'),
+      end_date: dayjs(coupon.end_date).format('HH:mm L'),
       actions: { class: 'text-right' },
     }));
   }
@@ -69,6 +74,7 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
     {
       label: 'Edit',
       icon: 'i-heroicons-pencil-square-20-solid',
+      disabled: true,
       click: () => row,
       // click: () => console.log('Edit', row.id),
     },
@@ -93,8 +99,11 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
   [
     {
       label: 'Delete',
-      disabled: true,
       icon: 'i-heroicons-trash-20-solid',
+      click: async () => {
+        await deleteCoupon(row.id);
+        await refetchShopGetCoupons();
+      },
     },
   ],
 ];
@@ -129,7 +138,6 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
         :rows="rows"
         :columns="columns"
         :loading="isPendingShopGetCoupons"
-        :loading-state="{ icon: 'i-heroicons-arrow-path-20-solid', label: 'Loading...' }"
       >
         <template #code-data="{ row }">
           <div>
@@ -195,21 +203,23 @@ const itemsDropdownWithRow = (row: { id: string }): DropdownItem[][] => [
                 />
               </UButton>
             </UTooltip>
-            <UTooltip text="Feature not available">
-              <UDropdown
-                disabled
-                :items="itemsDropdownWithRow(row)"
-              >
-                <UButton
-                  color="gray"
-                  variant="ghost"
-                  icon="i-heroicons-ellipsis-horizontal-20-solid"
-                />
-              </UDropdown>
-            </UTooltip>
+            <UDropdown :items="itemsDropdownWithRow(row)">
+              <UButton
+                color="gray"
+                variant="ghost"
+                icon="i-heroicons-ellipsis-horizontal-20-solid"
+              />
+            </UDropdown>
+          </div>
+        </template>
+
+        <template #loading-state>
+          <div class="grid h-[80vh] w-full place-content-center">
+            <LoadingSvg :child-class="'!w-12 !h-12'" />
           </div>
         </template>
       </UTable>
+
       <FixedPagination
         :page="page"
         :page-count="pageCount"

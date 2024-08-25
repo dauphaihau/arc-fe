@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import type { z } from 'zod';
 import { consola } from 'consola';
 import {
   COUPON_APPLIES_TO, COUPON_CONFIG, COUPON_MIN_ORDER_TYPES, COUPON_TYPES
 } from '~/config/enums/coupon';
-import { createSaleBodySchema } from '~/schemas/coupon.schema';
-import type { UndefinableFields } from '~/types/utils';
+import type { RequiredFields } from '~/types/utils';
 import { ROUTES } from '~/config/enums/routes';
 import { useShopCreateCoupon } from '~/services/shop';
 import { toastCustom } from '~/config/toast';
+import { createSaleBodySchema } from '~/schemas/request/shop-coupon.schema';
+import type { CreateSaleBody } from '~/types/coupon';
 
 const router = useRouter();
 const toast = useToast();
@@ -19,25 +19,15 @@ const {
   isPending: isPendingRunSale,
 } = useShopCreateCoupon();
 
-type CreateSaleBody = z.infer<typeof createSaleBodySchema>;
-
-type InitState = UndefinableFields<CreateSaleBody,
-| 'percent_off'
-| 'min_order_value'
-| 'min_products'
-| 'max_uses_per_user'
-| 'max_uses'
-| 'start_date'
-| 'end_date'
->;
+type StateSubmit = RequiredFields<Partial<CreateSaleBody>, 'type' | 'applies_to' | 'min_order_type' | 'is_auto_sale'>;
 
 const couponTypeOptions = [
   {
-    value: COUPON_TYPES.PERCENTAGE as CreateSaleBody['type'],
+    value: COUPON_TYPES.PERCENTAGE,
     label: 'Percentage off',
   },
   {
-    value: COUPON_TYPES.FREE_SHIP as CreateSaleBody['type'],
+    value: COUPON_TYPES.FREE_SHIP,
     label: 'Free standard shipping',
   },
 ];
@@ -53,19 +43,11 @@ const couponAppliesToOptions = [
   { value: COUPON_APPLIES_TO.SPECIFIC, label: 'Select products' },
 ];
 
-const selectedCouponType = ref(couponTypeOptions[0].value);
-
-const selectedMinOrder = ref(couponMinOrderOptions[0].value);
-
-const state = reactive<InitState>({
-  code: '',
+const state = reactive<StateSubmit>({
   type: COUPON_TYPES.PERCENTAGE,
   min_order_type: COUPON_MIN_ORDER_TYPES.NONE,
   applies_to: COUPON_APPLIES_TO.ALL,
-  max_uses_per_user: undefined,
-  max_uses: undefined,
-  start_date: undefined,
-  end_date: undefined,
+  is_auto_sale: true,
 });
 
 const formRef = ref();
@@ -74,17 +56,7 @@ const btnSubmit = ref();
 const validate = (stateValidate: CreateSaleBody): FormError[] => {
   let errors: FormError[] = [];
 
-  stateValidate.type = selectedCouponType.value;
-  stateValidate.min_order_type = selectedMinOrder.value;
-  const { type, min_order_type, applies_to } = stateValidate;
-  consola.info('stateValidate', stateValidate);
-
-  const result = createSaleBodySchema.required({
-    percent_off: type === COUPON_TYPES.PERCENTAGE || undefined,
-    applies_product_ids: applies_to === COUPON_APPLIES_TO.SPECIFIC || undefined,
-    min_products: min_order_type === COUPON_MIN_ORDER_TYPES.NUMBER_OF_PRODUCTS || undefined,
-    min_order_value: min_order_type === COUPON_MIN_ORDER_TYPES.ORDER_TOTAL || undefined,
-  }).safeParse(stateValidate);
+  const result = createSaleBodySchema.safeParse(stateValidate);
 
   if (!result.success) {
     errors = result.error.issues.map((detail) => {
@@ -101,28 +73,6 @@ const validate = (stateValidate: CreateSaleBody): FormError[] => {
 
 async function onSubmit(event: FormSubmitEvent<CreateSaleBody>) {
   formRef.value.clear();
-
-  switch (event.data.type) {
-    case COUPON_TYPES.FREE_SHIP:
-      delete event.data.percent_off;
-      break;
-    case COUPON_TYPES.PERCENTAGE:
-      delete event.data.amount_off;
-      break;
-  }
-
-  switch (event.data.min_order_type) {
-    case COUPON_MIN_ORDER_TYPES.NUMBER_OF_PRODUCTS:
-      delete event.data.min_order_value;
-      break;
-    case COUPON_MIN_ORDER_TYPES.ORDER_TOTAL:
-      delete event.data.min_products;
-      break;
-    case COUPON_MIN_ORDER_TYPES.NONE:
-      delete event.data.min_products;
-      delete event.data.min_order_value;
-      break;
-  }
 
   try {
     await runSale(event.data);
@@ -211,14 +161,14 @@ function onError(event: FormErrorEvent) {
           >
             <div class="flex space-x-5">
               <USelectMenu
-                v-model="selectedCouponType"
+                v-model="state.type"
                 size="lg"
                 :options="couponTypeOptions"
                 value-attribute="value"
                 name-attribute="label"
               />
               <UFormGroup
-                v-if="selectedCouponType === COUPON_TYPES.PERCENTAGE"
+                v-if="state.type === COUPON_TYPES.PERCENTAGE"
                 name="percent_off"
                 class="w-1/2"
               >
@@ -246,7 +196,7 @@ function onError(event: FormErrorEvent) {
           >
             <div class="flex space-x-5">
               <USelectMenu
-                v-model="selectedMinOrder"
+                v-model="state.min_order_type"
                 size="lg"
                 :options="couponMinOrderOptions"
                 class="w-[180px]"
@@ -255,7 +205,7 @@ function onError(event: FormErrorEvent) {
               />
 
               <UFormGroup
-                v-if="selectedMinOrder === COUPON_MIN_ORDER_TYPES.NUMBER_OF_PRODUCTS"
+                v-if="state.min_order_type === COUPON_MIN_ORDER_TYPES.NUMBER_OF_PRODUCTS"
                 name="min_products"
                 class="w-1/3"
               >
@@ -266,7 +216,7 @@ function onError(event: FormErrorEvent) {
                 />
               </UFormGroup>
               <UFormGroup
-                v-if="selectedMinOrder === COUPON_MIN_ORDER_TYPES.ORDER_TOTAL"
+                v-if="state.min_order_type === COUPON_MIN_ORDER_TYPES.ORDER_TOTAL"
                 name="min_order_value"
                 class="w-1/3"
               >
@@ -322,26 +272,23 @@ function onError(event: FormErrorEvent) {
             description="Your discount can apply shop-wide, or be limited to specific items."
             name="applies_to"
           >
-            <div class="flex gap-16">
-              <URadio
-                v-for="opt of couponAppliesToOptions"
-                :key="opt.value.toString()"
-                v-model="state.applies_to"
-                v-bind="opt"
-              />
-            </div>
-          </UFormGroup>
-
-          <UFormGroup
-            name="applies_product_ids"
-            class="mb-4"
-            required
-          >
-            <CreateCouponApplyCouponOnProduct
-              v-if="state.applies_to === COUPON_APPLIES_TO.SPECIFIC"
-              v-model="state.applies_product_ids"
+            <RadioGroupInput
+              v-model="state.applies_to"
+              :options="couponAppliesToOptions"
+              :disabled="isPendingRunSale"
+              row
             />
           </UFormGroup>
+
+          <div v-if="state.applies_to === COUPON_APPLIES_TO.SPECIFIC">
+            <CreateCouponApplyCouponOnProduct v-model="state.applies_product_ids" />
+            <div
+              v-if="formRef.getErrors('applies_product_ids')"
+              class="mt-2 text-red-500"
+            >
+              {{ formRef.getErrors('applies_product_ids')[0].message }}
+            </div>
+          </div>
         </div>
       </template>
     </WrapperFormGroupCard>
@@ -358,11 +305,11 @@ function onError(event: FormErrorEvent) {
        w-full items-center justify-end gap-2 border-t bg-white py-2.5 pr-8"
   >
     <UButton
-      :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}`"
       :disabled="isPendingRunSale"
       size="sm"
       type="submit"
       color="gray"
+      @click="router.push(`${ROUTES.ACCOUNT}${ROUTES.SHOP}${ROUTES.COUPONS}`)"
     >
       Cancel
     </UButton>

@@ -2,11 +2,9 @@
 /*
   use in cart page, cart/checkout page
  */
-import dayjs from 'dayjs';
 import { ROUTES } from '~/config/enums/routes';
 import type { Shop } from '~/types/shop';
 import { useDeleteProductCart } from '~/services/cart';
-import { COUPON_CONFIG } from '~/config/enums/coupon';
 import type { ResponseGetCart_ProductCart, ResponseGetCart } from '~/types/request-api/cart';
 
 const props = defineProps<{
@@ -60,16 +58,16 @@ const {
   },
 });
 
-const percentCoupon = computed(() => {
-  const coupon = props.productCart.percent_coupon;
-  if (coupon) {
-    return {
-      ...coupon,
-      endInDays: Math.abs(dayjs(coupon.start_date).diff(coupon?.end_date, 'day')),
-    };
-  }
-  return undefined;
-});
+// const percentCoupon = computed(() => {
+//   const coupon = props.productCart.percent_coupon;
+//   if (coupon) {
+//     return {
+//       ...coupon,
+//       endInDays: Math.abs(dayjs(coupon.start_date).diff(coupon?.end_date, 'day')),
+//     };
+//   }
+//   return undefined;
+// });
 
 const goToDetailProduct = () => {
   navigateTo(`${ROUTES.PRODUCTS}/${props.productCart.product.id}`);
@@ -149,12 +147,12 @@ const goToDetailProduct = () => {
             </span>
             ({{ props.productCart.percent_coupon.percent_off }}% off)
           </div>
-          <div
-            v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE"
-            class="mt-1 font-medium text-green-700"
-          >
-            Sale ends in {{ percentCoupon.endInDays }} days
-          </div>
+          <!--          <div -->
+          <!--            v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE" -->
+          <!--            class="mt-1 font-medium text-green-700" -->
+          <!--          > -->
+          <!--            Sale ends in {{ percentCoupon.endInDays }} days -->
+          <!--          </div> -->
         </div>
         <div
           v-else

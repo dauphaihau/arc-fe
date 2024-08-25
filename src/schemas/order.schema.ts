@@ -3,15 +3,15 @@ import {
   PAYMENT_TYPES, ORDER_STATUSES, ORDER_SHIPPING_STATUSES, ORDER_CONFIG
 } from '~/config/enums/order';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
-import { couponSchema } from '~/schemas/coupon.schema';
+import { baseCouponSchema } from '~/schemas/coupon.schema';
 import { baseProductSchema } from '~/schemas/product.schema';
 import { productInventorySchema } from '~/schemas/product-inventory.schema';
 
 export const orderProductSchema = z.object({
   product: baseProductSchema.shape.id,
   inventory: productInventorySchema.shape.id,
-  percent_coupon: couponSchema.shape.id,
-  freeship_coupon: couponSchema.shape.id,
+  percent_coupon: baseCouponSchema.shape.id,
+  freeship_coupon: baseCouponSchema.shape.id,
   price: productInventorySchema.shape.price,
   sale_price: productInventorySchema.shape.price,
   quantity: z.number(),
@@ -42,7 +42,7 @@ export const orderSchema = z.object({
     .max(ORDER_CONFIG.MAX_CHAR_NOTE)
     .optional(),
   promo_coupons: z
-    .array(couponSchema.shape.id).max(ORDER_CONFIG.MAX_PROMO_COUPONS)
+    .array(baseCouponSchema.shape.id).max(ORDER_CONFIG.MAX_PROMO_COUPONS)
     .default([]),
   created_at: z.date(),
   updated_at: z.date(),

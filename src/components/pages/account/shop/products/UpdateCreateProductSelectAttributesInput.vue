@@ -2,11 +2,7 @@
 import type { Category } from '~/types/category';
 import { useGetAttributesByCategory } from '~/services/category';
 import type { ProductAttribute } from '~/types/product';
-
-type AttributeOption = {
-  attribute_id: string
-  selected: string
-};
+import type { ReqAttributeOption } from '~/types/request-api/shop-product';
 
 const { categoryId, attributesSelected } = defineProps<{
   categoryId?: Category['id']
@@ -14,7 +10,7 @@ const { categoryId, attributesSelected } = defineProps<{
 }
 >();
 
-const attributesModel = defineModel<AttributeOption[] | undefined>({
+const attributesModel = defineModel<ReqAttributeOption[] | undefined>({
   default: [],
   required: true,
 });
@@ -23,32 +19,26 @@ const {
   data: dataGetAttributesByCategory,
 } = useGetAttributesByCategory(categoryId);
 
-const state = reactive({});
+const state = reactive<Record<ReqAttributeOption['attribute_id'], ReqAttributeOption['selected']>>({});
 
 watch(() => dataGetAttributesByCategory.value, () => {
-  // reset each change category
-  Object.keys(state).forEach((key) => {
-    state[key] = '';
-  });
-
-  // case update, init data
-  if (dataGetAttributesByCategory.value?.attributes && attributesSelected) {
-    const attrSelectedMap = new Map();
-    attributesSelected.forEach((attr) => {
-      attrSelectedMap.set(attr.attribute, attr.selected);
-    });
-    dataGetAttributesByCategory.value.attributes.forEach((attr) => {
-      if (attributesSelected && attrSelectedMap.has(attr.id)) {
-        state[attr.id] = attrSelectedMap.get(attr.id);
-        return;
-      }
-      state[attr.id] = '';
-    });
+  if (dataGetAttributesByCategory.value?.attributes) {
+    // case update, init data
+    if (attributesSelected) {
+      attributesSelected.forEach((attr) => {
+        state[attr.attribute] = attr.selected;
+      });
+    }
+    else {
+      dataGetAttributesByCategory.value.attributes.forEach((attr) => {
+        state[attr.id] = '';
+      });
+    }
   }
 }, { immediate: true });
 
 watch(() => state, () => {
-  const attrsValid: AttributeOption[] = [];
+  const attrsValid: ReqAttributeOption[] = [];
   Object.keys(state).forEach((key) => {
     if (state[key]) {
       attrsValid.push({

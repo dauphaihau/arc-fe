@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import dayjs from 'dayjs';
 import { ORDER_CONFIG } from '~/config/enums/order';
 import { useCartStore } from '~/stores/cart';
 import { PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
 import { useGetCart, useUpdateCart } from '~/services/cart';
-import { COUPON_CONFIG } from '~/config/enums/coupon';
 import type { ResponseGetCart } from '~/types/request-api/cart';
 import type { Cart } from '~/types/cart';
 
@@ -25,16 +23,16 @@ const {
 const shopCart = computed(() => dataGetCart.value?.cart && dataGetCart?.value?.cart.shop_carts[0]);
 const productCart = computed(() => shopCart.value?.products[0]);
 
-const percentCoupon = computed(() => {
-  const coupon = productCart.value?.percent_coupon;
-  if (coupon) {
-    return {
-      ...coupon,
-      endInDays: Math.abs(dayjs(coupon.start_date).diff(coupon?.end_date, 'day')),
-    };
-  }
-  return undefined;
-});
+// const percentCoupon = computed(() => {
+//   const coupon = productCart.value?.percent_coupon;
+//   if (coupon) {
+//     return {
+//       ...coupon,
+//       endInDays: Math.abs(dayjs(coupon.start_date).diff(coupon?.end_date, 'day')),
+//     };
+//   }
+//   return undefined;
+// });
 
 const showNoteInput = ref(!!cartStore.stateCheckoutNow.note);
 
@@ -160,12 +158,12 @@ watchDebounced(
                 </span>
                 ({{ productCart.percent_coupon.percent_off }}% off)
               </div>
-              <div
-                v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE"
-                class="mt-1 font-medium text-green-700"
-              >
-                Sale ends in {{ percentCoupon.endInDays }} days
-              </div>
+              <!--              <div -->
+              <!--                v-if="percentCoupon && percentCoupon.endInDays <= COUPON_CONFIG.AMOUNT_DAYS_WARN_END_SALE" -->
+              <!--                class="mt-1 font-medium text-green-700" -->
+              <!--              > -->
+              <!--                Sale ends in {{ percentCoupon.endInDays }} days -->
+              <!--              </div> -->
             </div>
             <div
               v-else

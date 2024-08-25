@@ -8,7 +8,7 @@ import {
 } from '~/config/enums/coupon';
 import { objectIdSchema } from '~/schemas/sub/objectId.schema';
 
-export const couponSchema = z.object({
+export const baseCouponSchema = z.object({
   id: objectIdSchema,
   shop: objectIdSchema,
   code: z
@@ -22,26 +22,9 @@ export const couponSchema = z.object({
   type: z
     .nativeEnum(COUPON_TYPES)
     .default(COUPON_TYPES.FIXED_AMOUNT),
-  amount_off: z
-    .number()
-    .min(1, `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_PRICE - 1}.`)
-    .max(PRODUCT_CONFIG.MAX_PRICE - 1,
-      `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_PRICE - 1}.`)
-    .optional(),
-  percent_off: z
-    .number()
-    .min(1, 'Please enter a value between 1 and 99.')
-    .max(99, 'Please enter a value between 1 and 99.')
-    .optional(),
   applies_to: z
     .nativeEnum(COUPON_APPLIES_TO)
-    .default(COUPON_APPLIES_TO.ALL)
-    .optional(),
-  applies_product_ids: z
-    .array(objectIdSchema)
-    .min(1, 'Add at least 1 product')
-    .default([])
-    .optional(),
+    .default(COUPON_APPLIES_TO.ALL),
   max_uses_per_user: z
     .number()
     .min(COUPON_CONFIG.MIN_USES_PER_USER,
@@ -58,20 +41,8 @@ export const couponSchema = z.object({
   min_order_type: z
     .nativeEnum(COUPON_MIN_ORDER_TYPES)
     .default(COUPON_MIN_ORDER_TYPES.ORDER_TOTAL),
-  min_order_value: z
-    .number()
-    .default(0)
-    .optional(),
-  min_products: z
-    .number()
-    .min(1)
-    .optional(),
-  start_date: z
-    .coerce
-    .date(),
-  end_date: z
-    .coerce
-    .date(),
+  start_date: z.coerce.date(),
+  end_date: z.coerce.date(),
   uses_count: z
     .number()
     .default(0),
@@ -89,24 +60,69 @@ export const couponSchema = z.object({
   updated_at: z.date(),
 });
 
-export const createPromoCodeBodySchema = couponSchema.omit({
-  id: true,
-  shop: true,
-  users_used: true,
-  uses_count: true,
-  is_active: true,
-  created_at: true,
-  updated_at: true,
+export const percentOffSchema = z.object({
+  type: z.literal(COUPON_TYPES.PERCENTAGE),
+  percent_off: z
+    .number()
+    .min(1, 'Please enter a value between 1 and 99.')
+    .max(99, 'Please enter a value between 1 and 99.'),
 });
 
-export const createSaleBodySchema = couponSchema.omit({
-  id: true,
-  shop: true,
-  users_used: true,
-  uses_count: true,
-  is_active: true,
-  created_at: true,
-  updated_at: true,
-}).merge(z.object({
-  type: z.union([z.literal(COUPON_TYPES.PERCENTAGE), z.literal(COUPON_TYPES.FREE_SHIP)]),
-}));
+export const fixAmountSchema = z.object({
+  type: z.literal(COUPON_TYPES.FIXED_AMOUNT),
+  amount_off: z
+    .number()
+    .min(1, `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_PRICE - 1}.`)
+    .max(PRODUCT_CONFIG.MAX_PRICE - 1,
+      `Please enter a value between 1 and ${PRODUCT_CONFIG.MAX_PRICE - 1}.`),
+});
+
+export const minProductSchema = z.object({
+  min_order_type: z.literal(COUPON_MIN_ORDER_TYPES.NUMBER_OF_PRODUCTS),
+  min_products: z
+    .number()
+    .min(1),
+});
+
+export const minOrderValueSchema = z.object({
+  min_order_type: z.literal(COUPON_MIN_ORDER_TYPES.ORDER_TOTAL),
+  min_order_value: z
+    .number()
+    .min(1),
+});
+
+export const applyToSpecifySchema = z.object({
+  applies_to: z.literal(COUPON_APPLIES_TO.SPECIFIC),
+  applies_product_ids: z
+    .array(objectIdSchema)
+    .min(1, 'Add at least 1 product')
+    .default([]),
+});
+
+export const conditionApplyToTypeSchema = z.discriminatedUnion(
+  'applies_to', [
+    z.object({ applies_to: z.literal(COUPON_APPLIES_TO.ALL) }),
+    applyToSpecifySchema,
+  ]
+);
+
+export const conditionMinOrderTypeSchema = z.discriminatedUnion(
+  'min_order_type', [
+    z.object({ min_order_type: z.literal(COUPON_MIN_ORDER_TYPES.NONE) }),
+    minProductSchema,
+    minOrderValueSchema,
+  ]
+);
+
+export const conditionTypeCouponSchema = z.discriminatedUnion(
+  'type', [
+    z.object({ type: z.literal(COUPON_TYPES.FREE_SHIP) }),
+    percentOffSchema,
+    fixAmountSchema,
+  ]
+);
+
+export const couponSchema = baseCouponSchema
+  .and(conditionApplyToTypeSchema)
+  .and(conditionMinOrderTypeSchema)
+  .and(conditionTypeCouponSchema);

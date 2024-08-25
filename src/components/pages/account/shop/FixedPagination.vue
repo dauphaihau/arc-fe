@@ -20,7 +20,7 @@ onBeforeUnmount(() => {
 
 function onScroll() {
   const { scrollTop, offsetHeight } = document.documentElement;
-  isBottomPage.value = scrollTop + window.innerHeight >= offsetHeight;
+  isBottomPage.value = scrollTop + window.innerHeight > offsetHeight;
 }
 
 watch(pageRef, () => {

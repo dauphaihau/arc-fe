@@ -1,8 +1,10 @@
 <script setup lang="ts">
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import type {
+  Product,
   ProductCombineVariant,
   ProductInventory,
-  ProductPopulated,
   ProductVariant
 } from '~/types/product';
 import { PRODUCT_CONFIG, PRODUCT_VARIANT_TYPES } from '~/config/enums/product';
@@ -42,7 +44,8 @@ const generateRandomId = () => new Date().getTime().toString();
 
 const props = defineProps<{
   countValidate: number
-  product: ProductPopulated
+  product: Product
+  // product: ProductPopulated
   // product: ResponseShopGetDetailProduct['product']
 }>();
 

@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type {
   combineVariantSchema,
   productAttributeSchema,
-  productImageSchema, productPopulateSchema,
+  productImageSchema,
   productSchema,
   singleVariantSchema
 } from '~/schemas/product.schema';
@@ -16,7 +16,6 @@ import type { productVariantSchema } from '~/schemas/product-variant.schema';
 export type Product = z.infer<typeof productSchema>;
 export type ProductSingleVariant = z.infer<typeof singleVariantSchema>;
 export type ProductCombineVariant = z.infer<typeof combineVariantSchema>;
-export type ProductPopulated = z.infer<typeof productPopulateSchema>;
 export type ProductInventory = z.infer<typeof productInventorySchema>;
 export type ProductImage = z.infer<typeof productImageSchema>;
 export type ProductVariant = z.infer<typeof productVariantSchema>;

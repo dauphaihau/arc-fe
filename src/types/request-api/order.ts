@@ -2,7 +2,7 @@ import type { MARKET_CURRENCIES } from '~/config/enums/market';
 import type { Shop } from '~/types/shop';
 import type { Order, OrderShopProduct } from '~/types/order';
 import type { UserAddress } from '~/types/user-address';
-import type { Coupon } from '~/types/coupon';
+import type { Coupon, PercentOff } from '~/types/coupon';
 import type { Override } from '~/types/utils';
 import type { Product, ProductInventory } from '~/types/product';
 import type { Payment } from '~/types/payment';
@@ -15,7 +15,7 @@ export type ResponseGetOrderShopsProduct = Override<OrderShopProduct, {
     variant_sub_group_name?: string
   }
   inventory: Pick<ProductInventory, 'variant'>
-  percent_coupon: Pick<Coupon, 'percent_off'> | null
+  percent_coupon: Pick<PercentOff, 'percent_off'> | null
   // freeship_coupon: Pick<Coupon, ''> | null
 }>;
 
