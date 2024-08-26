@@ -63,7 +63,7 @@
   "dependencies": {
     "@formkit/auto-animate": "^0.8.1",
     "@hebilicious/vue-query-nuxt": "^0.3.0",
-    "@nuxt/ui": "^2.17.0",
+    "@nuxt/ui": "^2.18.4",
     "@pinia/nuxt": "^0.5.1",
     "@tailwindcss/typography": "^0.5.10",
     "@tanstack/vue-query": "^5.45.0",
