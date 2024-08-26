@@ -31,10 +31,6 @@ const {
 
 const onCreateOrder = async () => {
   try {
-    cartStore.stateCheckoutNow.currentStep++;
-    if (cartStore.stateCheckoutNow.currentStep !== CHECKOUT_NOW_STEPS.ORDER) {
-      return;
-    }
     cartStore.stateCheckoutNow.isPendingCreateOrder = true;
 
     const addressId = cartStore.stateCheckoutNow.address?.id;
@@ -111,24 +107,38 @@ const onCreateOrder = async () => {
     });
   }
 };
+
+function nextStep() {
+  cartStore.stateCheckoutNow.currentStep++;
+}
 </script>
 
 <template>
-  <UButton
-    class="mx-auto mt-8"
-    block
-    size="xl"
-    :disabled="!cartStore.stateCheckoutNow.address"
-    :loading="cartStore.stateCheckoutNow.isPendingCreateOrder"
-    :ui="{
-      rounded: 'shadow-border',
-    }"
-    @click="onCreateOrder"
-  >
-    {{
-      cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION ? 'Complete Order' : 'Continue'
-    }}
-  </UButton>
+  <div class="mx-auto mt-8">
+    <UButton
+      v-if="
+        cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.ADDRESS_SHIPPING
+          || cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.PAYMENT
+      "
+      block
+      size="xl"
+      :disabled="!cartStore.stateCheckoutNow.address"
+      :ui="{ rounded: 'shadow-border' }"
+      @click="nextStep"
+    >
+      Continue
+    </UButton>
+    <UButton
+      v-else-if="cartStore.stateCheckoutNow.currentStep === CHECKOUT_NOW_STEPS.REVIEW_CONFIRMATION"
+      block
+      size="xl"
+      :loading="cartStore.stateCheckoutNow.isPendingCreateOrder"
+      :ui="{ rounded: 'shadow-border' }"
+      @click="onCreateOrder"
+    >
+      Complete Order
+    </UButton>
+  </div>
 </template>
 
 <style scoped>

@@ -32,11 +32,6 @@ const {
 
 const onCreateOrder = async () => {
   try {
-    cartStore.stateCheckoutCart.currentStep++;
-    if (cartStore.stateCheckoutCart.currentStep !== CHECKOUT_CART_STEPS.ORDER) {
-      return;
-    }
-
     cartStore.stateCheckoutCart.isPendingCreateOrder = true;
 
     const addressId = cartStore.stateCheckoutCart.address?.id;
@@ -80,7 +75,7 @@ const onCreateOrder = async () => {
     }
     // endregion validate currency
 
-    body.addition_info_shop_carts = Array
+    let tempAdditionInfoShopCarts = Array
       .from(cartStore.additionInfoShopCarts)
       .map(([shopId, value]) => ({
         shop_id: shopId,
@@ -88,11 +83,11 @@ const onCreateOrder = async () => {
         note: value.note,
       }));
 
-    const addition_info_shop_carts = body.addition_info_shop_carts.filter((item) => {
+    tempAdditionInfoShopCarts = tempAdditionInfoShopCarts.filter((item) => {
       return item.note || item.promo_codes.length > 0;
     });
-    if (addition_info_shop_carts.length > 0) {
-      body.addition_info_shop_carts = addition_info_shop_carts;
+    if (tempAdditionInfoShopCarts.length > 0) {
+      body.addition_info_shop_carts = tempAdditionInfoShopCarts;
     }
 
     if (body.payment_type === PAYMENT_TYPES.CARD) {
@@ -120,22 +115,38 @@ const onCreateOrder = async () => {
     });
   }
 };
+
+function nextStep() {
+  cartStore.stateCheckoutCart.currentStep++;
+}
 </script>
 
 <template>
-  <UButton
-    class="mx-auto mt-8"
-    block
-    size="xl"
-    :disabled="!cartStore.stateCheckoutCart.address"
-    :loading="cartStore.stateCheckoutCart.isPendingCreateOrder"
-    :ui="{
-      rounded: 'shadow-border',
-    }"
-    @click="onCreateOrder"
-  >
-    {{ cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.REVIEW_CONFIRMATION ? 'Complete Order' : 'Continue' }}
-  </UButton>
+  <div class="mx-auto mt-8">
+    <UButton
+      v-if="
+        cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.ADDRESS_SHIPPING
+          || cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.PAYMENT
+      "
+      block
+      size="xl"
+      :disabled="!cartStore.stateCheckoutCart.address"
+      :ui="{ rounded: 'shadow-border' }"
+      @click="nextStep"
+    >
+      Continue
+    </UButton>
+    <UButton
+      v-else-if="cartStore.stateCheckoutCart.currentStep === CHECKOUT_CART_STEPS.REVIEW_CONFIRMATION"
+      block
+      size="xl"
+      :loading="cartStore.stateCheckoutCart.isPendingCreateOrder"
+      :ui="{ rounded: 'shadow-border' }"
+      @click="onCreateOrder"
+    >
+      Complete Order
+    </UButton>
+  </div>
 </template>
 
 <style scoped>
