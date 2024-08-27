@@ -40,7 +40,7 @@ function optionToLabel(opt: TOption) {
 </script>
 
 <template>
-  <div :class="props.row ? 'flex items-center space-x-3' : 'space-y-1'">
+  <div :class="props.row ? 'flex items-center space-x-10' : 'space-y-1'">
     <div
       v-for="(opt, idx) in props.options"
       :key="idx"

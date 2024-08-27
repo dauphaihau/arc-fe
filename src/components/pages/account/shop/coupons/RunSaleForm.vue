@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { FormError, FormErrorEvent, FormSubmitEvent } from '#ui/types';
-import { consola } from 'consola';
 import {
   COUPON_APPLIES_TO, COUPON_CONFIG, COUPON_MIN_ORDER_TYPES, COUPON_TYPES
 } from '~/config/enums/coupon';
@@ -66,7 +65,7 @@ const validate = (stateValidate: CreateSaleBody): FormError[] => {
         message: detail.message,
       };
     });
-    consola.error('zod parse errors', errors);
+    log.error('zod parse errors', errors);
   }
   return errors;
 };
@@ -283,7 +282,7 @@ function onError(event: FormErrorEvent) {
           <div v-if="state.applies_to === COUPON_APPLIES_TO.SPECIFIC">
             <CreateCouponApplyCouponOnProduct v-model="state.applies_product_ids" />
             <div
-              v-if="formRef.getErrors('applies_product_ids')"
+              v-if="formRef.getErrors('applies_product_ids')[0]?.message"
               class="mt-2 text-red-500"
             >
               {{ formRef.getErrors('applies_product_ids')[0].message }}

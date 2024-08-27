@@ -16,7 +16,7 @@ const stateSubmit = reactive({
 });
 
 const {
-  isPending,
+  isPending: isPendingCreateShop,
   mutateAsync: createShop,
 } = useCreateShop();
 
@@ -83,13 +83,14 @@ async function onSubmit(event: FormSubmitEvent<{ shop_name: Shop['shop_name'] }>
       >
         <UInput
           v-model="stateSubmit.shop_name"
-          :disabled="isPending"
+          :disabled="isPendingCreateShop"
           size="xl"
         />
       </UFormGroup>
 
       <UButton
-        :disabled="isPending"
+        :disabled="!stateSubmit.shop_name"
+        :loading="isPendingCreateShop"
         size="xl"
         block
         type="submit"
