@@ -18,7 +18,7 @@ const { data } = useGetProducts(queryParams);
 
 <template>
   <div>
-    <h3 class="mb-4 text-3xl font-medium">
+    <h3 class="mb-4 text-2xl font-medium">
       You may also like
     </h3>
     <div

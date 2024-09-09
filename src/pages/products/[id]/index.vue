@@ -61,10 +61,10 @@ const inventorySelected = ref();
         </div>
       </div>
       <!--      <DetailProductMoreProductsByShop -->
-      <!--        :shop-id="data.product.shop.id" -->
-      <!--        class="mb-16" -->
+      <!--          :shop-id="dataGetDetailProduct.product.shop.id" -->
+      <!--          class="mb-16" -->
       <!--      /> -->
-      <!--      <DetailProductMoreProductsByCategory :category-id="data.product.category" /> -->
+      <DetailProductMoreProductsByCategory :category-id="dataGetDetailProduct.product.category" />
     </div>
   </div>
 </template>

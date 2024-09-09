@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { ROUTES } from '~/config/enums/routes';
 import type { ResponseGetProducts_Product } from '~/types/request-api/product';
+import { PRODUCT_CONFIG } from '~/config/enums/product';
 
 const props = defineProps<{
   product: ResponseGetProducts_Product
 }>();
 
 const router = useRouter();
-const lowStock = 5;
 
 const freeShipCoupon = computed(() => {
   return props.product?.free_ship_coupon;
@@ -62,7 +62,7 @@ const salePercentCoupon = computed(() => {
         Free shipping
       </UBadge>
       <p
-        v-if="props.product.inventory.stock < lowStock"
+        v-if="props.product.inventory.stock < PRODUCT_CONFIG.LOW_STOCK"
         class="text-[13px] text-red-600"
       >
         Only {{ props.product.inventory.stock }} left - order soon

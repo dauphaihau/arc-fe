@@ -9,7 +9,7 @@ const { shopId } = defineProps<{
 }>();
 
 const queryParams = computed(() => ({
-  shop: shopId,
+  shop_id: shopId,
   limit,
 }));
 
