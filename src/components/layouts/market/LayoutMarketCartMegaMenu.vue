@@ -5,7 +5,7 @@ import { useLogout } from '~/services/auth';
 import { useGetCurrentUser } from '~/services/user';
 import { useGetCart } from '~/services/cart';
 
-const { show } = defineProps<{ show: boolean }>();
+const props = defineProps<{ show: boolean }>();
 
 const router = useRouter();
 const modal = useModal();
@@ -39,7 +39,7 @@ const remainProductCart = computed(() => {
 
 <template>
   <transition name="slide-down">
-    <div v-if="show">
+    <div v-if="props.show">
       <div class="mx-auto ml-5 pb-12">
         <div class="mb-4 flex justify-between gap-3">
           <div class="text-2xl font-semibold">

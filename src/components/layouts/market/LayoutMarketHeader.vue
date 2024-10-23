@@ -5,9 +5,6 @@ import { useGetCurrentUser } from '~/services/user';
 
 const route = useRoute();
 
-// const isDark = useDark();
-// const toggleDark = useToggle(isDark);
-
 const {
   data: dataGetCart,
 } = useGetCart();
@@ -67,14 +64,6 @@ const totalProductCarts = computed(() => {
 </script>
 
 <template>
-  <!--  <div class="bg-customGray-100 h-11"> -->
-  <!--    <div class=" max-w-market-layout mx-auto flex items-center justify-end text-custom-Gray-950 text-sm h-full font-medium"> -->
-  <!--      <div>Join us</div> -->
-  <!--      <UDivider orientation="vertical" class="w-6 h-3 border-black" size="xs" :ui="{ border: { base: 'border-black' } }" /> -->
-  <!--      <div>Login</div> -->
-  <!--    </div> -->
-  <!--  </div> -->
-
   <header
     class="header"
     :class="{ 'hidden-header': !state.showNavbar }"
@@ -101,47 +90,36 @@ const totalProductCarts = computed(() => {
         />
       </div>
 
-      <!--      <div class="flex items-center gap-4"> -->
-      <!--      <UButton -->
-      <!--        color="gray" -->
-      <!--        variant="ghost" -->
-      <!--        class="icon-button" -->
-      <!--        @click="toggleDark()" -->
-      <!--      > -->
-      <!--        <Icon v-if="!isDark" name="uil:sun" /> -->
-      <!--        <Icon v-else name="uil:moon" /> -->
-      <!--      </UButton> -->
-
-      <!--        <div v-if="authStore.isLogged" class="flex items-center gap-4"> -->
+      <!--      <div v-if="dataUserAuth?.user" class="flex items-center gap-4"> -->
       <!--        <UTooltip text="Favorites"> -->
       <!--          <UButton -->
-      <!--            color="gray" -->
-      <!--            variant="ghost" -->
-      <!--            class="icon-button" -->
+      <!--              color="gray" -->
+      <!--              variant="ghost" -->
+      <!--              class="icon-button" -->
       <!--          > -->
-      <!--            <Icon name="uil:heart" /> -->
+      <!--            <Icon name="uil:heart"/> -->
       <!--          </UButton> -->
       <!--        </UTooltip> -->
       <!--        <UTooltip text="Notifications"> -->
       <!--          <UButton -->
-      <!--            color="gray" -->
-      <!--            variant="ghost" -->
-      <!--            class="icon-button" -->
+      <!--              color="gray" -->
+      <!--              variant="ghost" -->
+      <!--              class="icon-button" -->
       <!--          > -->
-      <!--            <Icon name="uil:bell" /> -->
+      <!--            <Icon name="uil:bell"/> -->
       <!--          </UButton> -->
       <!--        </UTooltip> -->
       <!--        <UTooltip text="Shop Manager"> -->
       <!--          <UButton -->
-      <!--            :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}`" -->
-      <!--            color="gray" -->
-      <!--            variant="ghost" -->
-      <!--            class="icon-button" -->
+      <!--              :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}`" -->
+      <!--              color="gray" -->
+      <!--              variant="ghost" -->
+      <!--              class="icon-button" -->
       <!--          > -->
-      <!--            <Icon name="uil:shop" /> -->
+      <!--            <Icon name="uil:shop"/> -->
       <!--          </UButton> -->
       <!--        </UTooltip> -->
-      <!--        </div> -->
+      <!--      </div> -->
 
       <!--        <RegisterLoginDialog v-else /> -->
 
