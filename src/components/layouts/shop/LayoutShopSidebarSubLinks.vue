@@ -50,7 +50,7 @@ const itemsLinkRoutes = Array.isArray(data.sub) && data.sub.map(item => item.rou
               :class="[item.disabled && 'opacity-50']"
             >
               <UDivider
-                :ui="{ border: { base: routes.path.indexOf(item.route as string) > -1 && 'border-primary' } }"
+                :ui="{ border: { base: routes.path.indexOf(item.route as string) > -1 ? 'border-primary' : '' } }"
                 orientation="vertical"
                 class="h-auto w-4"
               />
