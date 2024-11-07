@@ -34,6 +34,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@samk-dev/nuxt-vcalendar',
     '@hebilicious/vue-query-nuxt',
+    '@nuxt/test-utils/module'
   ],
 
   eslint: {

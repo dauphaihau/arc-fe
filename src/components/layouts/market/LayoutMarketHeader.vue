@@ -89,40 +89,6 @@ const totalProductCarts = computed(() => {
           class="mt-8"
         />
       </div>
-
-      <!--      <div v-if="dataUserAuth?.user" class="flex items-center gap-4"> -->
-      <!--        <UTooltip text="Favorites"> -->
-      <!--          <UButton -->
-      <!--              color="gray" -->
-      <!--              variant="ghost" -->
-      <!--              class="icon-button" -->
-      <!--          > -->
-      <!--            <Icon name="uil:heart"/> -->
-      <!--          </UButton> -->
-      <!--        </UTooltip> -->
-      <!--        <UTooltip text="Notifications"> -->
-      <!--          <UButton -->
-      <!--              color="gray" -->
-      <!--              variant="ghost" -->
-      <!--              class="icon-button" -->
-      <!--          > -->
-      <!--            <Icon name="uil:bell"/> -->
-      <!--          </UButton> -->
-      <!--        </UTooltip> -->
-      <!--        <UTooltip text="Shop Manager"> -->
-      <!--          <UButton -->
-      <!--              :to="`${ROUTES.ACCOUNT}${ROUTES.SHOP}`" -->
-      <!--              color="gray" -->
-      <!--              variant="ghost" -->
-      <!--              class="icon-button" -->
-      <!--          > -->
-      <!--            <Icon name="uil:shop"/> -->
-      <!--          </UButton> -->
-      <!--        </UTooltip> -->
-      <!--      </div> -->
-
-      <!--        <RegisterLoginDialog v-else /> -->
-
       <div class="relative flex h-fit items-center gap-4">
         <div class="absolute right-12 flex gap-4">
           <UTooltip text="Search">
@@ -158,6 +124,7 @@ const totalProductCarts = computed(() => {
             @mouseover="isShowSearch = false"
           >
             <UButton
+              id="cart-btn"
               class="icon-button"
               variant="ghost"
               color="gray"
@@ -170,8 +137,6 @@ const totalProductCarts = computed(() => {
             </UButton>
           </UChip>
         </UTooltip>
-
-        <!--        <HeaderUserDropdown /> -->
       </div>
     </nav>
   </header>

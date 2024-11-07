@@ -3,9 +3,10 @@ import { useGetCurrentUser } from '~/services/user';
 
 const route = useRoute();
 const { data: dataUserAuth } = useGetCurrentUser();
+const modal = useModal();
+
 const isOpen = ref(false);
 const isLoginForm = ref(true);
-const modal = useModal();
 
 defineShortcuts({
   escape: {

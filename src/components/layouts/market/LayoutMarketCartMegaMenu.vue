@@ -39,7 +39,10 @@ const remainProductCart = computed(() => {
 
 <template>
   <transition name="slide-down">
-    <div v-if="props.show">
+    <div
+      v-if="props.show"
+      id="mega-menu-cart"
+    >
       <div class="mx-auto ml-5 pb-12">
         <div class="mb-4 flex justify-between gap-3">
           <div class="text-2xl font-semibold">
@@ -108,6 +111,7 @@ const remainProductCart = computed(() => {
             class="flex items-center gap-1"
           >
             <UButton
+              id="login-btn"
               size="sm"
               variant="link"
               label="Log in"
@@ -127,7 +131,10 @@ const remainProductCart = computed(() => {
           </div>
         </div>
 
-        <div v-if="dataUserAuth?.user">
+        <div
+          v-if="dataUserAuth?.user"
+          id="user-profile"
+        >
           <div class="mb-2 text-customGray-950">
             My Profile
           </div>

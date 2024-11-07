@@ -1,21 +1,8 @@
-import { resolve } from 'node:path';
-import { defineConfig } from 'vite';
-import vue from '@vitejs/plugin-vue';
-import type { InlineConfig } from 'vitest';
-import type { UserConfig } from 'vite';
+import { defineVitestConfig } from '@nuxt/test-utils/config'
 
-type ViteConfig = UserConfig & { test: InlineConfig };
-
-const config: ViteConfig = {
-  plugins: [vue()],
+export default defineVitestConfig({
   test: {
-    globals: true,
-    environment: 'jsdom',
+    environment: 'nuxt',
+    setupFiles: './test/vitest.setup.ts',
   },
-  resolve: {
-    alias: [
-      { find: '@test', replacement: resolve(__dirname, './tests') },
-    ],
-  },
-};
-export default defineConfig(config);
+})
