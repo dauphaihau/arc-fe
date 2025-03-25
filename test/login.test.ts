@@ -3,6 +3,7 @@ import {
 } from 'vitest';
 import { mount } from '@vue/test-utils';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
+import type { Ref, ComponentPublicInstance } from 'vue';
 import LayoutMarketHeader from '~/components/layouts/market/LayoutMarketHeader.vue';
 import LoginForm from '~/components/dialogs/login-register/LoginForm.vue';
 
@@ -35,8 +36,8 @@ describe('login', () => {
     await emailInput.setValue(email);
     await passwordInput.setValue(password);
 
-    expect(emailInput.element.value).toBe(email);
-    expect(passwordInput.element.value).toBe(password);
+    expect((emailInput.element as HTMLInputElement).value).toBe(email);
+    expect((passwordInput.element as HTMLInputElement).value).toBe(password);
   });
 
   it('alert user input incorrect password', async () => {
@@ -44,11 +45,20 @@ describe('login', () => {
       global: {
         stubs: {
           NuxtLink: true,
+          UAlert: true, // Stub UAlert to ensure it renders even with v-if
         },
       },
     });
 
-    component.vm.unknownErrorServerMsg.value = 'Incorrect email or password';
+    // Define the type for the component instance
+    const vm = component.vm as ComponentPublicInstance & {
+      unknownErrorServerMsg: Ref<string>
+    };
+
+    // Access the internal ref and set its value
+    vm.unknownErrorServerMsg.value = 'Incorrect email or password';
+
+    // Wait for the next tick to allow the component to update
     await component.vm.$nextTick();
 
     expect(component.html()).toContain('Incorrect email or password');
